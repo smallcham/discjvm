@@ -1,6 +1,9 @@
 #include "base_type.h"
 #include "constant_class.h"
 
+#ifndef DISCJVM_CLASS_H
+#define DISCJVM_CLASS_H
+
 //魔数
 #define CLASS_MAGIC_NUMBER 0xCAFEBABE
 //public
@@ -129,3 +132,5 @@ typedef struct {
     u2 attributes_count;
     AttributeInfo *attributes; // [attributes_count]
 } ClassFile;
+
+#endif //DISCJVM_CLASS_H

@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <zconf.h>
 #include "class/class_loader.h"
 

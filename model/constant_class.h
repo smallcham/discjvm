@@ -1,3 +1,6 @@
+#ifndef DISCJVM_CONSTANT_CLASS_H
+#define DISCJVM_CONSTANT_CLASS_H
+
 #define CONSTANT_Class              7
 #define CONSTANT_Fieldref           9
 #define CONSTANT_Methodref          10
@@ -109,3 +112,5 @@ typedef struct {
     u1 tag;
     u2 name_index;
 } CONSTANT_Package_info;
+
+#endif //DISCJVM_CONSTANT_CLASS_H
