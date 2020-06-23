@@ -22,188 +22,188 @@ int load_class(char *path) {
     class.constant_pool_count = l2b_2(*(u2 *) class_file);
     class_file += sizeof(u2);
 
-    class.constant_pool = (ConstantPool*) malloc(class.constant_pool_count * sizeof(ConstantPool));
+    class.constant_pool = (ConstantPool *) malloc(class.constant_pool_count * sizeof(ConstantPool));
 
     for (u2 i = 1; i < class.constant_pool_count; i++) {
-        ConstantPool *constant_pool = (ConstantPool *) malloc(sizeof(ConstantPool));
-        constant_pool->tag = *(u1 *) class_file;
-        printf("\nTAG: %d\n", constant_pool->tag);
-        switch (constant_pool->tag) {
-            case CONSTANT_Class:
-                printf("CONSTANT_Class");
+//        ConstantPool *constant_pool = (ConstantPool *) malloc(sizeof(ConstantPool));
+        class.constant_pool[i].tag = *(u1 *) class_file;
+        switch (class.constant_pool[i].tag) {
+            case CONSTANT_Class: {
                 CONSTANT_Class_info *constant_class_info = (CONSTANT_Class_info *) malloc(sizeof(CONSTANT_Class_info));
-                constant_class_info->tag = constant_pool->tag;
+                constant_class_info->tag = class.constant_pool[i].tag;
                 class_file += sizeof(u1);
                 constant_class_info->name_index = l2b_2(*(u2 *) class_file);
                 class_file += sizeof(u2);
-                constant_pool->info = constant_class_info;
+                class.constant_pool[i].info = constant_class_info;
                 continue;
-            case CONSTANT_Fieldref:
-                printf("CONSTANT_Fieldref");
+            }
+            case CONSTANT_Fieldref: {
                 CONSTANT_Fieldref_info *constant_fieldref_info = (CONSTANT_Fieldref_info *) malloc(
                         sizeof(CONSTANT_Fieldref_info));
-                constant_fieldref_info->tag = constant_pool->tag;
+                constant_fieldref_info->tag = class.constant_pool[i].tag;
                 class_file += sizeof(u1);
                 constant_fieldref_info->class_index = l2b_2(*(u2 *) class_file);
                 class_file += sizeof(u2);
                 constant_fieldref_info->name_and_type_index = l2b_2(*(u2 *) class_file);
                 class_file += sizeof(u2);
-                constant_pool->info = constant_fieldref_info;
+                class.constant_pool[i].info = constant_fieldref_info;
                 continue;
-            case CONSTANT_Methodref:
-                printf("CONSTANT_Methodref");
+            }
+            case CONSTANT_Methodref: {
                 CONSTANT_Methodref_info *constant_methodref_info = (CONSTANT_Methodref_info *) malloc(
                         sizeof(CONSTANT_Methodref_info));
-                constant_methodref_info->tag = constant_pool->tag;
+                constant_methodref_info->tag = class.constant_pool[i].tag;
                 class_file += sizeof(u1);
                 constant_methodref_info->class_index = l2b_2(*(u2 *) class_file);
                 class_file += sizeof(u2);
                 constant_methodref_info->name_and_type_index = l2b_2(*(u2 *) class_file);
                 class_file += sizeof(u2);
-                constant_pool->info = constant_methodref_info;
+                class.constant_pool[i].info = constant_methodref_info;
                 continue;
-            case CONSTANT_InterfaceMethodref:
-                printf("CONSTANT_InterfaceMethodref");
+            }
+            case CONSTANT_InterfaceMethodref: {
                 CONSTANT_InterfaceMethodref_info *constant_interfacemethodref_info = (CONSTANT_InterfaceMethodref_info *) malloc(
                         sizeof(CONSTANT_InterfaceMethodref_info));
-                constant_interfacemethodref_info->tag = constant_pool->tag;
+                constant_interfacemethodref_info->tag = class.constant_pool[i].tag;
                 class_file += sizeof(u1);
                 constant_interfacemethodref_info->class_index = l2b_2(*(u2 *) class_file);
                 class_file += sizeof(u2);
                 constant_interfacemethodref_info->name_and_type_index = l2b_2(*(u2 *) class_file);
                 class_file += sizeof(u2);
-                constant_pool->info = constant_interfacemethodref_info;
+                class.constant_pool[i].info = constant_interfacemethodref_info;
                 continue;
-            case CONSTANT_String:
-                printf("CONSTANT_String");
+            }
+            case CONSTANT_String: {
                 CONSTANT_String_info *constant_string_info = (CONSTANT_String_info *) malloc(
                         sizeof(CONSTANT_String_info));
-                constant_string_info->tag = constant_pool->tag;
+                constant_string_info->tag = class.constant_pool[i].tag;
                 class_file += sizeof(u1);
                 constant_string_info->string_index = l2b_2(*(u2 *) class_file);
                 class_file += sizeof(u2);
-                constant_pool->info = constant_string_info;
+                class.constant_pool[i].info = constant_string_info;
                 continue;
-            case CONSTANT_Integer:
-                printf("CONSTANT_Integer");
+            }
+            case CONSTANT_Integer: {
                 CONSTANT_Integer_info *constant_integer_info = (CONSTANT_Integer_info *) malloc(
                         sizeof(CONSTANT_Integer_info));
-                constant_integer_info->tag = constant_pool->tag;
+                constant_integer_info->tag = class.constant_pool[i].tag;
                 class_file += sizeof(u1);
                 constant_integer_info->bytes = l2b_4(*(u4 *) class_file);
                 class_file += sizeof(u4);
-                constant_pool->info = constant_integer_info;
+                class.constant_pool[i].info = constant_integer_info;
                 continue;
-            case CONSTANT_Float:
-                printf("CONSTANT_Float");
+            }
+            case CONSTANT_Float: {
                 CONSTANT_Float_info *constant_float_info = (CONSTANT_Float_info *) malloc(sizeof(CONSTANT_Float_info));
-                constant_float_info->tag = constant_pool->tag;
+                constant_float_info->tag = class.constant_pool[i].tag;
                 class_file += sizeof(u1);
                 constant_float_info->bytes = l2b_4(*(u4 *) class_file);
                 class_file += sizeof(u4);
-                constant_pool->info = constant_float_info;
+                class.constant_pool[i].info = constant_float_info;
                 continue;
-            case CONSTANT_Long:
-                printf("CONSTANT_Long");
+            }
+            case CONSTANT_Long: {
                 CONSTANT_Long_info *constant_long_info = (CONSTANT_Long_info *) malloc(sizeof(CONSTANT_Long_info));
-                constant_long_info->tag = constant_pool->tag;
+                constant_long_info->tag = class.constant_pool[i].tag;
                 class_file += sizeof(u1);
                 constant_long_info->high_bytes = l2b_4(*(u4 *) class_file);
                 class_file += sizeof(u4);
                 constant_long_info->low_bytes = l2b_4(*(u4 *) class_file);
                 class_file += sizeof(u4);
-                constant_pool->info = constant_long_info;
+                class.constant_pool[i].info = constant_long_info;
                 continue;
-            case CONSTANT_Double:
-                printf("CONSTANT_Double");
+            }
+            case CONSTANT_Double: {
                 CONSTANT_Double_info *constant_double_info = (CONSTANT_Double_info *) malloc(
                         sizeof(CONSTANT_Double_info));
-                constant_double_info->tag = constant_pool->tag;
+                constant_double_info->tag = class.constant_pool[i].tag;
                 class_file += sizeof(u1);
                 constant_double_info->high_bytes = l2b_4(*(u4 *) class_file);
                 class_file += sizeof(u4);
                 constant_double_info->low_bytes = l2b_4(*(u4 *) class_file);
                 class_file += sizeof(u4);
-                constant_pool->info = constant_double_info;
+                class.constant_pool[i].info = constant_double_info;
                 continue;
-            case CONSTANT_NameAndType:
-                printf("CONSTANT_NameAndType");
+            }
+            case CONSTANT_NameAndType: {
                 CONSTANT_NameAndType_info *constant_nameandtype_info = (CONSTANT_NameAndType_info *) malloc(
                         sizeof(CONSTANT_NameAndType_info));
-                constant_nameandtype_info->tag = constant_pool->tag;
+                constant_nameandtype_info->tag = class.constant_pool[i].tag;
                 class_file += sizeof(u1);
                 constant_nameandtype_info->name_index = l2b_2(*(u2 *) class_file);
                 class_file += sizeof(u2);
                 constant_nameandtype_info->descriptor_index = l2b_2(*(u2 *) class_file);
                 class_file += sizeof(u2);
-                constant_pool->info = constant_nameandtype_info;
+                class.constant_pool[i].info = constant_nameandtype_info;
                 continue;
-            case CONSTANT_Utf8:
-                printf("CONSTANT_Utf8");
+            }
+            case CONSTANT_Utf8: {
                 CONSTANT_Utf8_info *constant_utf8_info = (CONSTANT_Utf8_info *) malloc(sizeof(CONSTANT_Utf8_info));
-                constant_utf8_info->tag = constant_pool->tag;
+                constant_utf8_info->tag = class.constant_pool[i].tag;
                 class_file += sizeof(u1);
                 constant_utf8_info->length = l2b_2(*(u2 *) class_file);
                 class_file += sizeof(u2);
                 u4 len = sizeof(u1) * constant_utf8_info->length;
                 constant_utf8_info->bytes = (u1 *) malloc(len);
                 class_file += len;
-                constant_pool->info = constant_utf8_info;
+                class.constant_pool[i].info = constant_utf8_info;
                 continue;
-            case CONSTANT_MethodHandle:
-                printf("CONSTANT_MethodHandle");
+            }
+            case CONSTANT_MethodHandle: {
                 CONSTANT_MethodHandle_info *constant_methodhandle_info = (CONSTANT_MethodHandle_info *) malloc(
                         sizeof(CONSTANT_MethodHandle_info));
-                constant_methodhandle_info->tag = constant_pool->tag;
+                constant_methodhandle_info->tag = class.constant_pool[i].tag;
                 class_file += sizeof(u1);
                 constant_methodhandle_info->reference_index = l2b_2(*(u2 *) class_file);
                 class_file += sizeof(u2);
                 constant_methodhandle_info->reference_kind = *(u1 *) class_file;
                 class_file += sizeof(u1);
-                constant_pool->info = constant_methodhandle_info;
+                class.constant_pool[i].info = constant_methodhandle_info;
                 continue;
-            case CONSTANT_MethodType:
-                printf("CONSTANT_MethodType");
+            }
+            case CONSTANT_MethodType: {
                 CONSTANT_MethodType_info *constant_methodtype_info = (CONSTANT_MethodType_info *) malloc(
                         sizeof(CONSTANT_MethodType_info));
-                constant_methodtype_info->tag = constant_pool->tag;
+                constant_methodtype_info->tag = class.constant_pool[i].tag;
                 class_file += sizeof(u1);
                 constant_methodtype_info->descriptor_index = l2b_2(*(u2 *) class_file);
                 class_file += sizeof(u2);
-                constant_pool->info = constant_methodtype_info;
+                class.constant_pool[i].info = constant_methodtype_info;
                 continue;
-            case CONSTANT_InvokeDynamic:
-                printf("CONSTANT_InvokeDynamic");
+            }
+            case CONSTANT_InvokeDynamic: {
                 CONSTANT_InvokeDynamic_info *constant_invokedynamic_info = (CONSTANT_InvokeDynamic_info *) malloc(
                         sizeof(CONSTANT_InvokeDynamic_info));
-                constant_invokedynamic_info->tag = constant_pool->tag;
+                constant_invokedynamic_info->tag = class.constant_pool[i].tag;
                 class_file += sizeof(u1);
                 constant_invokedynamic_info->name_and_type_index = l2b_2(*(u2 *) class_file);
                 class_file += sizeof(u2);
                 constant_invokedynamic_info->bootstrap_method_attr_index = l2b_2(*(u2 *) class_file);
                 class_file += sizeof(u2);
-                constant_pool->info = constant_invokedynamic_info;
+                class.constant_pool[i].info = constant_invokedynamic_info;
                 continue;
-            case CONSTANT_Module:
-                printf("CONSTANT_InvokeDynamic");
-                CONSTANT_Module_info *constant_module_info = (CONSTANT_Module_info *) malloc(sizeof(CONSTANT_Module_info));
-                constant_module_info->tag = constant_pool->tag;
+            }
+            case CONSTANT_Module: {
+                CONSTANT_Module_info *constant_module_info = (CONSTANT_Module_info *) malloc(
+                        sizeof(CONSTANT_Module_info));
+                constant_module_info->tag = class.constant_pool[i].tag;
                 class_file += sizeof(u1);
                 constant_module_info->name_index = l2b_2(*(u2 *) class_file);
                 class_file += sizeof(u2);
-                constant_pool->info = constant_module_info;
+                class.constant_pool[i].info = constant_module_info;
                 continue;
-            case CONSTANT_Package:
-                printf("CONSTANT_InvokeDynamic");
-                CONSTANT_Package_info *constant_package_info = (CONSTANT_Package_info *) malloc(sizeof(CONSTANT_Package_info));
-                constant_package_info->tag = constant_pool->tag;
+            }
+            case CONSTANT_Package: {
+                CONSTANT_Package_info *constant_package_info = (CONSTANT_Package_info *) malloc(
+                        sizeof(CONSTANT_Package_info));
+                constant_package_info->tag = class.constant_pool[i].tag;
                 class_file += sizeof(u1);
                 constant_package_info->name_index = l2b_2(*(u2 *) class_file);
                 class_file += sizeof(u2);
-                constant_pool->info = constant_package_info;
+                class.constant_pool[i].info = constant_package_info;
                 continue;
+            }
         }
-        class.constant_pool[i].info = constant_pool;
         printf("\n");
     }
     class.access_flags = l2b_2(*(u2 *) class_file);
@@ -214,37 +214,39 @@ int load_class(char *path) {
     class_file += sizeof(u2);
     class.interfaces_count = l2b_2(*(u2 *) class_file);
     class_file += sizeof(u2);
-    if(class.interfaces_count > 0){
-        class.interfaces = (u2*) malloc(class.interfaces_count * sizeof(u2));
-        for(int i = 0; i < class.interfaces_count; i++) {
-            class.interfaces[i] = l2b_2(*(u2*) class_file);
+    if (class.interfaces_count > 0) {
+        class.interfaces = (u2 *) malloc(class.interfaces_count * sizeof(u2));
+        for (int i = 0; i < class.interfaces_count; i++) {
+            class.interfaces[i] = l2b_2(*(u2 *) class_file);
             class_file += sizeof(u2);
         }
     }
-    class.fields_count = l2b_2(*(u2*) class_file);
+    class.fields_count = l2b_2(*(u2 *) class_file);
     class_file += sizeof(u2);
     if (class.fields_count > 0) {
-        class.fields = (FieldInfo*) malloc(class.fields_count * sizeof(FieldInfo));
+        class.fields = (FieldInfo *) malloc(class.fields_count * sizeof(FieldInfo));
         for (int i = 0; i < class.fields_count; i++) {
-            class.fields[i].access_flags = l2b_2(*(u2*)class_file);
+            class.fields[i].access_flags = l2b_2(*(u2 *) class_file);
             class_file += sizeof(u2);
-            class.fields[i].name_index = l2b_2(*(u2*)class_file);
+            class.fields[i].name_index = l2b_2(*(u2 *) class_file);
             class_file += sizeof(u2);
-            class.fields[i].descriptor_index = l2b_2(*(u2*)class_file);
+            class.fields[i].descriptor_index = l2b_2(*(u2 *) class_file);
             class_file += sizeof(u2);
-            class.fields[i].attributes_count = l2b_2(*(u2*)class_file);
+            class.fields[i].attributes_count = l2b_2(*(u2 *) class_file);
             class_file += sizeof(u2);
             if (class.fields[i].attributes_count > 0) {
-                class.fields[i].attributes = (AttributeInfo*) malloc(class.fields[i].attributes_count * sizeof(AttributeInfo));
+                class.fields[i].attributes = (AttributeInfo *) malloc(
+                        class.fields[i].attributes_count * sizeof(AttributeInfo));
                 for (int j = 0; j < class.fields[i].attributes_count; j++) {
-                    class.fields[i].attributes[j].attribute_name_index = l2b_2(*(u2*) class_file);
+                    class.fields[i].attributes[j].attribute_name_index = l2b_2(*(u2 *) class_file);
                     class_file += sizeof(u2);
-                    class.fields[i].attributes[j].attribute_length = l2b_4(*(u4*) class_file);
+                    class.fields[i].attributes[j].attribute_length = l2b_4(*(u4 *) class_file);
                     class_file += sizeof(u4);
                     if (class.fields[i].attributes[j].attribute_length > 0) {
-                        class.fields[i].attributes[j].info = malloc(sizeof(u1) * class.fields[i].attributes[j].attribute_length);
+                        class.fields[i].attributes[j].info = malloc(
+                                sizeof(u1) * class.fields[i].attributes[j].attribute_length);
                         for (int k = 0; k < class.fields[i].attributes[j].attribute_length; k++) {
-                            class.fields[i].attributes[j].info[k] = *(u1*) class_file;
+                            class.fields[i].attributes[j].info[k] = *(u1 *) class_file;
                             class_file += sizeof(u1);
                         }
                     }
@@ -252,30 +254,32 @@ int load_class(char *path) {
             }
         }
     }
-    class.methods_count = l2b_2(*(u2*) class_file);
+    class.methods_count = l2b_2(*(u2 *) class_file);
     class_file += sizeof(u2);
     if (class.methods_count > 0) {
         class.methods = malloc(class.methods_count * sizeof(MethodInfo));
         for (int i = 0; i < class.methods_count; i++) {
-            class.methods[i].access_flags = l2b_2(*(u2*) class_file);
+            class.methods[i].access_flags = l2b_2(*(u2 *) class_file);
             class_file += sizeof(u2);
-            class.methods[i].name_index = l2b_2(*(u2*) class_file);
+            class.methods[i].name_index = l2b_2(*(u2 *) class_file);
             class_file += sizeof(u2);
-            class.methods[i].descriptor_index = l2b_2(*(u2*) class_file);
+            class.methods[i].descriptor_index = l2b_2(*(u2 *) class_file);
             class_file += sizeof(u2);
-            class.methods[i].attributes_count = l2b_2(*(u2*) class_file);
+            class.methods[i].attributes_count = l2b_2(*(u2 *) class_file);
             class_file += sizeof(u2);
             if (class.methods[i].attributes_count > 0) {
-                class.methods[i].attributes = (AttributeInfo*) malloc(class.methods[i].attributes_count * sizeof(AttributeInfo));
+                class.methods[i].attributes = (AttributeInfo *) malloc(
+                        class.methods[i].attributes_count * sizeof(AttributeInfo));
                 for (int j = 0; j < class.methods[i].attributes_count; j++) {
-                    class.methods[i].attributes[j].attribute_name_index = l2b_2(*(u2*) class_file);
+                    class.methods[i].attributes[j].attribute_name_index = l2b_2(*(u2 *) class_file);
                     class_file += sizeof(u2);
-                    class.methods[i].attributes[j].attribute_length = l2b_4(*(u4*) class_file);
+                    class.methods[i].attributes[j].attribute_length = l2b_4(*(u4 *) class_file);
                     class_file += sizeof(u4);
                     if (class.methods[i].attributes[j].attribute_length > 0) {
-                        class.methods[i].attributes[j].info = malloc(sizeof(u1) * class.methods[i].attributes[j].attribute_length);
+                        class.methods[i].attributes[j].info = malloc(
+                                sizeof(u1) * class.methods[i].attributes[j].attribute_length);
                         for (int k = 0; k < class.methods[i].attributes[j].attribute_length; k++) {
-                            class.methods[i].attributes[j].info[k] = *(u1*) class_file;
+                            class.methods[i].attributes[j].info[k] = *(u1 *) class_file;
                             class_file += sizeof(u1);
                         }
                     }
@@ -283,20 +287,19 @@ int load_class(char *path) {
             }
         }
     }
-
-    class.attributes_count = l2b_2(*(u2*) class_file);
+    class.attributes_count = l2b_2(*(u2 *) class_file);
     class_file += sizeof(u2);
     if (class.attributes_count > 0) {
-        class.attributes = (AttributeInfo*) malloc(class.attributes_count * sizeof(AttributeInfo));
+        class.attributes = (AttributeInfo *) malloc(class.attributes_count * sizeof(AttributeInfo));
         for (int j = 0; j < class.attributes_count; j++) {
-            class.attributes[j].attribute_name_index = l2b_2(*(u2*) class_file);
+            class.attributes[j].attribute_name_index = l2b_2(*(u2 *) class_file);
             class_file += sizeof(u2);
-            class.attributes[j].attribute_length = l2b_4(*(u4*) class_file);
+            class.attributes[j].attribute_length = l2b_4(*(u4 *) class_file);
             class_file += sizeof(u4);
             if (class.attributes[j].attribute_length > 0) {
                 class.attributes[j].info = malloc(sizeof(u1) * class.attributes[j].attribute_length);
                 for (int k = 0; k < class.attributes[j].attribute_length; k++) {
-                    class.attributes[j].info[k] = *(u1*) class_file;
+                    class.attributes[j].info[k] = *(u1 *) class_file;
                     class_file += sizeof(u1);
                 }
             }
@@ -304,31 +307,28 @@ int load_class(char *path) {
     }
 
     printf("\n");
-    printf("%X, %d.%d, %d, %d, %#x, %x, %x", class.magic, class.major_version, class.minor_version, class.constant_pool_count,
+    printf("%X, %d.%d, %d, %d, %#x, %x, %x", class.magic, class.major_version, class.minor_version,
+           class.constant_pool_count,
            class.constant_pool[1].tag, class.access_flags, class.this_class, class.methods[2].attributes[0].info[0]);
 
-//    char *info = (char*)malloc(class.constant_pool_count * constant_info_size);
-//    class.constant_pool->info = info;
+    printf("\nMethodCount: %d", class.methods_count);
 
-    return 0;
-}
-
-void load_attributes(ClassFile class, const u1 *class_file)
-{
-    if (class.attributes_count > 0) {
-        class.attributes = (AttributeInfo*) malloc(class.attributes_count * sizeof(AttributeInfo));
-        for (int j = 0; j < class.attributes_count; j++) {
-            class.attributes[j].attribute_name_index = l2b_2(*(u2*) class_file);
-            class_file += sizeof(u2);
-            class.attributes[j].attribute_length = l2b_4(*(u4*) class_file);
-            class_file += sizeof(u4);
-            if (class.attributes[j].attribute_length > 0) {
-                class.attributes[j].info = malloc(sizeof(u1) * class.attributes[j].attribute_length);
-                for (int k = 0; k < class.attributes[j].attribute_length; k++) {
-                    class.attributes[j].info[k] = *(u1*) class_file;
-                    class_file += sizeof(u1);
+    for (int i = 0; i < class.methods_count; i++) {
+        for (int j = 0; j < class.methods[i].attributes_count; j++) {
+            printf("\nAttributeLength: %u", class.methods[i].attributes[i].attribute_length);
+            if (class.methods[i].attributes[i].attribute_length > 0) {
+                printf("\nIndex: %u", class.methods[i].attributes[i].attribute_name_index);
+                u1 tag = class.constant_pool[class.methods[i].attributes[i].attribute_name_index].tag;
+                printf("\nAttributeTag: %hhu", tag);
+                CONSTANT_Utf8_info info = *((CONSTANT_Utf8_info *) class.constant_pool[class.methods[i].attributes[i].attribute_name_index].info);
+                printf("\nUTF8Length: %hu\n", info.length);
+                printf("Content: \n");
+                for (int a = 0; a < info.length; a++) {
+                    printf("%x", info.bytes[a]);
                 }
             }
         }
     }
+
+    return 0;
 }
