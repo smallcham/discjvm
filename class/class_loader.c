@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "../model/class.h"
 #include "../util/endian.h"
 
@@ -143,8 +144,9 @@ int load_class(char *path) {
                 class_file += sizeof(u1);
                 constant_utf8_info->length = l2b_2(*(u2 *) class_file);
                 class_file += sizeof(u2);
-                u4 len = sizeof(u1) * constant_utf8_info->length;
+                u1 len = sizeof(u1) * constant_utf8_info->length;
                 constant_utf8_info->bytes = (u1 *) malloc(len);
+                memcpy(constant_utf8_info->bytes, class_file, len);
                 class_file += len;
                 class.constant_pool[i].info = constant_utf8_info;
                 continue;
@@ -307,9 +309,8 @@ int load_class(char *path) {
     }
 
     printf("\n");
-    printf("%X, %d.%d, %d, %d, %#x, %x, %x", class.magic, class.major_version, class.minor_version,
-           class.constant_pool_count,
-           class.constant_pool[1].tag, class.access_flags, class.this_class, class.methods[2].attributes[0].info[0]);
+    printf("MagicNumber: %X, Version: %d.%d, ConstantPoolCount: %d, AccessFlags: %#x, ThisClass: %x", class.magic, class.major_version, class.minor_version,
+           class.constant_pool_count,class.access_flags, class.this_class);
 
     printf("\nMethodCount: %d", class.methods_count);
 
@@ -323,9 +324,9 @@ int load_class(char *path) {
                 CONSTANT_Utf8_info info = *((CONSTANT_Utf8_info *) class.constant_pool[class.methods[i].attributes[i].attribute_name_index].info);
                 printf("\nUTF8Length: %hu\n", info.length);
                 printf("Content: \n");
-                for (int a = 0; a < info.length; a++) {
-                    printf("%x", info.bytes[a]);
-                }
+                char temp[4];
+                memcpy(temp, info.bytes, 4);
+                printf("%s", temp);
             }
         }
     }
