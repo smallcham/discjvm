@@ -540,6 +540,7 @@ _Noreturn void invoke_method(MethodInfo method)
     int i = 0;
     do {
         exec(instructions[read_code(code.code, &thread)], code.code, &thread, &frame);
+        // 明天把Step 改到这.
         i++;
     } while (i < 100);
 }
