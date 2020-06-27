@@ -1,8 +1,8 @@
-#include "base_type.h"
-#include "constant_class.h"
-
 #ifndef DISCJVM_CLASS_H
 #define DISCJVM_CLASS_H
+
+#include "base_type.h"
+#include "constant_class.h"
 
 //魔数
 #define CLASS_MAGIC_NUMBER 0xCAFEBABE

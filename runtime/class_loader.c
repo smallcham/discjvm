@@ -4,7 +4,7 @@
 #include "../model/class.h"
 #include "../util/endian.h"
 
-int load_class(char *path) {
+ClassFile load_class(char *path) {
     FILE *fp = fopen(path, "rb");
     ClassFile class;
 
@@ -16,9 +16,9 @@ int load_class(char *path) {
     fclose(fp);
     class.magic = l2b_4(*(u4 *) class_file);
     class_file += sizeof(u4);
-    class.major_version = l2b_2(*(u2 *) class_file);
-    class_file += sizeof(u2);
     class.minor_version = l2b_2(*(u2 *) class_file);
+    class_file += sizeof(u2);
+    class.major_version = l2b_2(*(u2 *) class_file);
     class_file += sizeof(u2);
     class.constant_pool_count = l2b_2(*(u2 *) class_file);
     class_file += sizeof(u2);
@@ -26,7 +26,6 @@ int load_class(char *path) {
     class.constant_pool = (ConstantPool *) malloc(class.constant_pool_count * sizeof(ConstantPool));
 
     for (u2 i = 1; i < class.constant_pool_count; i++) {
-//        ConstantPool *constant_pool = (ConstantPool *) malloc(sizeof(ConstantPool));
         class.constant_pool[i].tag = *(u1 *) class_file;
         switch (class.constant_pool[i].tag) {
             case CONSTANT_Class: {
@@ -144,10 +143,10 @@ int load_class(char *path) {
                 class_file += sizeof(u1);
                 constant_utf8_info->length = l2b_2(*(u2 *) class_file);
                 class_file += sizeof(u2);
-                u1 len = sizeof(u1) * constant_utf8_info->length;
-                constant_utf8_info->bytes = (u1 *) malloc(len);
-                memcpy(constant_utf8_info->bytes, class_file, len);
-                class_file += len;
+                constant_utf8_info->bytes = malloc(constant_utf8_info->length + 1);
+                memcpy(constant_utf8_info->bytes, class_file, constant_utf8_info->length);
+                constant_utf8_info->bytes[constant_utf8_info->length] = '\0';
+                class_file += constant_utf8_info->length;
                 class.constant_pool[i].info = constant_utf8_info;
                 continue;
             }
@@ -217,11 +216,10 @@ int load_class(char *path) {
     class.interfaces_count = l2b_2(*(u2 *) class_file);
     class_file += sizeof(u2);
     if (class.interfaces_count > 0) {
-        class.interfaces = (u2 *) malloc(class.interfaces_count * sizeof(u2));
-        for (int i = 0; i < class.interfaces_count; i++) {
-            class.interfaces[i] = l2b_2(*(u2 *) class_file);
-            class_file += sizeof(u2);
-        }
+        u2 len = class.interfaces_count * sizeof(u2);
+        class.interfaces = (u2 *) malloc(len);
+        memcpy(class.interfaces, class_file, len);
+        class_file += len;
     }
     class.fields_count = l2b_2(*(u2 *) class_file);
     class_file += sizeof(u2);
@@ -247,10 +245,8 @@ int load_class(char *path) {
                     if (class.fields[i].attributes[j].attribute_length > 0) {
                         class.fields[i].attributes[j].info = malloc(
                                 sizeof(u1) * class.fields[i].attributes[j].attribute_length);
-                        for (int k = 0; k < class.fields[i].attributes[j].attribute_length; k++) {
-                            class.fields[i].attributes[j].info[k] = *(u1 *) class_file;
-                            class_file += sizeof(u1);
-                        }
+                        memcpy(class.fields[i].attributes[j].info, class_file, class.fields[i].attributes[j].attribute_length);
+                        class_file += class.fields[i].attributes[j].attribute_length;
                     }
                 }
             }
@@ -278,12 +274,9 @@ int load_class(char *path) {
                     class.methods[i].attributes[j].attribute_length = l2b_4(*(u4 *) class_file);
                     class_file += sizeof(u4);
                     if (class.methods[i].attributes[j].attribute_length > 0) {
-                        class.methods[i].attributes[j].info = malloc(
-                                sizeof(u1) * class.methods[i].attributes[j].attribute_length);
-                        for (int k = 0; k < class.methods[i].attributes[j].attribute_length; k++) {
-                            class.methods[i].attributes[j].info[k] = *(u1 *) class_file;
-                            class_file += sizeof(u1);
-                        }
+                        class.methods[i].attributes[j].info = malloc(sizeof(u1) * class.methods[i].attributes[j].attribute_length);
+                        memcpy(class.methods[i].attributes[j].info, class_file, class.methods[i].attributes[j].attribute_length);
+                        class_file += class.methods[i].attributes[j].attribute_length;
                     }
                 }
             }
@@ -300,36 +293,167 @@ int load_class(char *path) {
             class_file += sizeof(u4);
             if (class.attributes[j].attribute_length > 0) {
                 class.attributes[j].info = malloc(sizeof(u1) * class.attributes[j].attribute_length);
-                for (int k = 0; k < class.attributes[j].attribute_length; k++) {
-                    class.attributes[j].info[k] = *(u1 *) class_file;
-                    class_file += sizeof(u1);
+                memcpy(class.attributes[j].info, class_file, class.attributes[j].attribute_length);
+                class_file += class.attributes[j].attribute_length;
+            }
+        }
+    }
+    return class;
+}
+
+CodeAttribute get_method_code(MethodInfo method) {
+    AttributeInfo code_info = method.attributes[0];
+    CodeAttribute code_attribute = *(CodeAttribute*) malloc(sizeof(CodeAttribute));
+    code_attribute.attribute_name_index = code_info.attribute_name_index;
+    code_attribute.attribute_length = code_info.attribute_length;
+    u1 *bytes = code_info.info;
+    code_attribute.max_stack = l2b_2(*(u2*) bytes);
+    bytes += sizeof(u2);
+    code_attribute.max_locals = l2b_2(*(u2*) bytes);
+    bytes += sizeof(u2);
+    code_attribute.code_length = l2b_4(*(u4*) bytes);
+    bytes += sizeof(u4);
+    if (code_attribute.code_length > 0) {
+        code_attribute.code = malloc(code_attribute.code_length);
+        memcpy(code_attribute.code, bytes, code_attribute.code_length);
+        bytes += code_attribute.code_length;
+    }
+    code_attribute.exception_table_length = l2b_2(*(u2*) bytes);
+    bytes += sizeof(u2);
+    if (code_attribute.exception_table_length > 0) {
+        u8 exception_table_len = code_attribute.exception_table_length * sizeof(u8);
+        code_attribute.exception_table = malloc(exception_table_len);
+        memcpy(code_attribute.exception_table, bytes, exception_table_len);
+        bytes += exception_table_len;
+    }
+    code_attribute.attributes_count = l2b_2(*(u2*) bytes);
+    bytes += sizeof(u2);
+    if (code_attribute.attributes_count > 0) {
+        code_attribute.attributes = malloc(sizeof(AttributeInfo) * code_attribute.attributes_count);
+        code_attribute.attributes->attribute_name_index = l2b_2(*(u2*) bytes);
+        bytes += sizeof(u2);
+        code_attribute.attributes->attribute_length = l2b_4(*(u4*) bytes);
+        bytes += sizeof(u4);
+        code_attribute.attributes->info = malloc(code_attribute.attributes->attribute_length);
+        memcpy(code_attribute.attributes->info, bytes, code_attribute.attributes->attribute_length);
+    }
+    return code_attribute;
+}
+
+void print_class_info(ClassFile class)
+{
+    printf("General Infomation:\n");
+
+    CONSTANT_Class_info constant_class_info = *(CONSTANT_Class_info*)class.constant_pool[class.this_class].info;
+    CONSTANT_Utf8_info this_class = *(CONSTANT_Utf8_info*)class.constant_pool[constant_class_info.name_index].info;
+
+    CONSTANT_Class_info constant_super_class_info = *(CONSTANT_Class_info*)class.constant_pool[class.super_class].info;
+    CONSTANT_Utf8_info super_class = *(CONSTANT_Utf8_info*)class.constant_pool[constant_super_class_info.name_index].info;
+
+    printf("\tMagicNumber: %X\n\tVersion: %d.%d (%d)\n\tConstantPoolCount: %d"
+           "\n\tAccessFlags: %#x\n\tThisClass: #%d <%s>\n\tSuperClass: #%d <%s>"
+           "\n\tInterfaceCount: %d\n\tFieldCount: %d\n\tMethodCount: %d\n\tAttributeCount: %d"
+           "\n", class.magic, class.major_version, class.minor_version, class.major_version - 44,
+           class.constant_pool_count,class.access_flags, class.this_class, this_class.bytes,
+           class.super_class, super_class.bytes, class.interfaces_count, class.fields_count, class.methods_count, class.attributes_count);
+
+
+    printf("Constant Pool:\n");
+    for (int i = 1; i < class.constant_pool_count; i++) {
+        switch (class.constant_pool[i].tag) {
+            case CONSTANT_Class:
+                printf("\t[%2d] CONSTANT_Class_info\n", i);
+                continue;
+            case CONSTANT_Fieldref:
+                printf("\t[%2d] CONSTANT_Fieldref_info\n", i);
+                continue;
+            case CONSTANT_Methodref:
+                printf("\t[%2d] CONSTANT_Methodref_info\n", i);
+                continue;
+            case CONSTANT_InterfaceMethodref:
+                printf("\t[%2d] CONSTANT_InterfaceMethodref_info\n", i);
+                continue;
+            case CONSTANT_String:
+                printf("\t[%2d] CONSTANT_String_info\n", i);
+                continue;
+            case CONSTANT_Integer:
+                printf("\t[%2d] CONSTANT_Integer_info\n", i);
+                continue;
+            case CONSTANT_Float:
+                printf("\t[%2d] CONSTANT_Float_info\n", i);
+                continue;
+            case CONSTANT_Long:
+                printf("\t[%2d] CONSTANT_Long_info\n", i);
+                continue;
+            case CONSTANT_Double:
+                printf("\t[%2d] CONSTANT_Double_info\n", i);
+                continue;
+            case CONSTANT_NameAndType:
+                printf("\t[%2d] CONSTANT_NameAndType_info\n", i);
+                continue;
+            case CONSTANT_Utf8:
+                printf("\t[%2d] CONSTANT_Utf8_info\n", i);
+                continue;
+            case CONSTANT_MethodHandle:
+                printf("\t[%2d] CONSTANT_MethodHandle_info\n", i);
+                continue;
+            case CONSTANT_MethodType:
+                printf("\t[%2d] CONSTANT_MethodType_info\n", i);
+                continue;
+            case CONSTANT_InvokeDynamic:
+                printf("\t[%2d] CONSTANT_InvokeDynamic_info\n", i);
+                continue;
+            case CONSTANT_Module:
+                printf("\t[%2d] CONSTANT_Module_info\n", i);
+                continue;
+            case CONSTANT_Package:
+                printf("\t[%2d] CONSTANT_Package_info\n", i);
+                continue;
+        }
+    }
+
+    printf("Interfaces:\n");
+    for (int i = 0; i < class.interfaces_count; i++) {
+        CONSTANT_Class_info interface = *(CONSTANT_Class_info *)class.constant_pool[class.interfaces[i]].info;
+        CONSTANT_Utf8_info interface_name = *(CONSTANT_Utf8_info*)class.constant_pool[interface.name_index].info;
+        printf("\t[%d] %s #%d\n", i, interface_name.bytes, interface.name_index);
+    }
+    printf("Fields:\n");
+    for (int i = 0; i < class.fields_count; i++) {
+        CONSTANT_Utf8_info field_name = *(CONSTANT_Utf8_info*)class.constant_pool[class.fields[i].name_index].info;
+        printf("\t[%d] %s #%d [%#x]\n", i, field_name.bytes, class.fields[i].name_index, class.fields[i].access_flags);
+    }
+    printf("Methods:\n");
+    for (int i = 0; i < class.methods_count; i++) {
+        CONSTANT_Utf8_info method_name = *(CONSTANT_Utf8_info*)class.constant_pool[class.methods[i].name_index].info;
+        printf("\t[%d] %s #%d [%#x]\n", i, method_name.bytes, class.methods[i].name_index, class.methods[i].access_flags);
+        for (int j = 0; j < class.methods[i].attributes_count; j++) {
+            CONSTANT_Utf8_info attribute_name = *(CONSTANT_Utf8_info*)class.constant_pool[class.methods[i].attributes[j].attribute_name_index].info;
+            printf("\t\t[%d] %s #%d %d\n", j, attribute_name.bytes, class.methods[i].attributes[j].attribute_name_index, class.methods[i].attributes[j].attribute_length);
+            if (strcmp(attribute_name.bytes, "Code") == 0) {
+                CodeAttribute code = get_method_code(class.methods[i]);
+                printf("\t\t\t[%d] MaxStack: %d | CodeLength: %d\n", j, code.max_stack, code.code_length);
+                for (int k = 0; k < code.code_length; k++) {
+                    printf("\t\t\t%#X\n", code.code[k]);
                 }
             }
         }
     }
-
-    printf("\n");
-    printf("MagicNumber: %X, Version: %d.%d, ConstantPoolCount: %d, AccessFlags: %#x, ThisClass: %x", class.magic, class.major_version, class.minor_version,
-           class.constant_pool_count,class.access_flags, class.this_class);
-
-    printf("\nMethodCount: %d", class.methods_count);
-
-    for (int i = 0; i < class.methods_count; i++) {
-        for (int j = 0; j < class.methods[i].attributes_count; j++) {
-            printf("\nAttributeLength: %u", class.methods[i].attributes[i].attribute_length);
-            if (class.methods[i].attributes[i].attribute_length > 0) {
-                printf("\nIndex: %u", class.methods[i].attributes[i].attribute_name_index);
-                u1 tag = class.constant_pool[class.methods[i].attributes[i].attribute_name_index].tag;
-                printf("\nAttributeTag: %hhu", tag);
-                CONSTANT_Utf8_info info = *((CONSTANT_Utf8_info *) class.constant_pool[class.methods[i].attributes[i].attribute_name_index].info);
-                printf("\nUTF8Length: %hu\n", info.length);
-                printf("Content: \n");
-                char temp[4];
-                memcpy(temp, info.bytes, 4);
-                printf("%s", temp);
-            }
-        }
+    printf("Attributes:\n");
+    for (int i = 0; i < class.attributes_count; i++) {
+        CONSTANT_Utf8_info attribute_name = *(CONSTANT_Utf8_info*)class.constant_pool[class.attributes[i].attribute_name_index].info;
+        printf("\t[%d] %s #%d Length: %d\n", i, attribute_name.bytes, class.attributes[i].attribute_name_index, class.attributes[i].attribute_length);
     }
+}
 
-    return 0;
+MethodInfo get_main_method(ClassFile class) {
+    for (int i = 0; i < class.methods_count; i++)
+    {
+        CONSTANT_Utf8_info method_info = *(CONSTANT_Utf8_info*)class.constant_pool[class.methods[i].name_index].info;
+        char method_name[method_info.length + 1];
+        memcpy(method_name, method_info.bytes, method_info.length);
+        method_name[method_info.length] = '\0';
+        if (strcmp(method_name, "main") == 0) return class.methods[i];
+    }
+    return *(MethodInfo*) NULL;
 }
