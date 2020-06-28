@@ -24,18 +24,19 @@ typedef struct {
     Stack *c_stack;
 } Thread;
 
-Frame create_frame(u2 method_name_index, int local_variables_size, int operand_stack_size)
+void create_vm_frame(Thread *thread, u2 method_name_index, int local_variables_size, int operand_stack_size)
 {
     Frame frame = *(Frame*)malloc(sizeof(Frame) + (sizeof(LocalVariable) * local_variables_size));
     frame.operand_stack = *(Stack*)malloc(sizeof(Stack));
     frame.method_name_index = method_name_index;
     frame.operand_stack.max_size = operand_stack_size;
-    return frame;
+    frame.operand_stack.size = 0;
+    push(thread->vm_stack, &frame);
 }
 
-Thread create_thread(u4 pc, int vm_stack_size, int c_stack_size)
+Thread create_thread(int vm_stack_size, int c_stack_size)
 {
-    Thread thread = { pc, malloc(sizeof(Stack) * vm_stack_size), malloc(sizeof(Stack) * c_stack_size) };
+    Thread thread = { 0, malloc(sizeof(Stack) * vm_stack_size), malloc(sizeof(Stack) * c_stack_size) };
     return thread;
 }
 

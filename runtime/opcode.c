@@ -532,15 +532,15 @@ void exec(Operator operator, u1 *code, Thread *thread, Frame *param)
     operator(code, thread, param);
 }
 
-_Noreturn void invoke_method(MethodInfo method)
+void invoke_method(MethodInfo method)
 {
     CodeAttribute code = get_method_code(method);
-    Thread thread = create_thread(0, 100, 100);
-    Frame frame = create_frame(method.name_index, code.max_locals, code.max_stack);
+    Thread thread = create_thread(100, 100);
+    create_vm_frame(&thread, method.name_index, code.max_locals, code.max_stack);
     int i = 0;
+    Frame *frame = pop(thread.vm_stack);
     do {
-        exec(instructions[read_code(code.code, &thread)], code.code, &thread, &frame);
-        // 明天把Step 改到这.
+        exec(instructions[read_code(code.code, &thread)], code.code, &thread, frame);
         i++;
     } while (i < 100);
 }
