@@ -28,7 +28,7 @@ int is_full(Stack *stack)
     return stack->size >= stack->max_size;
 }
 
-int push(Stack *stack, void *value)
+int push_stack(Stack *stack, void *value)
 {
     if (is_full(stack)) return 0;
     if (NULL == stack->head)
@@ -41,7 +41,6 @@ int push(Stack *stack, void *value)
     }
     else
     {
-
         Entry next = *(Entry*) malloc(sizeof(Entry));
         next.value = value;
         next.next = NULL;
@@ -57,7 +56,7 @@ int push(Stack *stack, void *value)
 
 int push_int(Stack *stack, int value)
 {
-    return push(stack, (void *) value);
+    return push_stack(stack, (void *) value);
 }
 
 int push_float(Stack *stack, float value)
@@ -81,7 +80,7 @@ int empty(Stack *stack)
     return stack->size == 0 || NULL == stack || NULL == stack->tail;
 }
 
-void* pop(Stack *stack)
+void* pop_stack(Stack *stack)
 {
     if (empty(stack)) return NULL;
     void* value = (void *) stack->tail->value;
@@ -93,7 +92,7 @@ void* pop(Stack *stack)
 
 int pop_int(Stack *stack)
 {
-    return (int) pop(stack);
+    return (int) pop_stack(stack);
 }
 
 float pop_float(Stack *stack)

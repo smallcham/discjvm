@@ -93,11 +93,11 @@ void aload(u1 *code, Thread *thread, Frame *frame) {}
 void iload_0(u1 *code, Thread *thread, Frame *frame) {}
 void iload_1(u1 *code, Thread *thread, Frame *frame) {
     step_pc_1(thread);
-    push_int(&frame->operand_stack, frame->local_variables[1].value);
+    push_int(&frame->operand_stack, frame->local_variables[1]);
 }
 void iload_2(u1 *code, Thread *thread, Frame *frame) {
     step_pc_1(thread);
-    push_int(&frame->operand_stack, frame->local_variables[2].value);
+    push_int(&frame->operand_stack, frame->local_variables[2]);
 }
 void iload_3(u1 *code, Thread *thread, Frame *frame) {}
 void lload_0(u1 *code, Thread *thread, Frame *frame) {}
@@ -132,11 +132,11 @@ void astore(u1 *code, Thread *thread, Frame *frame) {}
 void istore_0(u1 *code, Thread *thread, Frame *frame) {}
 void istore_1(u1 *code, Thread *thread, Frame *frame) {
     step_pc_1(thread);
-    frame->local_variables[1].value = pop_int(&frame->operand_stack);
+    frame->local_variables[1] = pop_int(&frame->operand_stack);
 }
 void istore_2(u1 *code, Thread *thread, Frame *frame) {
     step_pc_1(thread);
-    frame->local_variables[2].value = pop_int(&frame->operand_stack);
+    frame->local_variables[2] = pop_int(&frame->operand_stack);
 }
 void istore_3(u1 *code, Thread *thread, Frame *frame) {}
 void lstore_0(u1 *code, Thread *thread, Frame *frame) {}
@@ -212,7 +212,7 @@ void lor(u1 *code, Thread *thread, Frame *frame) {}
 void ixor(u1 *code, Thread *thread, Frame *frame) {}
 void lxor(u1 *code, Thread *thread, Frame *frame) {}
 void iinc(u1 *code, Thread *thread, Frame *frame) {
-    frame->local_variables[step_pc_and_read_code(code, thread)].value += step_pc_and_read_code(code, thread);
+    frame->local_variables[step_pc_and_read_code(code, thread)] += step_pc_and_read_code(code, thread);
     step_pc_1(thread);
 }
 void i2l(u1 *code, Thread *thread, Frame *frame) {}
@@ -536,11 +536,9 @@ void invoke_method(MethodInfo method)
 {
     CodeAttribute code = get_method_code(method);
     Thread thread = create_thread(100, 100);
-    create_vm_frame(&thread, method.name_index, code.max_locals, code.max_stack);
-    int i = 0;
-    Frame *frame = pop(thread.vm_stack);
+    Frame *frame = create_vm_frame(method.name_index, code.max_locals, code.max_stack);
+    push_stack(thread.vm_stack, &frame);
     do {
         exec(instructions[read_code(code.code, &thread)], code.code, &thread, frame);
-        i++;
-    } while (i < 100);
+    } while (thread.pc < 20);
 }
