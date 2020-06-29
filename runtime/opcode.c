@@ -25,6 +25,21 @@ void step_pc_1(Thread *thread)
     thread->pc ++;
 }
 
+u4 step_pc_no_submit(Thread *thread, u4 offset)
+{
+    return thread->pc + offset;
+}
+
+u4 step_pc_1_no_submit(Thread *thread)
+{
+    return step_pc_no_submit(thread, 1);
+}
+
+u4 step_pc_2_no_submit(Thread *thread)
+{
+    return step_pc_no_submit(thread, 2);
+}
+
 int step_pc_1_read_pc(Thread *thread)
 {
     step_pc_1(thread);
@@ -52,6 +67,21 @@ u1 read_code_and_step_pc1(u1 *code, Thread *thread)
     u1 op_code = read_code(code, thread);
     step_pc_1(thread);
     return op_code;
+}
+
+u1 step_pc1_and_read_code_no_submit(u1 *code, Thread *thread)
+{
+    return code[step_pc_1_no_submit(thread)];
+}
+
+u1 step_pc2_and_read_code_no_submit(u1 *code, Thread *thread)
+{
+    return code[step_pc_2_no_submit(thread)];
+}
+
+u1 step_pc_and_read_code_no_submit(u1 *code, Thread *thread, u4 offset)
+{
+    return code[step_pc_no_submit(thread, offset)];
 }
 
 u1 step_pc1_and_read_code(u1 *code, Thread *thread)
@@ -208,7 +238,7 @@ void ddiv(u1 *code, Thread *thread, Frame *frame) {}
 void irem(u1 *code, Thread *thread, Frame *frame) {}
 void lrem(u1 *code, Thread *thread, Frame *frame) {}
 void frem(u1 *code, Thread *thread, Frame *frame) {}
-void drem(u1 *code, Thread *thread, Frame *frame) {}
+void j_drem(u1 *code, Thread *thread, Frame *frame) {}
 void ineg(u1 *code, Thread *thread, Frame *frame) {}
 void lneg(u1 *code, Thread *thread, Frame *frame) {}
 void fneg(u1 *code, Thread *thread, Frame *frame) {}
@@ -226,7 +256,9 @@ void lor(u1 *code, Thread *thread, Frame *frame) {}
 void ixor(u1 *code, Thread *thread, Frame *frame) {}
 void lxor(u1 *code, Thread *thread, Frame *frame) {}
 void iinc(u1 *code, Thread *thread, Frame *frame) {
-    frame->local_variables[step_pc1_and_read_code(code, thread)] += step_pc1_and_read_code(code, thread);
+    u4 index = step_pc1_and_read_code(code, thread);
+    u4 increment =  step_pc1_and_read_code(code, thread);
+    frame->local_variables[index] += increment;
     step_pc_1(thread);
 }
 void i2l(u1 *code, Thread *thread, Frame *frame) {}
@@ -258,9 +290,9 @@ void ifle(u1 *code, Thread *thread, Frame *frame) {}
 void if_icmpeq(u1 *code, Thread *thread, Frame *frame) {
     int value2 = pop_int(&(frame->operand_stack));
     int value1 = pop_int(&(frame->operand_stack));
-    u1 branch1 = step_pc1_and_read_code(code, thread);
-    u1 branch2 = step_pc1_and_read_code(code, thread);
-    thread->pc = (value1 == value2) ? step_pc_and_read_pc(thread, (branch1 << 8) | branch2) : step_pc_1_read_pc(thread);
+    u1 branch1 = step_pc1_and_read_code_no_submit(code, thread);
+    u1 branch2 = step_pc2_and_read_code_no_submit(code, thread);
+    thread->pc = (value1 == value2) ? step_pc_and_read_pc(thread, (branch1 << 8) | branch2) : step_pc_and_read_pc(thread, 3);
 }
 void if_icmpne(u1 *code, Thread *thread, Frame *frame) {}
 void if_icmplt(u1 *code, Thread *thread, Frame *frame) {}
@@ -268,16 +300,17 @@ void if_icmpge(u1 *code, Thread *thread, Frame *frame) {}
 void if_icmpgt(u1 *code, Thread *thread, Frame *frame) {
     int value2 = pop_int(&(frame->operand_stack));
     int value1 = pop_int(&(frame->operand_stack));
-    u1 branch1 = step_pc1_and_read_code(code, thread);
-    u1 branch2 = step_pc1_and_read_code(code, thread);
-    thread->pc = (value1 > value2) ? step_pc_and_read_pc(thread, (short)((branch1 << 8) | branch2)) : step_pc_1_read_pc(thread);
+    u1 branch1 = step_pc1_and_read_code_no_submit(code, thread);
+    u1 branch2 = step_pc2_and_read_code_no_submit(code, thread);
+    // 如果条件成立，则将程序计数器pc前移分支1、2计算得出的offset偏移量， 否则将程pc前移3步（分别为 - 1：前移指令、2：分支一指令、3：分支二指令）
+    thread->pc = (value1 > value2) ? step_pc_and_read_pc(thread, (short)((branch1 << 8) | branch2)) : step_pc_and_read_pc(thread, 3);
 }
 void if_icmple(u1 *code, Thread *thread, Frame *frame) {}
 void if_acmpeq(u1 *code, Thread *thread, Frame *frame) {}
 void if_acmpne(u1 *code, Thread *thread, Frame *frame) {}
 void j_goto(u1 *code, Thread *thread, Frame *frame) {
-    u1 branch1 = step_pc1_and_read_code(code, thread);
-    u1 branch2 = step_pc1_and_read_code(code, thread);
+    u1 branch1 = step_pc1_and_read_code_no_submit(code, thread);
+    u1 branch2 = step_pc2_and_read_code_no_submit(code, thread);
     thread->pc = step_pc_and_read_pc(thread, (short)((branch1 << 8) | branch2));
 }
 void jsr(u1 *code, Thread *thread, Frame *frame) {}
@@ -290,7 +323,8 @@ void freturn(u1 *code, Thread *thread, Frame *frame) {}
 void dreturn(u1 *code, Thread *thread, Frame *frame) {}
 void areturn(u1 *code, Thread *thread, Frame *frame) {}
 void j_return(u1 *code, Thread *thread, Frame *frame) {
-    printf("SUM: %d", frame->local_variables[1]);
+    printf("SUM: %d\n", frame->local_variables[1]);
+    pop_stack(thread->vm_stack);
 }
 void getstatic(u1 *code, Thread *thread, Frame *frame) {}
 void putstatic(u1 *code, Thread *thread, Frame *frame) {}
@@ -448,7 +482,7 @@ void init_instructions()
     instructions[0x70] = irem;
     instructions[0x71] = lrem;
     instructions[0x72] = frem;
-    instructions[0x73] = drem;
+    instructions[0x73] = j_drem;
     instructions[0x74] = ineg;
     instructions[0x75] = lneg;
     instructions[0x76] = fneg;
@@ -561,10 +595,9 @@ void invoke_method(MethodInfo method)
 {
     CodeAttribute code = get_method_code(method);
     Thread thread = create_thread(100, 100);
-    Frame *frame = create_vm_frame(method.name_index, code.max_locals, code.max_stack);
-    push_stack(thread.vm_stack, frame);
+    create_vm_frame(&thread, method.name_index, code.max_locals, code.max_stack);
     do {
-        printf("%#x\n", read_code(code.code, &thread));
+        Frame *frame = get_stack(thread.vm_stack);
         exec(instructions[read_code(code.code, &thread)], code.code, &thread, frame);
-    } while (thread.pc <= 20);
+    } while (!empty_stack(thread.vm_stack));
 }

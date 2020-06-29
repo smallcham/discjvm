@@ -97,19 +97,25 @@ int push_double(Stack *stack, double value)
     return push_long(stack, (long) value);
 }
 
-int empty(Stack *stack)
+int empty_stack(Stack *stack)
 {
-    return stack->size == 0 || NULL == stack || NULL == stack->tail;
+    return NULL == stack || stack->size == 0 || NULL == stack->tail;
 }
 
 void* pop_stack(Stack *stack)
 {
-    if (empty(stack)) return NULL;
+    if (empty_stack(stack)) return NULL;
     void* value = (void *) stack->tail->value;
     stack->tail = (Entry *) stack->tail->prev;
     stack->size--;
     if (stack->size == 0) stack->head = NULL;
     return value;
+}
+
+void* get_stack(Stack *stack)
+{
+    if (empty_stack(stack)) return NULL;
+    return (void *) stack->tail->value;
 }
 
 int pop_int(Stack *stack)
@@ -126,7 +132,7 @@ long pop_long(Stack *stack)
 {
     int higher = pop_int(stack);
     int lower = pop_int(stack);
-    return ((higher << 32) | lower);
+    return (((long)higher << 32) | lower);
 }
 
 double pop_double(Stack *stack)

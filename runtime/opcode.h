@@ -8,6 +8,6 @@
 #include "../model/class.h"
 
 void init_instructions();
-_Noreturn void invoke_method(MethodInfo method);
+void invoke_method(MethodInfo method);
 
 #endif //DISCJVM_OPCODE_H
