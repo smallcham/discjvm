@@ -23,6 +23,26 @@ typedef struct {
     Entry *tail;
 } Stack;
 
+Stack create_stack(int max_size)
+{
+    Stack stack = *(Stack*)malloc(sizeof(Stack));
+    stack.size = 0;
+    stack.max_size = max_size;
+    stack.head = NULL;
+    stack.tail = NULL;
+    return stack;
+}
+
+Stack *create_pstack(int max_size)
+{
+    Stack *stack = (Stack*)malloc(sizeof(Stack));
+    stack->size = 0;
+    stack->max_size = max_size;
+    stack->head = NULL;
+    stack->tail = NULL;
+    return stack;
+}
+
 int is_full(Stack *stack)
 {
     return stack->size >= stack->max_size;
@@ -51,12 +71,14 @@ int push_stack(Stack *stack, void *value)
         stack->tail = (Entry *) stack->tail->next;
     }
     stack->size ++;
-    return 1;
+    return 0;
 }
 
 int push_int(Stack *stack, int value)
 {
-    return push_stack(stack, (void *) value);
+    int *temp = malloc(sizeof(int));
+    *temp = value;
+    return push_stack(stack, temp);
 }
 
 int push_float(Stack *stack, float value)
@@ -92,7 +114,7 @@ void* pop_stack(Stack *stack)
 
 int pop_int(Stack *stack)
 {
-    return (int) pop_stack(stack);
+    return *(int*) pop_stack(stack);
 }
 
 float pop_float(Stack *stack)

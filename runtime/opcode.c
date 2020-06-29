@@ -9,6 +9,17 @@
 
 typedef void (*Operator)(u1 *code, Thread *, Frame *);
 
+void step_pc(Thread *thread, int offset)
+{
+    thread->pc += offset;
+}
+
+int step_pc_and_read_pc(Thread *thread, int offset)
+{
+    thread->pc += offset;
+    return thread->pc;
+}
+
 void step_pc_1(Thread *thread)
 {
     thread->pc ++;
@@ -36,14 +47,14 @@ u1 read_code(u1 *code, Thread *thread)
     return code[thread->pc];
 }
 
-u1 read_code_and_step_pc(u1 *code, Thread *thread)
+u1 read_code_and_step_pc1(u1 *code, Thread *thread)
 {
     u1 op_code = read_code(code, thread);
     step_pc_1(thread);
     return op_code;
 }
 
-u1 step_pc_and_read_code(u1 *code, Thread *thread)
+u1 step_pc1_and_read_code(u1 *code, Thread *thread)
 {
     step_pc_1(thread);
     u1 op_code = read_code(code, thread);
@@ -57,15 +68,15 @@ void aconst_null(u1 *code, Thread *thread, Frame *frame) {}
 void iconst_m1(u1 *code, Thread *thread, Frame *frame) {}
 void iconst_0(u1 *code, Thread *thread, Frame *frame) {
     step_pc_1(thread);
-    push_int(&frame->operand_stack, 0);
+    push_int(&(frame->operand_stack), 0);
 }
 void iconst_1(u1 *code, Thread *thread, Frame *frame) {
     step_pc_1(thread);
-    push_int(&frame->operand_stack, 1);
+    push_int(&(frame->operand_stack), 1);
 }
 void iconst_2(u1 *code, Thread *thread, Frame *frame) {
     step_pc_1(thread);
-    push_int(&frame->operand_stack, 2);
+    push_int(&(frame->operand_stack), 2);
 }
 void iconst_3(u1 *code, Thread *thread, Frame *frame) {}
 void iconst_4(u1 *code, Thread *thread, Frame *frame) {}
@@ -78,7 +89,7 @@ void fconst_2(u1 *code, Thread *thread, Frame *frame) {}
 void dconst_0(u1 *code, Thread *thread, Frame *frame) {}
 void dconst_1(u1 *code, Thread *thread, Frame *frame) {}
 void bipush(u1 *code, Thread *thread, Frame *frame) {
-    push_int(&frame->operand_stack, step_pc_and_read_code(code, thread));
+    push_int(&(frame->operand_stack), step_pc1_and_read_code(code, thread));
     step_pc_1(thread);
 }
 void sipush(u1 *code, Thread *thread, Frame *frame) {}
@@ -90,14 +101,17 @@ void lload(u1 *code, Thread *thread, Frame *frame) {}
 void fload(u1 *code, Thread *thread, Frame *frame) {}
 void dload(u1 *code, Thread *thread, Frame *frame) {}
 void aload(u1 *code, Thread *thread, Frame *frame) {}
-void iload_0(u1 *code, Thread *thread, Frame *frame) {}
+void iload_0(u1 *code, Thread *thread, Frame *frame) {
+    step_pc_1(thread);
+    push_int(&(frame->operand_stack), frame->local_variables[0]);
+}
 void iload_1(u1 *code, Thread *thread, Frame *frame) {
     step_pc_1(thread);
-    push_int(&frame->operand_stack, frame->local_variables[1]);
+    push_int(&(frame->operand_stack), frame->local_variables[1]);
 }
 void iload_2(u1 *code, Thread *thread, Frame *frame) {
     step_pc_1(thread);
-    push_int(&frame->operand_stack, frame->local_variables[2]);
+    push_int(&(frame->operand_stack), frame->local_variables[2]);
 }
 void iload_3(u1 *code, Thread *thread, Frame *frame) {}
 void lload_0(u1 *code, Thread *thread, Frame *frame) {}
@@ -132,11 +146,11 @@ void astore(u1 *code, Thread *thread, Frame *frame) {}
 void istore_0(u1 *code, Thread *thread, Frame *frame) {}
 void istore_1(u1 *code, Thread *thread, Frame *frame) {
     step_pc_1(thread);
-    frame->local_variables[1] = pop_int(&frame->operand_stack);
+    frame->local_variables[1] = pop_int(&(frame->operand_stack));
 }
 void istore_2(u1 *code, Thread *thread, Frame *frame) {
     step_pc_1(thread);
-    frame->local_variables[2] = pop_int(&frame->operand_stack);
+    frame->local_variables[2] = pop_int(&(frame->operand_stack));
 }
 void istore_3(u1 *code, Thread *thread, Frame *frame) {}
 void lstore_0(u1 *code, Thread *thread, Frame *frame) {}
@@ -163,7 +177,7 @@ void aastore(u1 *code, Thread *thread, Frame *frame) {}
 void bastore(u1 *code, Thread *thread, Frame *frame) {}
 void castore(u1 *code, Thread *thread, Frame *frame) {}
 void sastore(u1 *code, Thread *thread, Frame *frame) {}
-void op_pop(u1 *code, Thread *thread, Frame *frame) {}
+void j_pop(u1 *code, Thread *thread, Frame *frame) {}
 void pop2(u1 *code, Thread *thread, Frame *frame) {}
 void dup(u1 *code, Thread *thread, Frame *frame) {}
 void dup_x1(u1 *code, Thread *thread, Frame *frame) {}
@@ -174,7 +188,7 @@ void dup2_x2(u1 *code, Thread *thread, Frame *frame) {}
 void swap(u1 *code, Thread *thread, Frame *frame) {}
 void iadd(u1 *code, Thread *thread, Frame *frame) {
     step_pc_1(thread);
-    push_int(&frame->operand_stack, pop_int(&frame->operand_stack) + pop_int(&frame->operand_stack));
+    push_int(&(frame->operand_stack), pop_int(&(frame->operand_stack)) + pop_int(&(frame->operand_stack)));
 }
 void ladd(u1 *code, Thread *thread, Frame *frame) {}
 void fadd(u1 *code, Thread *thread, Frame *frame) {}
@@ -188,7 +202,7 @@ void lmul(u1 *code, Thread *thread, Frame *frame) {}
 void fmul(u1 *code, Thread *thread, Frame *frame) {}
 void dmul(u1 *code, Thread *thread, Frame *frame) {}
 void idiv(u1 *code, Thread *thread, Frame *frame) {}
-void op_ldiv(u1 *code, Thread *thread, Frame *frame) {}
+void j_ldiv(u1 *code, Thread *thread, Frame *frame) {}
 void fdiv(u1 *code, Thread *thread, Frame *frame) {}
 void ddiv(u1 *code, Thread *thread, Frame *frame) {}
 void irem(u1 *code, Thread *thread, Frame *frame) {}
@@ -212,7 +226,7 @@ void lor(u1 *code, Thread *thread, Frame *frame) {}
 void ixor(u1 *code, Thread *thread, Frame *frame) {}
 void lxor(u1 *code, Thread *thread, Frame *frame) {}
 void iinc(u1 *code, Thread *thread, Frame *frame) {
-    frame->local_variables[step_pc_and_read_code(code, thread)] += step_pc_and_read_code(code, thread);
+    frame->local_variables[step_pc1_and_read_code(code, thread)] += step_pc1_and_read_code(code, thread);
     step_pc_1(thread);
 }
 void i2l(u1 *code, Thread *thread, Frame *frame) {}
@@ -242,20 +256,29 @@ void ifge(u1 *code, Thread *thread, Frame *frame) {}
 void ifgt(u1 *code, Thread *thread, Frame *frame) {}
 void ifle(u1 *code, Thread *thread, Frame *frame) {}
 void if_icmpeq(u1 *code, Thread *thread, Frame *frame) {
-    int value1 = pop_int(&frame->operand_stack);
-    int value2 = pop_int(&frame->operand_stack);
-    u1 branch = step_pc_and_read_code(code, thread);
-    thread->pc = (value1 == value2) ? branch : step_pc_1_read_pc(thread);
+    int value2 = pop_int(&(frame->operand_stack));
+    int value1 = pop_int(&(frame->operand_stack));
+    u1 branch1 = step_pc1_and_read_code(code, thread);
+    u1 branch2 = step_pc1_and_read_code(code, thread);
+    thread->pc = (value1 == value2) ? step_pc_and_read_pc(thread, (branch1 << 8) | branch2) : step_pc_1_read_pc(thread);
 }
 void if_icmpne(u1 *code, Thread *thread, Frame *frame) {}
 void if_icmplt(u1 *code, Thread *thread, Frame *frame) {}
 void if_icmpge(u1 *code, Thread *thread, Frame *frame) {}
-void if_icmpgt(u1 *code, Thread *thread, Frame *frame) {}
+void if_icmpgt(u1 *code, Thread *thread, Frame *frame) {
+    int value2 = pop_int(&(frame->operand_stack));
+    int value1 = pop_int(&(frame->operand_stack));
+    u1 branch1 = step_pc1_and_read_code(code, thread);
+    u1 branch2 = step_pc1_and_read_code(code, thread);
+    thread->pc = (value1 > value2) ? step_pc_and_read_pc(thread, (short)((branch1 << 8) | branch2)) : step_pc_1_read_pc(thread);
+}
 void if_icmple(u1 *code, Thread *thread, Frame *frame) {}
 void if_acmpeq(u1 *code, Thread *thread, Frame *frame) {}
 void if_acmpne(u1 *code, Thread *thread, Frame *frame) {}
-void op_goto(u1 *code, Thread *thread, Frame *frame) {
-    thread->pc = step_pc_and_read_code(code, thread);
+void j_goto(u1 *code, Thread *thread, Frame *frame) {
+    u1 branch1 = step_pc1_and_read_code(code, thread);
+    u1 branch2 = step_pc1_and_read_code(code, thread);
+    thread->pc = step_pc_and_read_pc(thread, (short)((branch1 << 8) | branch2));
 }
 void jsr(u1 *code, Thread *thread, Frame *frame) {}
 void ret(u1 *code, Thread *thread, Frame *frame) {}
@@ -266,7 +289,9 @@ void lreturn(u1 *code, Thread *thread, Frame *frame) {}
 void freturn(u1 *code, Thread *thread, Frame *frame) {}
 void dreturn(u1 *code, Thread *thread, Frame *frame) {}
 void areturn(u1 *code, Thread *thread, Frame *frame) {}
-void op_return(u1 *code, Thread *thread, Frame *frame) {}
+void j_return(u1 *code, Thread *thread, Frame *frame) {
+    printf("SUM: %d", frame->local_variables[1]);
+}
 void getstatic(u1 *code, Thread *thread, Frame *frame) {}
 void putstatic(u1 *code, Thread *thread, Frame *frame) {}
 void getfield(u1 *code, Thread *thread, Frame *frame) {}
@@ -393,7 +418,7 @@ void init_instructions()
     instructions[0x56] = sastore;
 
     //Stack
-    instructions[0x57] = op_pop;
+    instructions[0x57] = j_pop;
     instructions[0x58] = pop2;
     instructions[0x59] = dup;
     instructions[0x5a] = dup_x1;
@@ -417,7 +442,7 @@ void init_instructions()
     instructions[0x6a] = fmul;
     instructions[0x6b] = dmul;
     instructions[0x6c] = idiv;
-    instructions[0x6d] = op_ldiv;
+    instructions[0x6d] = j_ldiv;
     instructions[0x6e] = fdiv;
     instructions[0x6f] = ddiv;
     instructions[0x70] = irem;
@@ -481,7 +506,7 @@ void init_instructions()
     instructions[0xa6] = if_acmpne;
 
     //Control
-    instructions[0xa7] = op_goto;
+    instructions[0xa7] = j_goto;
     instructions[0xa8] = jsr;
     instructions[0xa9] = ret;
     instructions[0xaa] = tableswitch;
@@ -491,7 +516,7 @@ void init_instructions()
     instructions[0xae] = freturn;
     instructions[0xaf] = dreturn;
     instructions[0xb0] = areturn;
-    instructions[0xb1] = op_return;
+    instructions[0xb1] = j_return;
 
     //References
     instructions[0xb2] = getstatic;
@@ -537,8 +562,9 @@ void invoke_method(MethodInfo method)
     CodeAttribute code = get_method_code(method);
     Thread thread = create_thread(100, 100);
     Frame *frame = create_vm_frame(method.name_index, code.max_locals, code.max_stack);
-    push_stack(thread.vm_stack, &frame);
+    push_stack(thread.vm_stack, frame);
     do {
+        printf("%#x\n", read_code(code.code, &thread));
         exec(instructions[read_code(code.code, &thread)], code.code, &thread, frame);
-    } while (thread.pc < 20);
+    } while (thread.pc <= 20);
 }
