@@ -108,28 +108,80 @@ void iconst_2(u1 *code, Thread *thread, Frame *frame) {
     step_pc_1(thread);
     push_int(&(frame->operand_stack), 2);
 }
-void iconst_3(u1 *code, Thread *thread, Frame *frame) {}
-void iconst_4(u1 *code, Thread *thread, Frame *frame) {}
-void iconst_5(u1 *code, Thread *thread, Frame *frame) {}
-void lconst_0(u1 *code, Thread *thread, Frame *frame) {}
-void lconst_1(u1 *code, Thread *thread, Frame *frame) {}
-void fconst_0(u1 *code, Thread *thread, Frame *frame) {}
-void fconst_1(u1 *code, Thread *thread, Frame *frame) {}
-void fconst_2(u1 *code, Thread *thread, Frame *frame) {}
-void dconst_0(u1 *code, Thread *thread, Frame *frame) {}
-void dconst_1(u1 *code, Thread *thread, Frame *frame) {}
+void iconst_3(u1 *code, Thread *thread, Frame *frame) {
+    step_pc_1(thread);
+    push_int(&(frame->operand_stack), 3);
+}
+void iconst_4(u1 *code, Thread *thread, Frame *frame) {
+    step_pc_1(thread);
+    push_int(&(frame->operand_stack), 4);
+}
+void iconst_5(u1 *code, Thread *thread, Frame *frame) {
+    step_pc_1(thread);
+    push_int(&(frame->operand_stack), 5);
+}
+void lconst_0(u1 *code, Thread *thread, Frame *frame) {
+    step_pc_1(thread);
+    push_long(&(frame->operand_stack), 0);
+}
+void lconst_1(u1 *code, Thread *thread, Frame *frame) {
+    step_pc_1(thread);
+    push_long(&(frame->operand_stack), 1);
+}
+void fconst_0(u1 *code, Thread *thread, Frame *frame) {
+    step_pc_1(thread);
+    push_float(&(frame->operand_stack), 0);
+}
+void fconst_1(u1 *code, Thread *thread, Frame *frame) {
+    step_pc_1(thread);
+    push_float(&(frame->operand_stack), 1);
+}
+void fconst_2(u1 *code, Thread *thread, Frame *frame) {
+    step_pc_1(thread);
+    push_float(&(frame->operand_stack), 2);
+}
+void dconst_0(u1 *code, Thread *thread, Frame *frame) {
+    step_pc_1(thread);
+    push_double(&(frame->operand_stack), 0);
+}
+void dconst_1(u1 *code, Thread *thread, Frame *frame) {
+    step_pc_1(thread);
+    push_float(&(frame->operand_stack), 1);
+}
 void bipush(u1 *code, Thread *thread, Frame *frame) {
     push_int(&(frame->operand_stack), step_pc1_and_read_code(code, thread));
     step_pc_1(thread);
 }
-void sipush(u1 *code, Thread *thread, Frame *frame) {}
+void sipush(u1 *code, Thread *thread, Frame *frame) {
+    u1 byte2 = step_pc1_and_read_code(code, thread);
+    u1 byte1 = step_pc1_and_read_code(code, thread);
+    short value = (byte1 << 8) | byte2;
+    push_int(&(frame->operand_stack), (int)value);
+    step_pc_1(thread);
+}
 void ldc(u1 *code, Thread *thread, Frame *frame) {}
 void ldc_w(u1 *code, Thread *thread, Frame *frame) {}
 void ldc2_w(u1 *code, Thread *thread, Frame *frame) {}
-void iload(u1 *code, Thread *thread, Frame *frame) {}
-void lload(u1 *code, Thread *thread, Frame *frame) {}
-void fload(u1 *code, Thread *thread, Frame *frame) {}
-void dload(u1 *code, Thread *thread, Frame *frame) {}
+void iload(u1 *code, Thread *thread, Frame *frame) {
+    push_int(&(frame->operand_stack), frame->local_variables[step_pc1_and_read_code(code, thread)]);
+    step_pc_1(thread);
+}
+void lload(u1 *code, Thread *thread, Frame *frame) {
+    u1 index = step_pc1_and_read_code(code, thread);
+    push_int(&(frame->operand_stack), frame->local_variables[index + 1]);
+    push_int(&(frame->operand_stack), frame->local_variables[index]);
+    step_pc_1(thread);
+}
+void fload(u1 *code, Thread *thread, Frame *frame) {
+    push_float(&(frame->operand_stack), frame->local_variables[step_pc1_and_read_code(code, thread)]);
+    step_pc_1(thread);
+}
+void dload(u1 *code, Thread *thread, Frame *frame) {
+    u1 index = step_pc1_and_read_code(code, thread);
+    push_int(&(frame->operand_stack), frame->local_variables[index + 1]);
+    push_int(&(frame->operand_stack), frame->local_variables[index]);
+    step_pc_1(thread);
+}
 void aload(u1 *code, Thread *thread, Frame *frame) {}
 void iload_0(u1 *code, Thread *thread, Frame *frame) {
     step_pc_1(thread);
@@ -143,19 +195,66 @@ void iload_2(u1 *code, Thread *thread, Frame *frame) {
     step_pc_1(thread);
     push_int(&(frame->operand_stack), frame->local_variables[2]);
 }
-void iload_3(u1 *code, Thread *thread, Frame *frame) {}
-void lload_0(u1 *code, Thread *thread, Frame *frame) {}
-void lload_1(u1 *code, Thread *thread, Frame *frame) {}
-void lload_2(u1 *code, Thread *thread, Frame *frame) {}
-void lload_3(u1 *code, Thread *thread, Frame *frame) {}
-void fload_0(u1 *code, Thread *thread, Frame *frame) {}
-void fload_1(u1 *code, Thread *thread, Frame *frame) {}
-void fload_2(u1 *code, Thread *thread, Frame *frame) {}
-void fload_3(u1 *code, Thread *thread, Frame *frame) {}
-void dload_0(u1 *code, Thread *thread, Frame *frame) {}
-void dload_1(u1 *code, Thread *thread, Frame *frame) {}
-void dload_2(u1 *code, Thread *thread, Frame *frame) {}
-void dload_3(u1 *code, Thread *thread, Frame *frame) {}
+void iload_3(u1 *code, Thread *thread, Frame *frame) {
+    step_pc_1(thread);
+    push_int(&(frame->operand_stack), frame->local_variables[3]);
+}
+void lload_0(u1 *code, Thread *thread, Frame *frame) {
+    push_int(&(frame->operand_stack), 0);
+    push_int(&(frame->operand_stack), 0);
+    step_pc_1(thread);
+}
+void lload_1(u1 *code, Thread *thread, Frame *frame) {
+    push_int(&(frame->operand_stack), 0);
+    push_int(&(frame->operand_stack), 1);
+    step_pc_1(thread);
+}
+void lload_2(u1 *code, Thread *thread, Frame *frame) {
+    push_int(&(frame->operand_stack), 0);
+    push_int(&(frame->operand_stack), 2);
+    step_pc_1(thread);
+}
+void lload_3(u1 *code, Thread *thread, Frame *frame) {
+    push_int(&(frame->operand_stack), 0);
+    push_int(&(frame->operand_stack), 3);
+    step_pc_1(thread);
+}
+void fload_0(u1 *code, Thread *thread, Frame *frame) {
+    push_float(&(frame->operand_stack), 0);
+    step_pc_1(thread);
+}
+void fload_1(u1 *code, Thread *thread, Frame *frame) {
+    push_float(&(frame->operand_stack), 1);
+    step_pc_1(thread);
+}
+void fload_2(u1 *code, Thread *thread, Frame *frame) {
+    push_float(&(frame->operand_stack), 2);
+    step_pc_1(thread);
+}
+void fload_3(u1 *code, Thread *thread, Frame *frame) {
+    push_float(&(frame->operand_stack), 3);
+    step_pc_1(thread);
+}
+void dload_0(u1 *code, Thread *thread, Frame *frame) {
+    push_int(&(frame->operand_stack), 0);
+    push_int(&(frame->operand_stack), 0);
+    step_pc_1(thread);
+}
+void dload_1(u1 *code, Thread *thread, Frame *frame) {
+    push_int(&(frame->operand_stack), 0);
+    push_int(&(frame->operand_stack), 0);
+    step_pc_1(thread);
+}
+void dload_2(u1 *code, Thread *thread, Frame *frame) {
+    push_int(&(frame->operand_stack), 0);
+    push_int(&(frame->operand_stack), 2);
+    step_pc_1(thread);
+}
+void dload_3(u1 *code, Thread *thread, Frame *frame) {
+    push_int(&(frame->operand_stack), 0);
+    push_int(&(frame->operand_stack), 3);
+    step_pc_1(thread);
+}
 void aload_0(u1 *code, Thread *thread, Frame *frame) {}
 void aload_1(u1 *code, Thread *thread, Frame *frame) {}
 void aload_2(u1 *code, Thread *thread, Frame *frame) {}
@@ -175,18 +274,37 @@ void dstore(u1 *code, Thread *thread, Frame *frame) {}
 void astore(u1 *code, Thread *thread, Frame *frame) {}
 void istore_0(u1 *code, Thread *thread, Frame *frame) {}
 void istore_1(u1 *code, Thread *thread, Frame *frame) {
-    step_pc_1(thread);
     frame->local_variables[1] = pop_int(&(frame->operand_stack));
+    step_pc_1(thread);
 }
 void istore_2(u1 *code, Thread *thread, Frame *frame) {
-    step_pc_1(thread);
     frame->local_variables[2] = pop_int(&(frame->operand_stack));
+    step_pc_1(thread);
 }
-void istore_3(u1 *code, Thread *thread, Frame *frame) {}
-void lstore_0(u1 *code, Thread *thread, Frame *frame) {}
-void lstore_1(u1 *code, Thread *thread, Frame *frame) {}
-void lstore_2(u1 *code, Thread *thread, Frame *frame) {}
-void lstore_3(u1 *code, Thread *thread, Frame *frame) {}
+void istore_3(u1 *code, Thread *thread, Frame *frame) {
+    frame->local_variables[3] = pop_int(&(frame->operand_stack));
+    step_pc_1(thread);
+}
+void lstore_0(u1 *code, Thread *thread, Frame *frame) {
+    frame->local_variables[0] = pop_int(&(frame->operand_stack));
+    frame->local_variables[1] = pop_int(&(frame->operand_stack));
+    step_pc_1(thread);
+}
+void lstore_1(u1 *code, Thread *thread, Frame *frame) {
+    frame->local_variables[1] = pop_int(&(frame->operand_stack));
+    frame->local_variables[2] = pop_int(&(frame->operand_stack));
+    step_pc_1(thread);
+}
+void lstore_2(u1 *code, Thread *thread, Frame *frame) {
+    frame->local_variables[2] = pop_int(&(frame->operand_stack));
+    frame->local_variables[3] = pop_int(&(frame->operand_stack));
+    step_pc_1(thread);
+}
+void lstore_3(u1 *code, Thread *thread, Frame *frame) {
+    frame->local_variables[3] = pop_int(&(frame->operand_stack));
+    frame->local_variables[4] = pop_int(&(frame->operand_stack));
+    step_pc_1(thread);
+}
 void fstore_0(u1 *code, Thread *thread, Frame *frame) {}
 void fstore_1(u1 *code, Thread *thread, Frame *frame) {}
 void fstore_2(u1 *code, Thread *thread, Frame *frame) {}
@@ -317,13 +435,24 @@ void jsr(u1 *code, Thread *thread, Frame *frame) {}
 void ret(u1 *code, Thread *thread, Frame *frame) {}
 void tableswitch(u1 *code, Thread *thread, Frame *frame) {}
 void lookupswitch(u1 *code, Thread *thread, Frame *frame) {}
-void ireturn(u1 *code, Thread *thread, Frame *frame) {}
-void lreturn(u1 *code, Thread *thread, Frame *frame) {}
-void freturn(u1 *code, Thread *thread, Frame *frame) {}
-void dreturn(u1 *code, Thread *thread, Frame *frame) {}
+int ireturn(u1 *code, Thread *thread, Frame *frame) {
+    pop_stack(thread->vm_stack);
+    return pop_int(&(frame->operand_stack));
+}
+long lreturn(u1 *code, Thread *thread, Frame *frame) {
+    pop_stack(thread->vm_stack);
+    return pop_long(&(frame->operand_stack));
+}
+float freturn(u1 *code, Thread *thread, Frame *frame) {
+    pop_stack(thread->vm_stack);
+    return pop_float(&(frame->operand_stack));
+}
+double dreturn(u1 *code, Thread *thread, Frame *frame) {
+    pop_stack(thread->vm_stack);
+    return pop_double(&(frame->operand_stack));
+}
 void areturn(u1 *code, Thread *thread, Frame *frame) {}
 void j_return(u1 *code, Thread *thread, Frame *frame) {
-    printf("SUM: %d\n", frame->local_variables[1]);
     pop_stack(thread->vm_stack);
 }
 void getstatic(u1 *code, Thread *thread, Frame *frame) {}
