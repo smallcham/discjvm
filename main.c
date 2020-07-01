@@ -15,7 +15,7 @@ int main(int argc, char *argv[]) {
     sprintf(path, "%s/../test/class/Hello.class", buf);
     ClassFile class = load_class(path);
     invoke_method(get_main_method(class));
-//    print_class_info(class);
+    print_class_info(class);
 
 //    printf("1: %s\n", argv[0]);
 //    printf("2: %s", argv[1]);

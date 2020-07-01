@@ -23,6 +23,16 @@ typedef struct {
     Entry *tail;
 } Stack;
 
+Stack create_unlimit_stack()
+{
+    Stack stack = *(Stack*)malloc(sizeof(Stack));
+    stack.size = 0;
+    stack.max_size = -1;
+    stack.head = NULL;
+    stack.tail = NULL;
+    return stack;
+}
+
 Stack create_stack(int max_size)
 {
     Stack stack = *(Stack*)malloc(sizeof(Stack));
@@ -45,7 +55,7 @@ Stack *create_pstack(int max_size)
 
 int is_full(Stack *stack)
 {
-    return stack->size >= stack->max_size;
+    return stack->max_size == -1 ? 0 : stack->size >= stack->max_size;
 }
 
 int push_stack(Stack *stack, void *value)
@@ -116,6 +126,16 @@ void* get_stack(Stack *stack)
 {
     if (empty_stack(stack)) return NULL;
     return (void *) stack->tail->value;
+}
+
+char* find_in_stack(Stack *stack, char* value)
+{
+    while (!empty_stack(stack))
+    {
+        char* temp = pop_stack(stack);
+        if (strcmp(temp, value)) return temp;
+    }
+    return NULL;
 }
 
 int pop_int(Stack *stack)
