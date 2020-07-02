@@ -2,7 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include "../model/class.h"
+#include "class_loader.h"
 #include "../util/endian.h"
+#include "../runtime/opcode.h"
 
 ClassFile load_class(char *path) {
     FILE *fp = fopen(path, "rb");
@@ -298,6 +300,7 @@ ClassFile load_class(char *path) {
             }
         }
     }
+    link_class(&class);
     return class;
 }
 
@@ -446,14 +449,20 @@ void print_class_info(ClassFile class)
     }
 }
 
-MethodInfo get_main_method(ClassFile class) {
+MethodInfo find_method(ClassFile class, char *name) {
     for (int i = 0; i < class.methods_count; i++)
     {
         CONSTANT_Utf8_info method_info = *(CONSTANT_Utf8_info*)class.constant_pool[class.methods[i].name_index].info;
         char method_name[method_info.length + 1];
         memcpy(method_name, method_info.bytes, method_info.length);
         method_name[method_info.length] = '\0';
-        if (strcmp(method_name, "main") == 0) return class.methods[i];
+        if (strcmp(method_name, name) == 0) return class.methods[i];
     }
     return *(MethodInfo*) NULL;
+}
+
+void link_class(ClassFile *class)
+{
+    invoke_method(class, find_method(*class, "<clinit>"));
+    invoke_method(class, find_method(*class, "<init>"));
 }

@@ -7,8 +7,9 @@
 #include "../model/class.h"
 
 ClassFile load_class(char *path);
+void link_class(ClassFile *class);
 void print_class_info(ClassFile class);
 CodeAttribute get_method_code(MethodInfo method);
-MethodInfo get_main_method(ClassFile class);
+MethodInfo find_method(ClassFile class, char *name);
 
 #endif //DISCJVM_CLASS_LOADER_H

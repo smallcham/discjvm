@@ -453,10 +453,18 @@ double dreturn(u1 *code, Thread *thread, Frame *frame) {
 }
 void areturn(u1 *code, Thread *thread, Frame *frame) {}
 void j_return(u1 *code, Thread *thread, Frame *frame) {
+    printf("%d", frame->local_variables[1]);
     pop_stack(thread->vm_stack);
 }
 void getstatic(u1 *code, Thread *thread, Frame *frame) {}
-void putstatic(u1 *code, Thread *thread, Frame *frame) {}
+void putstatic(u1 *code, Thread *thread, Frame *frame) {
+    u1 byte1 = step_pc1_and_read_code(code, thread);
+    u1 byte2 = step_pc1_and_read_code(code, thread);
+    CONSTANT_Fieldref_info field_ref_info = *(CONSTANT_Fieldref_info*)frame->constant_pool[(byte1 << 8) | byte2].info;
+    CONSTANT_Class_info class_info = *(CONSTANT_Class_info*)frame->constant_pool[field_ref_info.class_index].info;
+    CONSTANT_NameAndType_info name_and_type_info = *(CONSTANT_NameAndType_info*)frame->constant_pool[field_ref_info.name_and_type_index].info;
+    printf("%d, %d, %d\n", field_ref_info.tag, field_ref_info.class_index, field_ref_info.name_and_type_index);
+}
 void getfield(u1 *code, Thread *thread, Frame *frame) {}
 void putfield(u1 *code, Thread *thread, Frame *frame) {}
 void invokevirtual(u1 *code, Thread *thread, Frame *frame) {}
@@ -720,11 +728,11 @@ void exec(Operator operator, u1 *code, Thread *thread, Frame *param)
     operator(code, thread, param);
 }
 
-void invoke_method(MethodInfo method)
+void invoke_method(ClassFile *class, MethodInfo method)
 {
     CodeAttribute code = get_method_code(method);
     Thread thread = create_thread(100, 100);
-    create_vm_frame(&thread, method.name_index, code.max_locals, code.max_stack);
+    create_vm_frame(&thread, class->constant_pool, code.max_locals, code.max_stack);
     do {
         Frame *frame = get_stack(thread.vm_stack);
         exec(instructions[read_code(code.code, &thread)], code.code, &thread, frame);

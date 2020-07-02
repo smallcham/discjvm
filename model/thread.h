@@ -6,11 +6,12 @@
 #define DISCJVM_THREAD_H
 
 #include "base_type.h"
+#include "class.h"
 #include "data_struct.h"
 
 typedef struct {
     Stack operand_stack;
-    u2 method_name_index;
+    ConstantPool *constant_pool;
     u4 local_variables[];
 } Frame;
 
@@ -20,11 +21,11 @@ typedef struct {
     Stack *c_stack;
 } Thread;
 
-Frame *create_vm_frame(Thread* thread, u2 method_name_index, int local_variables_size, int operand_stack_size)
+Frame *create_vm_frame(Thread* thread, ConstantPool *constant_pool, int local_variables_size, int operand_stack_size)
 {
     Frame *frame = (Frame*)malloc(sizeof(Frame) + (sizeof(u4) * local_variables_size));
     frame->operand_stack = create_stack(operand_stack_size);
-    frame->method_name_index = method_name_index;
+    frame->constant_pool = constant_pool;
     push_stack(thread->vm_stack, frame);
     return frame;
 }
