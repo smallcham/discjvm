@@ -7,7 +7,7 @@
 
 #include "base_type.h"
 #include "class.h"
-#include "data_struct.h"
+#include "stack.h"
 
 typedef struct {
     Stack operand_stack;

@@ -2,8 +2,8 @@
 // Created by wangzhanzhi on 2020/6/26.
 //
 
-#ifndef DISCJVM_DATA_STRUCT_H
-#define DISCJVM_DATA_STRUCT_H
+#ifndef DISCJVM_STACK_H
+#define DISCJVM_STACK_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -160,4 +160,4 @@ double pop_double(Stack *stack)
     return (double) pop_long(stack);
 }
 
-#endif //DISCJVM_DATA_STRUCT_H
+#endif //DISCJVM_STACK_H

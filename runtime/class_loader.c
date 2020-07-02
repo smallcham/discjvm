@@ -2,20 +2,23 @@
 #include <stdlib.h>
 #include <string.h>
 #include "../model/class.h"
+#include "../model/hash_map.h"
 #include "class_loader.h"
 #include "../util/endian.h"
 #include "../runtime/opcode.h"
 
-ClassFile load_class(char *path) {
-    FILE *fp = fopen(path, "rb");
-    ClassFile class;
+u1* load_from_file(char *path);
 
-    fseek(fp, 0, SEEK_END);
-    long f_size = ftell(fp);
-    u1 *class_file = (u1 *) malloc(f_size * sizeof(u1));
-    rewind(fp);
-    fread(class_file, f_size, 1, fp);
-    fclose(fp);
+ClassFile load_class(char *full_class_name) {
+    ClassFile class;
+    HashMap *map = create_map();
+    put_map(map, "aaa", "a1");
+    put_map(map, "bbb", "b1");
+    put_map(map, "ccc", "c1");
+
+    void *a = get_map(map, "ccc1");
+
+    u1 *class_file = load_from_file(full_class_name);
     class.magic = l2b_4(*(u4 *) class_file);
     class_file += sizeof(u4);
     class.minor_version = l2b_2(*(u2 *) class_file);
@@ -302,6 +305,18 @@ ClassFile load_class(char *path) {
     }
     link_class(&class);
     return class;
+}
+
+u1* load_from_file(char *path)
+{
+    FILE *fp = fopen(path, "rb");
+    fseek(fp, 0, SEEK_END);
+    long f_size = ftell(fp);
+    u1 *class_file = (u1 *) malloc(f_size * sizeof(u1));
+    rewind(fp);
+    fread(class_file, f_size, 1, fp);
+    fclose(fp);
+    return class_file;
 }
 
 CodeAttribute get_method_code(MethodInfo method) {

@@ -3,7 +3,7 @@
 //
 
 
-#include "../model/data_struct.h"
+#include "../model/stack.h"
 #include "../model/thread.h"
 #include "../runtime/class_loader.h"
 
