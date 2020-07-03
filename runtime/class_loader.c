@@ -16,7 +16,12 @@ ClassFile load_class(char *full_class_name) {
     put_map(map, "bbb", "b1");
     put_map(map, "ccc", "c1");
 
-    void *a = get_map(map, "ccc1");
+    void *a = get_map(map, "ccc");
+    printf("%s", a);
+    char *b = del_map(map, "bbb");
+    printf("%s", b);
+    b = get_map(map, "bbb");
+    printf("%s", b);
 
     u1 *class_file = load_from_file(full_class_name);
     class.magic = l2b_4(*(u4 *) class_file);

@@ -15,8 +15,9 @@ typedef struct HashEntry {
 
 typedef struct {
     int size;
-    int max_size;
-    float cap;
+    int capacity;
+    int threshold;
+    float factor;
     HashEntry entries[];
 } HashMap;
 
@@ -32,14 +33,15 @@ int hash_code(char *key)
 
 static int entry_size = sizeof(HashEntry);
 static int map_size = sizeof(HashMap);
-HashMap *create_map_manual(int max_size, float cap)
+HashMap *create_map_manual(int capacity, float factor)
 {
 
-    HashMap *map = (HashMap*)malloc(map_size + entry_size * max_size);
+    HashMap *map = (HashMap*)malloc(map_size + entry_size * capacity);
     map->size = 0;
-    map->max_size = max_size;
-    map->cap = cap;
-    for (int i = 0; i < max_size; i++) {
+    map->capacity = capacity;
+    map->factor = factor;
+    map->threshold = entry_size * factor;
+    for (int i = 0; i < capacity; i++) {
         map->entries[i].key = NULL;
         map->entries[i].value = NULL;
         map->entries[i].next = NULL;
@@ -47,9 +49,9 @@ HashMap *create_map_manual(int max_size, float cap)
     return map;
 }
 
-HashMap *create_map_by_size(int max_size)
+HashMap *create_map_by_size(int capacity)
 {
-    return create_map_manual(max_size, 0.7f);
+    return create_map_manual(capacity, 0.75f);
 }
 
 HashMap *create_map()
@@ -59,7 +61,11 @@ HashMap *create_map()
 
 void resize_map(HashMap *map)
 {
-
+    HashMap *new_map = create_map_by_size(map->size * 2);
+    HashEntry *head = map->entries;
+    HashEntry *pre = head;
+    HashEntry *entry = head->next;
+    for (int i = 0; i < map->capacity; i++) {}
 }
 
 HashEntry *create_entry(char *key, void *value)
@@ -73,8 +79,8 @@ HashEntry *create_entry(char *key, void *value)
 
 void put_map(HashMap *map, char *key, void *value)
 {
-    if ((map->size + 1) >= (int)(map->max_size * map->cap)) resize_map(map);
-    int index = hash_code(key) % map->max_size;
+    if ((map->size + 1) >= map->threshold) resize_map(map);
+    int index = hash_code(key) % map->capacity;
     HashEntry entry = map->entries[index];
     if (NULL == entry.key) {
         HashEntry *new_entry = create_entry(key, value);
@@ -98,7 +104,7 @@ void put_map(HashMap *map, char *key, void *value)
 
 void *get_map(HashMap *map, char *key)
 {
-    int index = hash_code(key) % map->max_size;
+    int index = hash_code(key) % map->capacity;
     HashEntry entry = map->entries[index];
     while (NULL != entry.key) {
         if (strcmp(entry.key, key) == 0) return entry.value;
@@ -109,12 +115,13 @@ void *get_map(HashMap *map, char *key)
 
 void *del_map(HashMap *map, char *key)
 {
-    int index = hash_code(key) % map->max_size;
+    int index = hash_code(key) % map->capacity;
     HashEntry *entry = &map->entries[index];
     HashEntry *pre = entry;
     while (NULL != entry->key) {
         if (strcmp(entry->key, key) == 0) {
             pre->next = entry->next;
+            entry = pre->next;
             return entry->value;
         }
         pre = entry;
