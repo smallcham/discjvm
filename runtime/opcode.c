@@ -736,5 +736,5 @@ void invoke_method(ClassFile *class, MethodInfo method)
     do {
         Frame *frame = get_stack(thread.vm_stack);
         exec(instructions[read_code(code.code, &thread)], code.code, &thread, frame);
-    } while (!empty_stack(thread.vm_stack));
+    } while (!is_empty_stack(thread.vm_stack));
 }

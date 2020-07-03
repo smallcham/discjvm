@@ -107,16 +107,17 @@ int push_double(Stack *stack, double value)
     return push_long(stack, (long) value);
 }
 
-int empty_stack(Stack *stack)
+int is_empty_stack(Stack *stack)
 {
     return NULL == stack || stack->size == 0 || NULL == stack->tail;
 }
 
 void* pop_stack(Stack *stack)
 {
-    if (empty_stack(stack)) return NULL;
+    if (is_empty_stack(stack)) return NULL;
     void* value = (void *) stack->tail->value;
     stack->tail = (Entry *) stack->tail->prev;
+    free(stack->tail->prev);
     stack->size--;
     if (stack->size == 0) stack->head = NULL;
     return value;
@@ -124,13 +125,13 @@ void* pop_stack(Stack *stack)
 
 void* get_stack(Stack *stack)
 {
-    if (empty_stack(stack)) return NULL;
+    if (is_empty_stack(stack)) return NULL;
     return (void *) stack->tail->value;
 }
 
 char* find_in_stack(Stack *stack, char* value)
 {
-    while (!empty_stack(stack))
+    while (!is_empty_stack(stack))
     {
         char* temp = pop_stack(stack);
         if (strcmp(temp, value)) return temp;

@@ -11,18 +11,6 @@ u1* load_from_file(char *path);
 
 ClassFile load_class(char *full_class_name) {
     ClassFile class;
-    HashMap *map = create_map();
-    put_map(map, "aaa", "a1");
-    put_map(map, "bbb", "b1");
-    put_map(map, "ccc", "c1");
-
-    void *a = get_map(map, "ccc");
-    printf("%s", a);
-    char *b = del_map(map, "bbb");
-    printf("%s", b);
-    b = get_map(map, "bbb");
-    printf("%s", b);
-
     u1 *class_file = load_from_file(full_class_name);
     class.magic = l2b_4(*(u4 *) class_file);
     class_file += sizeof(u4);
