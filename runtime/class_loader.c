@@ -5,6 +5,7 @@
 #include "../model/hash_map.h"
 #include "class_loader.h"
 #include "../util/endian.h"
+#include "../util/string_util.h"
 #include "../runtime/opcode.h"
 
 u1* load_from_file(char *path);
@@ -296,12 +297,15 @@ ClassFile load_class(char *full_class_name) {
             }
         }
     }
-    link_class(&class);
+//    link_class(&class);
     return class;
 }
 
 u1* load_from_file(char *path)
 {
+    if (end_with(path, ".jar") == 1) {
+
+    }
     FILE *fp = fopen(path, "rb");
     fseek(fp, 0, SEEK_END);
     long f_size = ftell(fp);

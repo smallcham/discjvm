@@ -2,12 +2,19 @@
 #include <zconf.h>
 #include "runtime/class_loader.h"
 #include "runtime/opcode.h"
+#include <dlfcn.h>
+
 
 int main(int argc, char *argv[]) {
     char buf[80];
     char path[200];
     getcwd(buf, sizeof(buf));
     init_instructions();
+
+//    void* handle = dlopen("/usr/lib/jvm/java-11-openjdk-amd64/lib/libattach.so", RTLD_LAZY);
+//    u1 (*defineModules)(char *name);
+//    defineModules = dlsym(handle, "defineModules");
+//    defineModules("java/lang/Object");
 
 //    for (int i = 0; i < argc; i++) {
 //        printf("%s", argv[i]);
