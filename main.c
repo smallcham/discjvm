@@ -41,13 +41,31 @@ int main(int argc, char *argv[]) {
 //    }
 //    gzclose(infile);
 //    fclose(outfile);
-
-    FILE *infile = fopen("/home/wangzhanzhi/winshare/java.base.jmod", "rb");
-
+    FILE *infile = fopen("/usr/lib/jvm/java-11-openjdk-amd64/jmods/java.base.jmod", "rb");
     ZipFile zip_file = *(ZipFile*)malloc(sizeof(ZipFile));
-    fread(&zip_file, sizeof(zip_file), 1, infile);
-    printf("%#x\n", l2b_4(zip_file.head));
-    printf("%#x\n", l2b_4(zip_file.magic));
+    fread(&zip_file, 18, 1, infile);
+    printf("Head: %X\n", l2b_4(zip_file.head));
+    printf("Magic: %X\n", l2b_4(zip_file.magic));
+    printf("VersionLimit: %X\n", l2b_2(zip_file.version_limit));
+    printf("BitFlag: %X\n", l2b_2(zip_file.bit_flag));
+    printf("CompressMethod: %X\n", l2b_2(zip_file.compress_method));
+    printf("LastMTime: %X\n", l2b_2(zip_file.last_m_time));
+    printf("LastMDate: %X\n", l2b_2(zip_file.last_m_date));
+    int offset = 18;
+    fseek(infile, offset, SEEK_SET);
+    ZipEntry entry = *(ZipEntry*)malloc(sizeof(ZipEntry));
+    fread(&entry, 16, 1, infile);
+    offset += 16;
+    printf("Crc32: %x\n", l2b_4(entry.crc_32));
+    printf("CSize: %x\n", l2b_4(entry.compressed_size));
+    printf("UCSize: %x\n", l2b_4(entry.uncompress_size));
+    printf("FileNameLen: %x\n", l2b_2(entry.file_name_len));
+    printf("ExtraLen: %x\n", l2b_2(entry.extra_len));
+    entry.file_name = (u1*)malloc((sizeof(u1) * entry.file_name_len) + 1);
+    fseek(infile, offset, SEEK_SET);
+    fread(entry.file_name, entry.file_name_len, 1, infile);
+    entry.file_name[entry.file_name_len] = '\0';
+    printf("FileName: %s\n", entry.file_name);
     return 0;
 
 //    print_class_info(class);
