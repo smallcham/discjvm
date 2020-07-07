@@ -7,7 +7,7 @@
 
 #include "class.h"
 
-typedef struct {
+typedef struct __attribute__ ((__packed__)) {
     u4 crc_32;
     u4 compressed_size;
     u4 uncompress_size;
@@ -16,15 +16,15 @@ typedef struct {
     u1 *file_name;
 } ZipEntry;
 
-typedef struct {
-    u4 head;
-    u4 magic;
-    u2 version_limit;
-    u2 bit_flag;
+typedef struct __attribute__ ((__packed__)) {
+    u4 magic; //504b 0304
+    u2 create_version;
+    u2 reader_version;
+    u2 general_flag;
     u2 compress_method;
     u2 last_m_time;
     u2 last_m_date;
     ZipEntry entry;
-} ZipFile;
+} ZipHead;
 
 #endif //DISCJVM_ZIP_ENTRY_H
