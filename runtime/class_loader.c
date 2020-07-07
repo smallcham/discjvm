@@ -7,6 +7,7 @@
 #include "../util/endian.h"
 #include "../util/string_util.h"
 #include "../runtime/opcode.h"
+#include "../runtime/jmod.h"
 
 u1* load_from_file(char *path);
 
@@ -303,17 +304,18 @@ ClassFile load_class(char *full_class_name) {
 
 u1* load_from_file(char *path)
 {
-    if (end_with(path, ".jar") == 1) {
-
+    if (start_with(path, "java/lang/") == 1) {
+        return load_from_jmod(path);
+    } else {
+        FILE *fp = fopen(path, "rb");
+        fseek(fp, 0, SEEK_END);
+        long f_size = ftell(fp);
+        u1 *class_file = (u1 *) malloc(f_size * sizeof(u1));
+        rewind(fp);
+        fread(class_file, f_size, 1, fp);
+        fclose(fp);
+        return class_file;
     }
-    FILE *fp = fopen(path, "rb");
-    fseek(fp, 0, SEEK_END);
-    long f_size = ftell(fp);
-    u1 *class_file = (u1 *) malloc(f_size * sizeof(u1));
-    rewind(fp);
-    fread(class_file, f_size, 1, fp);
-    fclose(fp);
-    return class_file;
 }
 
 CodeAttribute get_method_code(MethodInfo method) {

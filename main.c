@@ -25,9 +25,9 @@ int main(int argc, char *argv[]) {
 //    for (int i = 0; i < argc; i++) {
 //        printf("%s", argv[i]);
 //    }
-//    sprintf(path, "%s/../test/class/Hello.class", buf);
-//    ClassFile class = load_class(path);
-//    invoke_method(&class, find_method(class, "main"));
+    sprintf(path, "%s/../test/class/Hello.class", buf);
+    ClassFile class = load_class(path);
+    invoke_method(&class, find_method(class, "main"));
 
 //    gzFile infile = gzopen("/home/wangzhanzhi/winshare/java.base.jmod", "rb");
 //    FILE *outfile = fopen("/home/wangzhanzhi/test1/111", "wb");
@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
 //    fclose(outfile);
 //    FILE *infile = fopen("/home/wangzhanzhi/work_temp/DedeCMS-V5.7-UTF8-SP2/uploads/include/data/base_dic_full.zip", "rb");
 //    FILE *infile = fopen("/usr/lib/jvm/java-1.11.0-openjdk-amd64/jmods/java.base.jmod", "rb");
-////    FILE *infile = fopen("/usr/lib/jvm/java-11-openjdk-amd64/jmods/java.base.jmod", "rb");
+//    FILE *infile = fopen("/usr/lib/jvm/java-11-openjdk-amd64/jmods/java.base.jmod", "rb");
 //    ZipHead zip_head = *(ZipHead*)malloc(sizeof(ZipHead));
 //    int offset = 4;
 //    fseek(infile, offset, SEEK_SET);
@@ -134,26 +134,56 @@ int main(int argc, char *argv[]) {
 //    printf("%d\n", index);
 //    printf("%s\n", buf);
 
-    int err = 0;
-    zip_t *z = zip_open("/home/wangzhanzhi/work_temp/foo.zip", 0, &err);
+//    int err = 0;
+//    zip_t *z = zip_open("/home/wangzhanzhi/work_temp/foo.zip", 0, &err);
+//
+//    //Search for the file of given name
+//    const char *name = "file.txt";
+//    struct zip_stat st;
+//    zip_stat_init(&st);
+//    zip_stat(z, name, 0, &st);
+//
+//    //Alloc memory for its uncompressed contents
+//    char *contents = malloc(st.size);
+//
+//    //Read the compressed file
+//    zip_file_t *f = zip_fopen(z, "file.txt", 0);
+//    zip_fread(f, contents, st.size);
+//    zip_fclose(f);
+//
+//    //And close the archive
+//    zip_close(z);
+//    printf("%s\n", contents);
 
-    //Search for the file of given name
-    const char *name = "file.txt";
-    struct zip_stat st;
-    zip_stat_init(&st);
-    zip_stat(z, name, 0, &st);
 
-    //Alloc memory for its uncompressed contents
-    char *contents = malloc(st.size);
-
-    //Read the compressed file
-    zip_file_t *f = zip_fopen(z, "file.txt", 0);
-    zip_fread(f, contents, st.size);
-    zip_fclose(f);
-
-    //And close the archive
-    zip_close(z);
-    printf("%s\n", contents);
+//    zip_error_t err;
+//    char *file_path = "/usr/lib/jvm/java-1.11.0-openjdk-amd64/jmods/java.base.jmod";
+//    FILE *fp = fopen(file_path, "rb");
+//    fseek(fp, 0, SEEK_END);
+//    long f_size = ftell(fp);
+//    fclose(fp);
+//    int offset = 4;
+//    zip_error_t error;
+//    zip_source_t *source = zip_source_file_create(file_path, offset, f_size - offset, &error);
+//    zip_t *z = zip_open_from_source(source, 0, &err);
+//
+//    //Search for the file of given name
+//    const char *name = "classes/com/sun/crypto/provider/AESCrypt.class";
+//    struct zip_stat st;
+//    zip_stat_init(&st);
+//    zip_stat(z, name, 0, &st);
+//
+//    //Alloc memory for its uncompressed contents
+//    char *contents = malloc(st.size);
+//
+//    //Read the compressed file
+//    zip_file_t *f = zip_fopen(z, name, 0);
+//    zip_fread(f, contents, st.size);
+//    zip_fclose(f);
+//
+//    //And close the archive
+//    zip_close(z);
+//    printf("%s\n", contents);
 
 //    print_class_info(class);
 
