@@ -2,12 +2,9 @@
 // Created by wangzhanzhi on 2020/6/25.
 //
 
+#include "opcode.h"
 
-#include "../model/stack.h"
-#include "../model/thread.h"
-#include "../runtime/class_loader.h"
-
-typedef void (*Operator)(u1 *code, Thread *, Frame *);
+typedef void (*Operator)(SerialHeap *heap, u1 *code, Thread *, Frame *);
 
 void step_pc(Thread *thread, int offset)
 {
@@ -91,331 +88,331 @@ u1 step_pc1_and_read_code(u1 *code, Thread *thread)
     return op_code;
 }
 
-void nop(u1 *code, Thread *thread, Frame *frame) {
+void nop(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     step_pc_1(thread);
 }
-void aconst_null(u1 *code, Thread *thread, Frame *frame) {}
-void iconst_m1(u1 *code, Thread *thread, Frame *frame) {}
-void iconst_0(u1 *code, Thread *thread, Frame *frame) {
+void aconst_null(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void iconst_m1(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void iconst_0(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     step_pc_1(thread);
     push_int(&(frame->operand_stack), 0);
 }
-void iconst_1(u1 *code, Thread *thread, Frame *frame) {
+void iconst_1(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     step_pc_1(thread);
     push_int(&(frame->operand_stack), 1);
 }
-void iconst_2(u1 *code, Thread *thread, Frame *frame) {
+void iconst_2(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     step_pc_1(thread);
     push_int(&(frame->operand_stack), 2);
 }
-void iconst_3(u1 *code, Thread *thread, Frame *frame) {
+void iconst_3(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     step_pc_1(thread);
     push_int(&(frame->operand_stack), 3);
 }
-void iconst_4(u1 *code, Thread *thread, Frame *frame) {
+void iconst_4(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     step_pc_1(thread);
     push_int(&(frame->operand_stack), 4);
 }
-void iconst_5(u1 *code, Thread *thread, Frame *frame) {
+void iconst_5(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     step_pc_1(thread);
     push_int(&(frame->operand_stack), 5);
 }
-void lconst_0(u1 *code, Thread *thread, Frame *frame) {
+void lconst_0(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     step_pc_1(thread);
     push_long(&(frame->operand_stack), 0);
 }
-void lconst_1(u1 *code, Thread *thread, Frame *frame) {
+void lconst_1(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     step_pc_1(thread);
     push_long(&(frame->operand_stack), 1);
 }
-void fconst_0(u1 *code, Thread *thread, Frame *frame) {
+void fconst_0(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     step_pc_1(thread);
     push_float(&(frame->operand_stack), 0);
 }
-void fconst_1(u1 *code, Thread *thread, Frame *frame) {
+void fconst_1(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     step_pc_1(thread);
     push_float(&(frame->operand_stack), 1);
 }
-void fconst_2(u1 *code, Thread *thread, Frame *frame) {
+void fconst_2(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     step_pc_1(thread);
     push_float(&(frame->operand_stack), 2);
 }
-void dconst_0(u1 *code, Thread *thread, Frame *frame) {
+void dconst_0(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     step_pc_1(thread);
     push_double(&(frame->operand_stack), 0);
 }
-void dconst_1(u1 *code, Thread *thread, Frame *frame) {
+void dconst_1(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     step_pc_1(thread);
     push_float(&(frame->operand_stack), 1);
 }
-void bipush(u1 *code, Thread *thread, Frame *frame) {
+void bipush(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     push_int(&(frame->operand_stack), step_pc1_and_read_code(code, thread));
     step_pc_1(thread);
 }
-void sipush(u1 *code, Thread *thread, Frame *frame) {
+void sipush(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     u1 byte2 = step_pc1_and_read_code(code, thread);
     u1 byte1 = step_pc1_and_read_code(code, thread);
     short value = (byte1 << 8) | byte2;
     push_int(&(frame->operand_stack), (int)value);
     step_pc_1(thread);
 }
-void ldc(u1 *code, Thread *thread, Frame *frame) {}
-void ldc_w(u1 *code, Thread *thread, Frame *frame) {}
-void ldc2_w(u1 *code, Thread *thread, Frame *frame) {}
-void iload(u1 *code, Thread *thread, Frame *frame) {
+void ldc(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void ldc_w(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void ldc2_w(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void iload(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     push_int(&(frame->operand_stack), frame->local_variables[step_pc1_and_read_code(code, thread)]);
     step_pc_1(thread);
 }
-void lload(u1 *code, Thread *thread, Frame *frame) {
+void lload(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     u1 index = step_pc1_and_read_code(code, thread);
     push_int(&(frame->operand_stack), frame->local_variables[index + 1]);
     push_int(&(frame->operand_stack), frame->local_variables[index]);
     step_pc_1(thread);
 }
-void fload(u1 *code, Thread *thread, Frame *frame) {
+void fload(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     push_float(&(frame->operand_stack), frame->local_variables[step_pc1_and_read_code(code, thread)]);
     step_pc_1(thread);
 }
-void dload(u1 *code, Thread *thread, Frame *frame) {
+void dload(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     u1 index = step_pc1_and_read_code(code, thread);
     push_int(&(frame->operand_stack), frame->local_variables[index + 1]);
     push_int(&(frame->operand_stack), frame->local_variables[index]);
     step_pc_1(thread);
 }
-void aload(u1 *code, Thread *thread, Frame *frame) {}
-void iload_0(u1 *code, Thread *thread, Frame *frame) {
+void aload(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void iload_0(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     step_pc_1(thread);
     push_int(&(frame->operand_stack), frame->local_variables[0]);
 }
-void iload_1(u1 *code, Thread *thread, Frame *frame) {
+void iload_1(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     step_pc_1(thread);
     push_int(&(frame->operand_stack), frame->local_variables[1]);
 }
-void iload_2(u1 *code, Thread *thread, Frame *frame) {
+void iload_2(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     step_pc_1(thread);
     push_int(&(frame->operand_stack), frame->local_variables[2]);
 }
-void iload_3(u1 *code, Thread *thread, Frame *frame) {
+void iload_3(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     step_pc_1(thread);
     push_int(&(frame->operand_stack), frame->local_variables[3]);
 }
-void lload_0(u1 *code, Thread *thread, Frame *frame) {
+void lload_0(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     push_int(&(frame->operand_stack), 0);
     push_int(&(frame->operand_stack), 0);
     step_pc_1(thread);
 }
-void lload_1(u1 *code, Thread *thread, Frame *frame) {
+void lload_1(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     push_int(&(frame->operand_stack), 0);
     push_int(&(frame->operand_stack), 1);
     step_pc_1(thread);
 }
-void lload_2(u1 *code, Thread *thread, Frame *frame) {
+void lload_2(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     push_int(&(frame->operand_stack), 0);
     push_int(&(frame->operand_stack), 2);
     step_pc_1(thread);
 }
-void lload_3(u1 *code, Thread *thread, Frame *frame) {
+void lload_3(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     push_int(&(frame->operand_stack), 0);
     push_int(&(frame->operand_stack), 3);
     step_pc_1(thread);
 }
-void fload_0(u1 *code, Thread *thread, Frame *frame) {
+void fload_0(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     push_float(&(frame->operand_stack), 0);
     step_pc_1(thread);
 }
-void fload_1(u1 *code, Thread *thread, Frame *frame) {
+void fload_1(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     push_float(&(frame->operand_stack), 1);
     step_pc_1(thread);
 }
-void fload_2(u1 *code, Thread *thread, Frame *frame) {
+void fload_2(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     push_float(&(frame->operand_stack), 2);
     step_pc_1(thread);
 }
-void fload_3(u1 *code, Thread *thread, Frame *frame) {
+void fload_3(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     push_float(&(frame->operand_stack), 3);
     step_pc_1(thread);
 }
-void dload_0(u1 *code, Thread *thread, Frame *frame) {
+void dload_0(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     push_int(&(frame->operand_stack), 0);
     push_int(&(frame->operand_stack), 0);
     step_pc_1(thread);
 }
-void dload_1(u1 *code, Thread *thread, Frame *frame) {
+void dload_1(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     push_int(&(frame->operand_stack), 0);
     push_int(&(frame->operand_stack), 0);
     step_pc_1(thread);
 }
-void dload_2(u1 *code, Thread *thread, Frame *frame) {
+void dload_2(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     push_int(&(frame->operand_stack), 0);
     push_int(&(frame->operand_stack), 2);
     step_pc_1(thread);
 }
-void dload_3(u1 *code, Thread *thread, Frame *frame) {
+void dload_3(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     push_int(&(frame->operand_stack), 0);
     push_int(&(frame->operand_stack), 3);
     step_pc_1(thread);
 }
-void aload_0(u1 *code, Thread *thread, Frame *frame) {}
-void aload_1(u1 *code, Thread *thread, Frame *frame) {}
-void aload_2(u1 *code, Thread *thread, Frame *frame) {}
-void aload_3(u1 *code, Thread *thread, Frame *frame) {}
-void iaload(u1 *code, Thread *thread, Frame *frame) {}
-void laload(u1 *code, Thread *thread, Frame *frame) {}
-void faload(u1 *code, Thread *thread, Frame *frame) {}
-void daload(u1 *code, Thread *thread, Frame *frame) {}
-void aaload(u1 *code, Thread *thread, Frame *frame) {}
-void baload(u1 *code, Thread *thread, Frame *frame) {}
-void caload(u1 *code, Thread *thread, Frame *frame) {}
-void saload(u1 *code, Thread *thread, Frame *frame) {}
-void istore(u1 *code, Thread *thread, Frame *frame) {}
-void lstore(u1 *code, Thread *thread, Frame *frame) {}
-void fstore(u1 *code, Thread *thread, Frame *frame) {}
-void dstore(u1 *code, Thread *thread, Frame *frame) {}
-void astore(u1 *code, Thread *thread, Frame *frame) {}
-void istore_0(u1 *code, Thread *thread, Frame *frame) {}
-void istore_1(u1 *code, Thread *thread, Frame *frame) {
+void aload_0(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void aload_1(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void aload_2(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void aload_3(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void iaload(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void laload(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void faload(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void daload(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void aaload(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void baload(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void caload(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void saload(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void istore(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void lstore(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void fstore(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void dstore(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void astore(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void istore_0(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void istore_1(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     frame->local_variables[1] = pop_int(&(frame->operand_stack));
     step_pc_1(thread);
 }
-void istore_2(u1 *code, Thread *thread, Frame *frame) {
+void istore_2(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     frame->local_variables[2] = pop_int(&(frame->operand_stack));
     step_pc_1(thread);
 }
-void istore_3(u1 *code, Thread *thread, Frame *frame) {
+void istore_3(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     frame->local_variables[3] = pop_int(&(frame->operand_stack));
     step_pc_1(thread);
 }
-void lstore_0(u1 *code, Thread *thread, Frame *frame) {
+void lstore_0(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     frame->local_variables[0] = pop_int(&(frame->operand_stack));
     frame->local_variables[1] = pop_int(&(frame->operand_stack));
     step_pc_1(thread);
 }
-void lstore_1(u1 *code, Thread *thread, Frame *frame) {
+void lstore_1(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     frame->local_variables[1] = pop_int(&(frame->operand_stack));
     frame->local_variables[2] = pop_int(&(frame->operand_stack));
     step_pc_1(thread);
 }
-void lstore_2(u1 *code, Thread *thread, Frame *frame) {
+void lstore_2(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     frame->local_variables[2] = pop_int(&(frame->operand_stack));
     frame->local_variables[3] = pop_int(&(frame->operand_stack));
     step_pc_1(thread);
 }
-void lstore_3(u1 *code, Thread *thread, Frame *frame) {
+void lstore_3(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     frame->local_variables[3] = pop_int(&(frame->operand_stack));
     frame->local_variables[4] = pop_int(&(frame->operand_stack));
     step_pc_1(thread);
 }
-void fstore_0(u1 *code, Thread *thread, Frame *frame) {}
-void fstore_1(u1 *code, Thread *thread, Frame *frame) {}
-void fstore_2(u1 *code, Thread *thread, Frame *frame) {}
-void fstore_3(u1 *code, Thread *thread, Frame *frame) {}
-void dstore_0(u1 *code, Thread *thread, Frame *frame) {}
-void dstore_1(u1 *code, Thread *thread, Frame *frame) {}
-void dstore_2(u1 *code, Thread *thread, Frame *frame) {}
-void dstore_3(u1 *code, Thread *thread, Frame *frame) {}
-void astore_0(u1 *code, Thread *thread, Frame *frame) {}
-void astore_1(u1 *code, Thread *thread, Frame *frame) {}
-void astore_2(u1 *code, Thread *thread, Frame *frame) {}
-void astore_3(u1 *code, Thread *thread, Frame *frame) {}
-void iastore(u1 *code, Thread *thread, Frame *frame) {}
-void lastore(u1 *code, Thread *thread, Frame *frame) {}
-void fastore(u1 *code, Thread *thread, Frame *frame) {}
-void dastore(u1 *code, Thread *thread, Frame *frame) {}
-void aastore(u1 *code, Thread *thread, Frame *frame) {}
-void bastore(u1 *code, Thread *thread, Frame *frame) {}
-void castore(u1 *code, Thread *thread, Frame *frame) {}
-void sastore(u1 *code, Thread *thread, Frame *frame) {}
-void j_pop(u1 *code, Thread *thread, Frame *frame) {}
-void pop2(u1 *code, Thread *thread, Frame *frame) {}
-void dup(u1 *code, Thread *thread, Frame *frame) {}
-void dup_x1(u1 *code, Thread *thread, Frame *frame) {}
-void dup_x2(u1 *code, Thread *thread, Frame *frame) {}
-void dup2(u1 *code, Thread *thread, Frame *frame) {}
-void dup2_x1(u1 *code, Thread *thread, Frame *frame) {}
-void dup2_x2(u1 *code, Thread *thread, Frame *frame) {}
-void swap(u1 *code, Thread *thread, Frame *frame) {}
-void iadd(u1 *code, Thread *thread, Frame *frame) {
+void fstore_0(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void fstore_1(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void fstore_2(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void fstore_3(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void dstore_0(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void dstore_1(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void dstore_2(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void dstore_3(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void astore_0(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void astore_1(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void astore_2(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void astore_3(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void iastore(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void lastore(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void fastore(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void dastore(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void aastore(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void bastore(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void castore(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void sastore(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void j_pop(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void pop2(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void dup(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void dup_x1(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void dup_x2(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void dup2(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void dup2_x1(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void dup2_x2(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void swap(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void iadd(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     step_pc_1(thread);
     push_int(&(frame->operand_stack), pop_int(&(frame->operand_stack)) + pop_int(&(frame->operand_stack)));
 }
-void ladd(u1 *code, Thread *thread, Frame *frame) {}
-void fadd(u1 *code, Thread *thread, Frame *frame) {}
-void dadd(u1 *code, Thread *thread, Frame *frame) {}
-void isub(u1 *code, Thread *thread, Frame *frame) {}
-void lsub(u1 *code, Thread *thread, Frame *frame) {}
-void fsub(u1 *code, Thread *thread, Frame *frame) {}
-void dsub(u1 *code, Thread *thread, Frame *frame) {}
-void imul(u1 *code, Thread *thread, Frame *frame) {}
-void lmul(u1 *code, Thread *thread, Frame *frame) {}
-void fmul(u1 *code, Thread *thread, Frame *frame) {}
-void dmul(u1 *code, Thread *thread, Frame *frame) {}
-void idiv(u1 *code, Thread *thread, Frame *frame) {}
-void j_ldiv(u1 *code, Thread *thread, Frame *frame) {}
-void fdiv(u1 *code, Thread *thread, Frame *frame) {}
-void ddiv(u1 *code, Thread *thread, Frame *frame) {}
-void irem(u1 *code, Thread *thread, Frame *frame) {}
-void lrem(u1 *code, Thread *thread, Frame *frame) {}
-void frem(u1 *code, Thread *thread, Frame *frame) {}
-void j_drem(u1 *code, Thread *thread, Frame *frame) {}
-void ineg(u1 *code, Thread *thread, Frame *frame) {}
-void lneg(u1 *code, Thread *thread, Frame *frame) {}
-void fneg(u1 *code, Thread *thread, Frame *frame) {}
-void dneg(u1 *code, Thread *thread, Frame *frame) {}
-void ishl(u1 *code, Thread *thread, Frame *frame) {}
-void lshl(u1 *code, Thread *thread, Frame *frame) {}
-void ishr(u1 *code, Thread *thread, Frame *frame) {}
-void lshr(u1 *code, Thread *thread, Frame *frame) {}
-void iushr(u1 *code, Thread *thread, Frame *frame) {}
-void lushr(u1 *code, Thread *thread, Frame *frame) {}
-void iand(u1 *code, Thread *thread, Frame *frame) {}
-void land(u1 *code, Thread *thread, Frame *frame) {}
-void ior(u1 *code, Thread *thread, Frame *frame) {}
-void lor(u1 *code, Thread *thread, Frame *frame) {}
-void ixor(u1 *code, Thread *thread, Frame *frame) {}
-void lxor(u1 *code, Thread *thread, Frame *frame) {}
-void iinc(u1 *code, Thread *thread, Frame *frame) {
+void ladd(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void fadd(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void dadd(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void isub(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void lsub(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void fsub(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void dsub(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void imul(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void lmul(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void fmul(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void dmul(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void idiv(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void j_ldiv(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void fdiv(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void ddiv(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void irem(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void lrem(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void frem(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void j_drem(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void ineg(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void lneg(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void fneg(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void dneg(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void ishl(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void lshl(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void ishr(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void lshr(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void iushr(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void lushr(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void iand(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void land(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void ior(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void lor(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void ixor(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void lxor(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void iinc(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     u4 index = step_pc1_and_read_code(code, thread);
     u4 increment =  step_pc1_and_read_code(code, thread);
     frame->local_variables[index] += increment;
     step_pc_1(thread);
 }
-void i2l(u1 *code, Thread *thread, Frame *frame) {}
-void i2f(u1 *code, Thread *thread, Frame *frame) {}
-void i2d(u1 *code, Thread *thread, Frame *frame) {}
-void l2i(u1 *code, Thread *thread, Frame *frame) {}
-void l2f(u1 *code, Thread *thread, Frame *frame) {}
-void l2d(u1 *code, Thread *thread, Frame *frame) {}
-void f2i(u1 *code, Thread *thread, Frame *frame) {}
-void f2l(u1 *code, Thread *thread, Frame *frame) {}
-void f2d(u1 *code, Thread *thread, Frame *frame) {}
-void d2i(u1 *code, Thread *thread, Frame *frame) {}
-void d2l(u1 *code, Thread *thread, Frame *frame) {}
-void d2f(u1 *code, Thread *thread, Frame *frame) {}
-void i2b(u1 *code, Thread *thread, Frame *frame) {}
-void i2c(u1 *code, Thread *thread, Frame *frame) {}
-void i2s(u1 *code, Thread *thread, Frame *frame) {}
-void lcmp(u1 *code, Thread *thread, Frame *frame) {}
-void fcmpl(u1 *code, Thread *thread, Frame *frame) {}
-void fcmpg(u1 *code, Thread *thread, Frame *frame) {}
-void dcmpl(u1 *code, Thread *thread, Frame *frame) {}
-void dcmpg(u1 *code, Thread *thread, Frame *frame) {}
-void ifeq(u1 *code, Thread *thread, Frame *frame) {}
-void ifne(u1 *code, Thread *thread, Frame *frame) {}
-void iflt(u1 *code, Thread *thread, Frame *frame) {}
-void ifge(u1 *code, Thread *thread, Frame *frame) {}
-void ifgt(u1 *code, Thread *thread, Frame *frame) {}
-void ifle(u1 *code, Thread *thread, Frame *frame) {}
-void if_icmpeq(u1 *code, Thread *thread, Frame *frame) {
+void i2l(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void i2f(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void i2d(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void l2i(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void l2f(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void l2d(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void f2i(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void f2l(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void f2d(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void d2i(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void d2l(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void d2f(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void i2b(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void i2c(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void i2s(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void lcmp(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void fcmpl(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void fcmpg(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void dcmpl(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void dcmpg(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void ifeq(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void ifne(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void iflt(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void ifge(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void ifgt(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void ifle(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void if_icmpeq(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     int value2 = pop_int(&(frame->operand_stack));
     int value1 = pop_int(&(frame->operand_stack));
     u1 branch1 = step_pc1_and_read_code_no_submit(code, thread);
     u1 branch2 = step_pc2_and_read_code_no_submit(code, thread);
     thread->pc = (value1 == value2) ? step_pc_and_read_pc(thread, (branch1 << 8) | branch2) : step_pc_and_read_pc(thread, 3);
 }
-void if_icmpne(u1 *code, Thread *thread, Frame *frame) {}
-void if_icmplt(u1 *code, Thread *thread, Frame *frame) {}
-void if_icmpge(u1 *code, Thread *thread, Frame *frame) {}
-void if_icmpgt(u1 *code, Thread *thread, Frame *frame) {
+void if_icmpne(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void if_icmplt(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void if_icmpge(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void if_icmpgt(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     int value2 = pop_int(&(frame->operand_stack));
     int value1 = pop_int(&(frame->operand_stack));
     u1 branch1 = step_pc1_and_read_code_no_submit(code, thread);
@@ -423,73 +420,74 @@ void if_icmpgt(u1 *code, Thread *thread, Frame *frame) {
     // 如果条件成立，则将程序计数器pc前移分支1、2计算得出的offset偏移量， 否则将程pc前移3步（分别为 - 1：前移指令、2：分支一指令、3：分支二指令）
     thread->pc = (value1 > value2) ? step_pc_and_read_pc(thread, (short)((branch1 << 8) | branch2)) : step_pc_and_read_pc(thread, 3);
 }
-void if_icmple(u1 *code, Thread *thread, Frame *frame) {}
-void if_acmpeq(u1 *code, Thread *thread, Frame *frame) {}
-void if_acmpne(u1 *code, Thread *thread, Frame *frame) {}
-void j_goto(u1 *code, Thread *thread, Frame *frame) {
+void if_icmple(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void if_acmpeq(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void if_acmpne(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void j_goto(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     u1 branch1 = step_pc1_and_read_code_no_submit(code, thread);
     u1 branch2 = step_pc2_and_read_code_no_submit(code, thread);
     thread->pc = step_pc_and_read_pc(thread, (short)((branch1 << 8) | branch2));
 }
-void jsr(u1 *code, Thread *thread, Frame *frame) {}
-void ret(u1 *code, Thread *thread, Frame *frame) {}
-void tableswitch(u1 *code, Thread *thread, Frame *frame) {}
-void lookupswitch(u1 *code, Thread *thread, Frame *frame) {}
-int ireturn(u1 *code, Thread *thread, Frame *frame) {
+void jsr(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void ret(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void tableswitch(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void lookupswitch(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+int ireturn(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     pop_stack(thread->vm_stack);
     return pop_int(&(frame->operand_stack));
 }
-long lreturn(u1 *code, Thread *thread, Frame *frame) {
+long lreturn(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     pop_stack(thread->vm_stack);
     return pop_long(&(frame->operand_stack));
 }
-float freturn(u1 *code, Thread *thread, Frame *frame) {
+float freturn(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     pop_stack(thread->vm_stack);
     return pop_float(&(frame->operand_stack));
 }
-double dreturn(u1 *code, Thread *thread, Frame *frame) {
+double dreturn(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     pop_stack(thread->vm_stack);
     return pop_double(&(frame->operand_stack));
 }
-void areturn(u1 *code, Thread *thread, Frame *frame) {}
-void j_return(u1 *code, Thread *thread, Frame *frame) {
+void areturn(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void j_return(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     printf("%d", frame->local_variables[1]);
     pop_stack(thread->vm_stack);
 }
-void getstatic(u1 *code, Thread *thread, Frame *frame) {}
-void putstatic(u1 *code, Thread *thread, Frame *frame) {
+void getstatic(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void putstatic(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     u1 byte1 = step_pc1_and_read_code(code, thread);
     u1 byte2 = step_pc1_and_read_code(code, thread);
     CONSTANT_Fieldref_info field_ref_info = *(CONSTANT_Fieldref_info*)frame->constant_pool[(byte1 << 8) | byte2].info;
     CONSTANT_Class_info class_info = *(CONSTANT_Class_info*)frame->constant_pool[field_ref_info.class_index].info;
     CONSTANT_NameAndType_info name_and_type_info = *(CONSTANT_NameAndType_info*)frame->constant_pool[field_ref_info.name_and_type_index].info;
+    ClassFile class = load_class(heap, frame->constant_pool[class_info.name_index].info);
     printf("%d, %d, %d\n", field_ref_info.tag, field_ref_info.class_index, field_ref_info.name_and_type_index);
 }
-void getfield(u1 *code, Thread *thread, Frame *frame) {}
-void putfield(u1 *code, Thread *thread, Frame *frame) {}
-void invokevirtual(u1 *code, Thread *thread, Frame *frame) {}
-void invokespecial(u1 *code, Thread *thread, Frame *frame) {}
-void invokestatic(u1 *code, Thread *thread, Frame *frame) {}
-void invokeinterface(u1 *code, Thread *thread, Frame *frame) {}
-void invokedynamic(u1 *code, Thread *thread, Frame *frame) {}
-void new(u1 *code, Thread *thread, Frame *frame) {}
-void newarray(u1 *code, Thread *thread, Frame *frame) {}
-void anewarray(u1 *code, Thread *thread, Frame *frame) {}
-void arraylength(u1 *code, Thread *thread, Frame *frame) {}
-void athrow(u1 *code, Thread *thread, Frame *frame) {}
-void checkcast(u1 *code, Thread *thread, Frame *frame) {}
-void instanceof(u1 *code, Thread *thread, Frame *frame) {}
-void monitorenter(u1 *code, Thread *thread, Frame *frame) {}
-void monitorexit(u1 *code, Thread *thread, Frame *frame) {}
-void wide(u1 *code, Thread *thread, Frame *frame) {}
-void multianewarray(u1 *code, Thread *thread, Frame *frame) {}
-void ifnull(u1 *code, Thread *thread, Frame *frame) {}
-void ifnonnull(u1 *code, Thread *thread, Frame *frame) {}
-void goto_w(u1 *code, Thread *thread, Frame *frame) {}
-void jsr_w(u1 *code, Thread *thread, Frame *frame) {}
-void breakpoint(u1 *code, Thread *thread, Frame *frame) {}
-void impdep1(u1 *code, Thread *thread, Frame *frame) {}
-void impdep2(u1 *code, Thread *thread, Frame *frame) {}
+void getfield(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void putfield(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void invokevirtual(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void invokespecial(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void invokestatic(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void invokeinterface(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void invokedynamic(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void new(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void newarray(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void anewarray(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void arraylength(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void athrow(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void checkcast(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void instanceof(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void monitorenter(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void monitorexit(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void wide(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void multianewarray(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void ifnull(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void ifnonnull(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void goto_w(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void jsr_w(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void breakpoint(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void impdep1(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
+void impdep2(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
 
 Operator instructions[0x100];
 
@@ -723,18 +721,18 @@ void init_instructions()
     instructions[0xff] = impdep2;
 }
 
-void exec(Operator operator, u1 *code, Thread *thread, Frame *param)
+void exec(Operator operator, SerialHeap *heap, u1 *code, Thread *thread, Frame *param)
 {
-    operator(code, thread, param);
+    operator(heap, code, thread, param);
 }
 
-void invoke_method(ClassFile *class, MethodInfo method)
+void invoke_method(SerialHeap *heap, ClassFile *class, MethodInfo method)
 {
     CodeAttribute code = get_method_code(method);
     Thread thread = create_thread(100, 100);
     create_vm_frame(&thread, class->constant_pool, code.max_locals, code.max_stack);
     do {
         Frame *frame = get_stack(thread.vm_stack);
-        exec(instructions[read_code(code.code, &thread)], code.code, &thread, frame);
+        exec(instructions[read_code(code.code, &thread)], heap, code.code, &thread, frame);
     } while (!is_empty_stack(thread.vm_stack));
 }

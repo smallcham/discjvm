@@ -4,7 +4,6 @@
 
 #ifndef DISCJVM_HASH_MAP_H
 #define DISCJVM_HASH_MAP_H
-#include <stdlib.h>
 #include <string.h>
 
 typedef struct HashEntry {

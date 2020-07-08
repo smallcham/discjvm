@@ -5,9 +5,7 @@
 #ifndef DISCJVM_THREAD_H
 #define DISCJVM_THREAD_H
 
-#include "base_type.h"
 #include "class.h"
-#include "stack.h"
 
 typedef struct {
     Stack operand_stack;

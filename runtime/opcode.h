@@ -5,9 +5,12 @@
 #ifndef DISCJVM_OPCODE_H
 #define DISCJVM_OPCODE_H
 
-#include "../model/class.h"
+#include "../model/stack.h"
+#include "../model/thread.h"
+#include "../runtime/class_loader.h"
+#include "../share/gc/serial/serial_heap.h"
 
 void init_instructions();
-void invoke_method(ClassFile *class, MethodInfo method);
+void invoke_method(SerialHeap *heap, ClassFile *class, MethodInfo method);
 
 #endif //DISCJVM_OPCODE_H

@@ -1,19 +1,14 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "../model/class.h"
-#include "../model/hash_map.h"
 #include "class_loader.h"
-#include "../util/endian.h"
-#include "../util/string_util.h"
-#include "../runtime/opcode.h"
-#include "../runtime/jmod.h"
 
-u1* load_from_file(char *path);
 
-ClassFile load_class(char *full_class_name) {
+u1* get_class_bytes(char *path);
+
+ClassFile load_class(SerialHeap *heap, char *full_class_name) {
     ClassFile class;
-    u1 *class_file = load_from_file(full_class_name);
+    ClassFile *class_from_cache = get_class_from_cache(heap->class_pool, full_class_name);
+    if (NULL != class_from_cache) return *class_from_cache;
+
+    u1 *class_file = get_class_bytes(full_class_name);
     class.magic = l2b_4(*(u4 *) class_file);
     class_file += sizeof(u4);
     class.minor_version = l2b_2(*(u2 *) class_file);
@@ -298,14 +293,15 @@ ClassFile load_class(char *full_class_name) {
             }
         }
     }
-//    link_class(&class);
+    link_class(heap, &class);
+    put_class_to_cache(heap->class_pool, class);
     return class;
 }
 
-u1* load_from_file(char *path)
+u1* get_class_bytes(char *path)
 {
-    if (start_with(path, "java/lang/") == 1) {
-        return load_from_jmod(path);
+    if (str_start_with(path, "java/lang/") == 1) {
+        return load_from_jmod("java.base.jmod", path);
     } else {
         FILE *fp = fopen(path, "rb");
         fseek(fp, 0, SEEK_END);
@@ -463,20 +459,20 @@ void print_class_info(ClassFile class)
     }
 }
 
-MethodInfo find_method(ClassFile class, char *name) {
+MethodInfo *find_method(ClassFile class, char *name) {
     for (int i = 0; i < class.methods_count; i++)
     {
         CONSTANT_Utf8_info method_info = *(CONSTANT_Utf8_info*)class.constant_pool[class.methods[i].name_index].info;
         char method_name[method_info.length + 1];
         memcpy(method_name, method_info.bytes, method_info.length);
         method_name[method_info.length] = '\0';
-        if (strcmp(method_name, name) == 0) return class.methods[i];
+        if (strcmp(method_name, name) == 0) return &class.methods[i];
     }
-    return *(MethodInfo*) NULL;
+    return NULL;
 }
 
-void link_class(ClassFile *class)
+void link_class(SerialHeap *heap, ClassFile *class)
 {
-    invoke_method(class, find_method(*class, "<clinit>"));
-    invoke_method(class, find_method(*class, "<init>"));
+    invoke_method(heap, class, *find_method(*class, "<clinit>"));
+    invoke_method(heap, class, *find_method(*class, "<init>"));
 }

@@ -7,17 +7,19 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "../model/class.h"
 #include "zip.h"
 
-u1 *load_from_jmod(char *name)
+static u1 *load_from_jmod(char *jmod_name, char *name)
 {
     char *full_name = malloc(strlen(name) + 8);
     sprintf(full_name, "classes/%s", name);
 
     zip_error_t err;
-    char *file_path = "/usr/lib/jvm/java-1.11.0-openjdk-amd64/jmods/java.base.jmod";
+    char *java_home = getenv("JAVA_HOME");
+    char *file_path = malloc(strlen(java_home) + strlen(jmod_name) + 5);
+    sprintf(file_path, "%s/jmods/%s", java_home, jmod_name);
     FILE *fp = fopen(file_path, "rb");
+    if (NULL == fp) exit(-1);
     fseek(fp, 0, SEEK_END);
     long f_size = ftell(fp);
     fclose(fp);

@@ -8,7 +8,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "base_type.h"
 
 typedef struct {
     void *value;
@@ -134,7 +133,7 @@ char* find_in_stack(Stack *stack, char* value)
     while (!is_empty_stack(stack))
     {
         char* temp = pop_stack(stack);
-        if (strcmp(temp, value)) return temp;
+        if (strcmp(temp, value) == 0) return temp;
     }
     return NULL;
 }
