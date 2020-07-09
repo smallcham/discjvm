@@ -7,6 +7,7 @@
 void start_vm(char *class_path)
 {
     SerialHeap *heap = init_gc();
+    init_instructions();
     ClassFile class = load_class(heap, class_path);
     MethodInfo *main = find_method(class, "main");
     if (NULL == main) exit(-1);

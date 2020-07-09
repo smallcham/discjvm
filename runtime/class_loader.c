@@ -4,10 +4,10 @@
 u1* get_class_bytes(char *path);
 
 ClassFile load_class(SerialHeap *heap, char *full_class_name) {
-    ClassFile class;
     ClassFile *class_from_cache = get_class_from_cache(heap->class_pool, full_class_name);
     if (NULL != class_from_cache) return *class_from_cache;
 
+    ClassFile class = *(ClassFile*)malloc(sizeof(ClassFile));
     u1 *class_file = get_class_bytes(full_class_name);
     class.magic = l2b_4(*(u4 *) class_file);
     class_file += sizeof(u4);
@@ -200,7 +200,6 @@ ClassFile load_class(SerialHeap *heap, char *full_class_name) {
                 continue;
             }
         }
-        printf("\n");
     }
     class.access_flags = l2b_2(*(u2 *) class_file);
     class_file += sizeof(u2);
@@ -293,8 +292,8 @@ ClassFile load_class(SerialHeap *heap, char *full_class_name) {
             }
         }
     }
+    put_class_to_cache(heap->class_pool, &class);
     link_class(heap, &class);
-    put_class_to_cache(heap->class_pool, class);
     return class;
 }
 

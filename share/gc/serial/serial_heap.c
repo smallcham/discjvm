@@ -26,12 +26,9 @@ void del_class_from_cache(HashMap *pool, char *class_full_name)
     del_map(&pool, class_full_name);
 }
 
-void put_class_to_cache(HashMap *pool, ClassFile class)
+void put_class_to_cache(HashMap *pool, ClassFile *class)
 {
-    CONSTANT_Class_info class_info = *(CONSTANT_Class_info*)class.constant_pool[class.this_class].info;
-    CONSTANT_Utf8_info name_info = *(CONSTANT_Utf8_info*)class.constant_pool[class_info.name_index].info;
-    char *class_name = malloc(name_info.length + 1);
-    memcpy(class_name, name_info.bytes, name_info.length);
-    class_name[name_info.length] = '\0';
-    put_map(&pool, class_name, &class);
+    CONSTANT_Class_info class_info = *(CONSTANT_Class_info*)class->constant_pool[class->this_class].info;
+    CONSTANT_Utf8_info name_info = *(CONSTANT_Utf8_info*)class->constant_pool[class_info.name_index].info;
+    put_map(&pool, name_info.bytes, class);
 }

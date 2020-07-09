@@ -460,7 +460,11 @@ void putstatic(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {
     CONSTANT_Fieldref_info field_ref_info = *(CONSTANT_Fieldref_info*)frame->constant_pool[(byte1 << 8) | byte2].info;
     CONSTANT_Class_info class_info = *(CONSTANT_Class_info*)frame->constant_pool[field_ref_info.class_index].info;
     CONSTANT_NameAndType_info name_and_type_info = *(CONSTANT_NameAndType_info*)frame->constant_pool[field_ref_info.name_and_type_index].info;
-    ClassFile class = load_class(heap, frame->constant_pool[class_info.name_index].info);
+    CONSTANT_Utf8_info class_name_info = *(CONSTANT_Utf8_info*)frame->constant_pool[class_info.name_index].info;
+//    char *class_name = malloc(class_name_info.length);
+//    memcpy(class_name, class_name_info.bytes, class_name_info.length);
+    ClassFile class = load_class(heap, class_name_info.bytes);
+    printf("%d\n", class.major_version);
     printf("%d, %d, %d\n", field_ref_info.tag, field_ref_info.class_index, field_ref_info.name_and_type_index);
 }
 void getfield(SerialHeap *heap, u1 *code, Thread *thread, Frame *frame) {}
