@@ -7,6 +7,7 @@
 #include "../util/endian.h"
 #include "../util/string_util.h"
 #include "../share/gc/serial/serial_heap.h"
+#include "../runtime/opcode.h"
 #include "../runtime/jmod.h"
 
 ClassFile load_class(SerialHeap *heap, char *full_class_name);

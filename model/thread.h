@@ -5,6 +5,7 @@
 #ifndef DISCJVM_THREAD_H
 #define DISCJVM_THREAD_H
 
+#include "stack.h"
 #include "class.h"
 
 typedef struct {
@@ -19,22 +20,8 @@ typedef struct {
     Stack *c_stack;
 } Thread;
 
-Frame *create_vm_frame(Thread* thread, ConstantPool *constant_pool, int local_variables_size, int operand_stack_size)
-{
-    Frame *frame = (Frame*)malloc(sizeof(Frame) + (sizeof(u4) * local_variables_size));
-    frame->operand_stack = create_stack(operand_stack_size);
-    frame->constant_pool = constant_pool;
-    push_stack(thread->vm_stack, frame);
-    return frame;
-}
+Frame *create_vm_frame(Thread* thread, ConstantPool *constant_pool, int local_variables_size, int operand_stack_size);
 
-Thread create_thread(int vm_stack_size, int c_stack_size)
-{
-    int len = sizeof(Stack);
-    Thread thread = { 0, malloc(len), malloc(len) };
-    thread.vm_stack = create_pstack(vm_stack_size);
-    thread.c_stack = create_pstack(c_stack_size);
-    return thread;
-}
+Thread create_thread(int vm_stack_size, int c_stack_size);
 
 #endif //DISCJVM_THREAD_H

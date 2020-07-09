@@ -1,3 +1,5 @@
+#include "endian.h"
+
 unsigned short  l2b_2(unsigned short x)
 {
     return ((x & 0x00ffu) << 8u) | ((x & 0xff00u) >> 8u);
