@@ -11,6 +11,7 @@
 #include "../share/gc/serial/serial_heap.h"
 
 void init_instructions();
+
 void invoke_method(SerialHeap *heap, ClassFile *class, MethodInfo method);
 
 #endif //DISCJVM_OPCODE_H

@@ -7,6 +7,7 @@
 #include <string.h>
 
 int str_end_with(char *source, char *pattern);
+
 int str_start_with(char *source, char *pattern);
 
 #endif //DISCJVM_STRING_UTIL_H
