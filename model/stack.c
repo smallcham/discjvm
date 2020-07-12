@@ -19,8 +19,14 @@ Stack create_stack(int max_size)
     Stack stack = *(Stack*)malloc(sizeof(Stack));
     stack.size = 0;
     stack.max_size = max_size;
-    stack.head = NULL;
-    stack.tail = NULL;
+    stack.head = malloc(sizeof(Entry));
+    stack.tail = malloc(sizeof(Entry));
+    stack.head->value = NULL;
+    stack.head->prev = NULL;
+    stack.head->next = NULL;
+    stack.tail->next = NULL;
+    stack.tail->next = NULL;
+    stack.tail->next = NULL;
     return stack;
 }
 
@@ -29,8 +35,14 @@ Stack *create_pstack(int max_size)
     Stack *stack = (Stack*)malloc(sizeof(Stack));
     stack->size = 0;
     stack->max_size = max_size;
-    stack->head = NULL;
-    stack->tail = NULL;
+    stack->head = malloc(sizeof(Entry));
+    stack->tail = malloc(sizeof(Entry));
+    stack->head->value = NULL;
+    stack->head->prev = NULL;
+    stack->head->next = NULL;
+    stack->tail->next = NULL;
+    stack->tail->next = NULL;
+    stack->tail->next = NULL;
     return stack;
 }
 
@@ -42,24 +54,22 @@ int is_full(Stack *stack)
 int push_stack(Stack *stack, void *value)
 {
     if (is_full(stack)) return 0;
-    if (NULL == stack->head)
+    if (NULL == stack->head->value && NULL == stack->head->next)
     {
-        stack->head = malloc(sizeof(Entry));
         stack->head->value = value;
-        stack->head->prev = NULL;
-        stack->head->next = NULL;
+        stack->head->prev = stack->head;
+        stack->head->next = stack->tail;
         stack->tail = stack->head;
     }
     else
     {
-        Entry next = *(Entry*) malloc(sizeof(Entry));
-        next.value = value;
-        next.next = NULL;
-        next.prev = (struct Entry *) stack->tail;
-        int len = sizeof(next);
-        stack->tail->next = malloc(len);
-        memcpy(stack->tail->next, &next, len);
-        stack->tail = (Entry *) stack->tail->next;
+        Entry *next = (Entry*) malloc(sizeof(Entry));
+        next->value = value;
+        next->next = NULL;
+        Entry *tail = stack->tail;
+        tail->next = next;
+        next->prev = tail;
+        stack->tail = next;
     }
     stack->size ++;
     return 0;
@@ -96,9 +106,10 @@ int is_empty_stack(Stack *stack)
 void* pop_stack(Stack *stack)
 {
     if (is_empty_stack(stack)) return NULL;
-    void* value = (void *) stack->tail->value;
-    stack->tail = (Entry *) stack->tail->prev;
-    free(stack->tail->prev);
+    void* value = stack->tail->value;
+    stack->tail = stack->tail->prev;
+    free(stack->tail->next);
+    stack->tail->next = NULL;
     stack->size--;
     if (stack->size == 0) stack->head = NULL;
     return value;
@@ -132,9 +143,9 @@ float pop_float(Stack *stack)
 
 long pop_long(Stack *stack)
 {
-    int higher = pop_int(stack);
+    long higher = (long)pop_int(stack);
     int lower = pop_int(stack);
-    return (((long)higher << 32) | lower);
+    return higher | lower;
 }
 
 double pop_double(Stack *stack)

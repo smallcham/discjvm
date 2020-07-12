@@ -3,6 +3,7 @@
 
 #include "base_type.h"
 #include "constant_class.h"
+#include "hash_map.h"
 
 //魔数
 #define CLASS_MAGIC_NUMBER 0xCAFEBABE
@@ -115,6 +116,15 @@ typedef struct {
 } InnerClassesAttribute;
 
 typedef struct {
+    u4 value;
+} Slot;
+
+typedef struct {
+    FieldInfo *field_info;
+    Slot *slot;
+} Field;
+
+typedef struct {
     u4 magic;
     u2 minor_version;
     u2 major_version;
@@ -131,6 +141,26 @@ typedef struct {
     MethodInfo *methods; // [methods_count]
     u2 attributes_count;
     AttributeInfo *attributes; // [attributes_count]
+    Field *runtime_fields;
+    u1 init_state;
 } ClassFile;
+
+//typedef struct{
+//    u2 *class_name;
+//    u2 access_flags;
+//    struct Class *super_class;
+//    u2 interfaces_count;
+//    struct Class *interfaces;
+//    u2 fields_count;
+//    u2 constant_pool_count;
+//    ConstantPool *constant_pool;
+//    Slot *runtime_constant_pool;
+//    Slot *fields;
+//    u2 methods_count;
+//    MethodInfo *methods;
+//    u2 attributes_count;
+//    AttributeInfo *attributes;
+//    u1 init_state;
+//} Class;
 
 #endif //DISCJVM_CLASS_H

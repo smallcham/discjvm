@@ -8,8 +8,14 @@ void start_vm(char *class_path)
 {
     SerialHeap *heap = init_gc();
     init_instructions();
-    ClassFile class = load_class(heap, class_path);
-    MethodInfo *main = find_method(class, "main");
+    Thread thread = create_thread(100, 100);
+    ClassFile *class = load_class(&thread, heap, class_path);
+    init_class(&thread, heap, class);
+
+    MethodInfo *main = find_method(*class, "main");
+    CodeAttribute *main_code = get_method_code(*main);
+
     if (NULL == main) exit(-1);
-    invoke_method(heap, &class, *main);
+    create_vm_frame_by_method(&thread, class->constant_pool, main, main_code);
+    invoke_method(thread, heap);
 }

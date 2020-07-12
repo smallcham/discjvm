@@ -36,6 +36,14 @@ HashEntry *create_entry(char *key, void *value);
 
 void put_map(HashMap **map, char *key, void *value);
 
+void put_map_for_double(HashMap **map, char *key, double value);
+
+void put_map_for_float(HashMap **map, char *key, float value);
+
+double *get_map_for_double(HashMap **map, char *key);
+
+float *get_map_for_float(HashMap **map, char *key);
+
 void *get_map(HashMap **map, char *key);
 
 void clean_entry(HashEntry *entry);

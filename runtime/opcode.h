@@ -10,8 +10,10 @@
 #include "../runtime/class_loader.h"
 #include "../share/gc/serial/serial_heap.h"
 
+typedef void (*Operator)(SerialHeap *heap, Thread *, Frame *);
+
 void init_instructions();
 
-void invoke_method(SerialHeap *heap, ClassFile *class, MethodInfo method);
+void invoke_method(Thread thread, SerialHeap *heap);
 
 #endif //DISCJVM_OPCODE_H

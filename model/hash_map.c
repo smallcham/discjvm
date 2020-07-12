@@ -64,6 +64,36 @@ HashEntry *create_entry(char *key, void *value)
     return new_entry;
 }
 
+void put_map_for_double(HashMap **map, char *key, double value)
+{
+    void *temp = malloc(sizeof(double));
+    memcpy(temp, &value, sizeof(double));
+    put_map(map, key, temp);
+}
+
+void put_map_for_float(HashMap **map, char *key, float value)
+{
+    void *temp = malloc(sizeof(double));
+    memcpy(temp, &value, sizeof(double));
+    put_map(map, key, temp);
+}
+
+float *get_map_for_float(HashMap **map, char *key)
+{
+    void *value = get_map(map, key);
+    float *temp = malloc(sizeof(double));
+    memcpy(temp, value, sizeof(double));
+    return temp;
+}
+
+double *get_map_for_double(HashMap **map, char *key)
+{
+    void *value = get_map(map, key);
+    double *temp = malloc(sizeof(double));
+    memcpy(temp, value, sizeof(double));
+    return temp;
+}
+
 void put_map(HashMap **map, char *key, void *value)
 {
     if (((*map)->size + 1) >= (*map)->threshold) {
