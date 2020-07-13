@@ -310,43 +310,6 @@ void set_field(Thread *thread, SerialHeap *heap, Frame *frame, CONSTANT_Fieldref
     CONSTANT_Class_info class_info = *(CONSTANT_Class_info*)frame->constant_pool[field_ref_info.class_index].info;
     CONSTANT_Utf8_info class_name_info = *(CONSTANT_Utf8_info*)frame->constant_pool[class_info.name_index].info;
     ClassFile *class = load_class_and_init_if_not_by_class_info(thread, heap, frame->constant_pool, class_info);
-    if (str_start_with(field_desc_info.bytes, "B") ||
-        str_start_with(field_desc_info.bytes, "C") ||
-        str_start_with(field_desc_info.bytes, "I") ||
-        str_start_with(field_desc_info.bytes, "S") ||
-        str_start_with(field_desc_info.bytes, "Z")) {
-        //Int
-        int value = pop_int(&(frame->operand_stack));
-    }
-    else if (str_start_with(field_desc_info.bytes, "F")) {
-        //Float
-        float value = pop_float(&(frame->operand_stack));
-    }
-    else if (str_start_with(field_desc_info.bytes, "D")) {
-        //Long
-        long value = pop_long(&(frame->operand_stack));
-    }
-    else if (str_start_with(field_desc_info.bytes, "J")) {
-        //Double
-        int higher = pop_int(&(frame->operand_stack));
-        int lower = pop_int(&(frame->operand_stack));
-    }
-    else if (str_start_with(field_desc_info.bytes, "L")) {
-        //Object
-    }
-    else if (str_start_with(field_desc_info.bytes, "[")) {
-        //Array
-    }
-}
-
-void set_static_field(Thread *thread, SerialHeap *heap, Frame *frame, CONSTANT_Fieldref_info field_ref_info)
-{
-    CONSTANT_NameAndType_info name_and_type_info = *(CONSTANT_NameAndType_info*)frame->constant_pool[field_ref_info.name_and_type_index].info;
-    CONSTANT_Utf8_info field_type_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.name_index].info;
-    CONSTANT_Utf8_info field_desc_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info;
-    CONSTANT_Class_info class_info = *(CONSTANT_Class_info*)frame->constant_pool[field_ref_info.class_index].info;
-    CONSTANT_Utf8_info class_name_info = *(CONSTANT_Utf8_info*)frame->constant_pool[class_info.name_index].info;
-    ClassFile *class = load_class_and_init_if_not_by_class_info(thread, heap, frame->constant_pool, class_info);
     int index = -1;
     for (int i = 0; i < class->fields_count; i++) {
         if (class->fields[i].name_index == name_and_type_info.name_index) {
@@ -385,9 +348,14 @@ void set_static_field(Thread *thread, SerialHeap *heap, Frame *frame, CONSTANT_F
     }
 }
 
-void set_static_field_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u1 index)
+void set_field_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u1 index)
 {
-    set_static_field(thread, heap, frame, *(CONSTANT_Fieldref_info*)frame->constant_pool[index].info);
+    set_field(thread, heap, frame, *(CONSTANT_Fieldref_info*)frame->constant_pool[index].info);
+}
+
+void create_object(Thread *thread, SerialHeap *heap, Frame *frame, u1 index)
+{
+    ClassFile *class = load_class_and_init_if_not_by_class_info(thread, heap, frame->constant_pool, *(CONSTANT_Class_info*)frame->constant_pool[index].info);
 }
 
 ClassFile *load_class_and_init_if_not(Thread *thread, SerialHeap *heap, char *full_class_name)
@@ -417,8 +385,6 @@ void init_class(Thread *thread, SerialHeap *heap, ClassFile *class)
         CodeAttribute *clinit_code = get_method_code(*clinit);
         create_vm_frame_by_method(thread, class->constant_pool, clinit, clinit_code);
     }
-
-    invoke_method(*thread, heap);
     class->init_state = CLASS_INITED;
 }
 

@@ -2,13 +2,12 @@
 
 u1 *load_from_jmod(char *jmod_name, char *name)
 {
-    char *full_name = malloc(strlen(name) + 8);
-    sprintf(full_name, "classes/%s", name);
+    char *full_name = malloc(strlen(name) + 15);
+    sprintf(full_name, "classes/%s.class", name);
 
     zip_error_t err;
-    char *java_home = getenv("JAVA_HOME");
-    char *file_path = malloc(strlen(java_home) + strlen(jmod_name) + 5);
-    sprintf(file_path, "%s/jmods/%s", java_home, jmod_name);
+    char *file_path = malloc(strlen(JAVA_HOME) + strlen(jmod_name) + 8);
+    sprintf(file_path, "%s/jmods/%s", JAVA_HOME, jmod_name);
     FILE *fp = fopen(file_path, "rb");
     if (NULL == fp) exit(-1);
     fseek(fp, 0, SEEK_END);
@@ -34,5 +33,7 @@ u1 *load_from_jmod(char *jmod_name, char *name)
 
     //And close the archive
     zip_close(z);
+    free(full_name);
+    free(file_path);
     return contents;
 }

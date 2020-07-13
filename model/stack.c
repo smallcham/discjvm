@@ -57,8 +57,8 @@ int push_stack(Stack *stack, void *value)
     if (NULL == stack->head->value && NULL == stack->head->next)
     {
         stack->head->value = value;
-        stack->head->prev = stack->head;
-        stack->head->next = stack->tail;
+        stack->head->prev = (struct Entry *) stack->head;
+        stack->head->next = (struct Entry *) stack->tail;
         stack->tail = stack->head;
     }
     else
@@ -67,8 +67,8 @@ int push_stack(Stack *stack, void *value)
         next->value = value;
         next->next = NULL;
         Entry *tail = stack->tail;
-        tail->next = next;
-        next->prev = tail;
+        tail->next = (struct Entry *) next;
+        next->prev = (struct Entry *) tail;
         stack->tail = next;
     }
     stack->size ++;
@@ -107,7 +107,7 @@ void* pop_stack(Stack *stack)
 {
     if (is_empty_stack(stack)) return NULL;
     void* value = stack->tail->value;
-    stack->tail = stack->tail->prev;
+    stack->tail = (Entry *) stack->tail->prev;
     free(stack->tail->next);
     stack->tail->next = NULL;
     stack->size--;

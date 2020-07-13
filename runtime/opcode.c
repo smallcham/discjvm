@@ -477,7 +477,8 @@ void getstatic(SerialHeap *heap, Thread *thread, Frame *frame) {
 void putstatic(SerialHeap *heap, Thread *thread, Frame *frame) {
     u1 byte1 = step_pc1_and_read_code(frame);
     u1 byte2 = step_pc1_and_read_code(frame);
-    set_static_field_by_index(thread, heap, frame, (byte1 << 8) | byte2);
+    set_field_by_index(thread, heap, frame, (byte1 << 8) | byte2);
+    step_pc_1(frame);
 }
 void getfield(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void putfield(SerialHeap *heap, Thread *thread, Frame *frame) {}
@@ -485,10 +486,17 @@ void invokevirtual(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void invokespecial(SerialHeap *heap, Thread *thread, Frame *frame) {
     step_pc(frame, 3);
 }
-void invokestatic(SerialHeap *heap, Thread *thread, Frame *frame) {}
+void invokestatic(SerialHeap *heap, Thread *thread, Frame *frame) {
+    step_pc(frame, 3);
+}
 void invokeinterface(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void invokedynamic(SerialHeap *heap, Thread *thread, Frame *frame) {}
-void new(SerialHeap *heap, Thread *thread, Frame *frame) {}
+void new(SerialHeap *heap, Thread *thread, Frame *frame) {
+    u1 byte1 = step_pc1_and_read_code(frame);
+    u1 byte2 = step_pc1_and_read_code(frame);
+    create_object(thread, heap, frame, (byte1 << 8) | byte2);
+    step_pc_1(frame);
+}
 void newarray(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void anewarray(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void arraylength(SerialHeap *heap, Thread *thread, Frame *frame) {}

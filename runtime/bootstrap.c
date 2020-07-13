@@ -11,6 +11,7 @@ void start_vm(char *class_path)
     Thread thread = create_thread(100, 100);
     ClassFile *class = load_class(&thread, heap, class_path);
     init_class(&thread, heap, class);
+    invoke_method(thread, heap);
 
     MethodInfo *main = find_method(*class, "main");
     CodeAttribute *main_code = get_method_code(*main);
