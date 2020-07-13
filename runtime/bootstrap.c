@@ -4,19 +4,22 @@
 
 #include "bootstrap.h"
 
+char *JAVA_HOME = NULL;
+
 void start_vm(char *class_path)
 {
+    JAVA_HOME = getenv("JAVA_HOME");
+
     SerialHeap *heap = init_gc();
     init_instructions();
     Thread thread = create_thread(100, 100);
     ClassFile *class = load_class(&thread, heap, class_path);
-    init_class(&thread, heap, class);
-    invoke_method(thread, heap);
+    init_class_and_exec(&thread, heap, class);
 
     MethodInfo *main = find_method(*class, "main");
     CodeAttribute *main_code = get_method_code(*main);
 
     if (NULL == main) exit(-1);
     create_vm_frame_by_method(&thread, class->constant_pool, main, main_code);
-    invoke_method(thread, heap);
+    invoke_method(&thread, heap);
 }

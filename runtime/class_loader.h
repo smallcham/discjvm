@@ -16,17 +16,21 @@
 
 ClassFile *load_class(Thread *thread, SerialHeap *heap, char *full_class_name);
 
-ClassFile *load_class_and_init_if_not(Thread *thread, SerialHeap *heap, char *full_class_name);
-
-ClassFile *load_class_and_init_if_not_by_class_info(Thread *thread, SerialHeap *heap, ConstantPool *constant_pool, CONSTANT_Class_info class_info);
-
 void set_field(Thread *thread, SerialHeap *heap, Frame *frame, CONSTANT_Fieldref_info field_ref_info);
 
 void set_field_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u1 index);
 
+ClassFile *load_class_by_class_info_name_index(Thread *thread, SerialHeap *heap, ConstantPool *constant_pool, u2 index);
+
+ClassFile *load_class_by_class_info(Thread *thread, SerialHeap *heap, ConstantPool *constant_pool, CONSTANT_Class_info class_info);
+
+ClassFile *get_super_class(Thread *thread, SerialHeap *heap, ClassFile *class);
+
 void create_object(Thread *thread, SerialHeap *heap, Frame *frame, u1 index);
 
 void init_class(Thread *thread, SerialHeap *heap, ClassFile *class);
+
+void init_class_and_exec(Thread *thread, SerialHeap *heap, ClassFile *class);
 
 void print_class_info(ClassFile class);
 

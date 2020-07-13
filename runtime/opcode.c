@@ -20,9 +20,19 @@ void step_pc_1(Frame *frame)
     frame->pc ++;
 }
 
+void back_pc_1(Frame *frame)
+{
+    frame->pc --;
+}
+
 u4 step_pc_no_submit(Frame *frame, u4 offset)
 {
     return frame->pc + offset;
+}
+
+u4 back_pc_no_submit(Frame *frame, u4 offset)
+{
+    return frame->pc - offset;
 }
 
 u4 step_pc_1_no_submit(Frame *frame)
@@ -30,14 +40,30 @@ u4 step_pc_1_no_submit(Frame *frame)
     return step_pc_no_submit(frame, 1);
 }
 
+u4 back_pc_1_no_submit(Frame *frame)
+{
+    return back_pc_no_submit(frame, 1);
+}
+
 u4 step_pc_2_no_submit(Frame *frame)
 {
     return step_pc_no_submit(frame, 2);
 }
 
+u4 back_pc_2_no_submit(Frame *frame)
+{
+    return back_pc_no_submit(frame, 2);
+}
+
 int step_pc_1_read_pc(Frame *frame)
 {
     step_pc_1(frame);
+    return frame->pc;
+}
+
+int back_pc_1_read_pc(Frame *frame)
+{
+    back_pc_1(frame);
     return frame->pc;
 }
 
@@ -335,7 +361,12 @@ void castore(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void sastore(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void j_pop(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void pop2(SerialHeap *heap, Thread *thread, Frame *frame) {}
-void dup(SerialHeap *heap, Thread *thread, Frame *frame) {}
+void dup(SerialHeap *heap, Thread *thread, Frame *frame) {
+    void *value = get_stack(&(frame->operand_stack));
+    push_stack(&(frame->operand_stack), value);
+    push_stack(&(frame->operand_stack), value);
+    step_pc_1(frame);
+}
 void dup_x1(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void dup_x2(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void dup2(SerialHeap *heap, Thread *thread, Frame *frame) {}
@@ -752,10 +783,10 @@ void exec(Operator operator, SerialHeap *heap, Thread *thread, Frame *frame)
     operator(heap, thread, frame);
 }
 
-void invoke_method(Thread thread, SerialHeap *heap) {
+void invoke_method(Thread *thread, SerialHeap *heap) {
     do {
-        Frame *frame = get_stack(thread.vm_stack);
-        exec(instructions[read_code(frame)], heap, &thread, frame);
+        Frame *frame = get_stack(thread->vm_stack);
+        exec(instructions[read_code(frame)], heap, thread, frame);
         printf("%#x\n", read_code(frame));
-    } while (!is_empty_stack(thread.vm_stack));
+    } while (!is_empty_stack(thread->vm_stack));
 }

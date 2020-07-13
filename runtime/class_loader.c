@@ -304,12 +304,18 @@ ClassFile *load_class(Thread *thread, SerialHeap *heap, char *full_class_name)
 
 void set_field(Thread *thread, SerialHeap *heap, Frame *frame, CONSTANT_Fieldref_info field_ref_info)
 {
+    //TODO add hook, set init state after init.
     CONSTANT_NameAndType_info name_and_type_info = *(CONSTANT_NameAndType_info*)frame->constant_pool[field_ref_info.name_and_type_index].info;
     CONSTANT_Utf8_info field_type_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.name_index].info;
     CONSTANT_Utf8_info field_desc_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info;
     CONSTANT_Class_info class_info = *(CONSTANT_Class_info*)frame->constant_pool[field_ref_info.class_index].info;
     CONSTANT_Utf8_info class_name_info = *(CONSTANT_Utf8_info*)frame->constant_pool[class_info.name_index].info;
-    ClassFile *class = load_class_and_init_if_not_by_class_info(thread, heap, frame->constant_pool, class_info);
+    ClassFile *class = load_class(thread, heap, class_name_info.bytes);
+    if (class->init_state == CLASS_NOT_INIT) {
+        back_pc_1(frame);
+        init_class(thread, heap, class);
+        return;
+    }
     int index = -1;
     for (int i = 0; i < class->fields_count; i++) {
         if (class->fields[i].name_index == name_and_type_info.name_index) {
@@ -318,6 +324,7 @@ void set_field(Thread *thread, SerialHeap *heap, Frame *frame, CONSTANT_Fieldref
         }
     }
     if (index == -1) exit(-1);
+    class->runtime_fields[index].field_info = &class->fields[index];
     if (str_start_with(field_desc_info.bytes, "B") ||
     str_start_with(field_desc_info.bytes, "C") ||
     str_start_with(field_desc_info.bytes, "I") ||
@@ -325,17 +332,20 @@ void set_field(Thread *thread, SerialHeap *heap, Frame *frame, CONSTANT_Fieldref
     str_start_with(field_desc_info.bytes, "Z")) {
         //Int
         int value = pop_int(&(frame->operand_stack));
+        class->runtime_fields[index].slot = malloc(sizeof(Slot));
+        class->runtime_fields[index].slot->value = value;
     }
     else if (str_start_with(field_desc_info.bytes, "F")) {
         //Float
         float value = pop_float(&(frame->operand_stack));
+        class->runtime_fields[index].slot = malloc(sizeof(Slot));
+        class->runtime_fields[index].slot->value = value;
     }
     else if (str_start_with(field_desc_info.bytes, "D") ||
             str_start_with(field_desc_info.bytes, "J")) {
         //Long
         int higher = pop_int(&(frame->operand_stack));
         int lower = pop_int(&(frame->operand_stack));
-        class->runtime_fields[index].field_info = &class->fields[index];
         class->runtime_fields[index].slot = malloc(sizeof(Slot) * 2);
         class->runtime_fields[index].slot[0].value = lower;
         class->runtime_fields[index].slot[1].value = higher;
@@ -355,20 +365,24 @@ void set_field_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u1 index
 
 void create_object(Thread *thread, SerialHeap *heap, Frame *frame, u1 index)
 {
-    ClassFile *class = load_class_and_init_if_not_by_class_info(thread, heap, frame->constant_pool, *(CONSTANT_Class_info*)frame->constant_pool[index].info);
+//    ClassFile *class = load_class(thread, heap, );
 }
 
-ClassFile *load_class_and_init_if_not(Thread *thread, SerialHeap *heap, char *full_class_name)
+ClassFile *load_class_by_class_info_name_index(Thread *thread, SerialHeap *heap, ConstantPool *constant_pool, u2 index)
 {
-    ClassFile *class = load_class(thread, heap, full_class_name);
-    if (class->init_state == CLASS_NOT_INIT) init_class(thread, heap, class);
-    return class;
+    CONSTANT_Utf8_info class_name_info = *(CONSTANT_Utf8_info*)constant_pool[index].info;
+    return load_class(thread, heap, class_name_info.bytes);
 }
 
-ClassFile *load_class_and_init_if_not_by_class_info(Thread *thread, SerialHeap *heap, ConstantPool *constant_pool, CONSTANT_Class_info class_info)
+ClassFile *load_class_by_class_info(Thread *thread, SerialHeap *heap, ConstantPool *constant_pool, CONSTANT_Class_info class_info)
 {
-    CONSTANT_Utf8_info class_name_info = *(CONSTANT_Utf8_info*)constant_pool[class_info.name_index].info;
-    return load_class_and_init_if_not(thread, heap, class_name_info.bytes);
+    return load_class_by_class_info_name_index(thread, heap, constant_pool, class_info.name_index);
+}
+
+ClassFile *get_super_class(Thread *thread, SerialHeap *heap, ClassFile *class)
+{
+    if (class->super_class == 0) return NULL;
+    return load_class_by_class_info(thread, heap, class->constant_pool, *(CONSTANT_Class_info*)class->constant_pool[class->super_class].info);
 }
 
 void init_class(Thread *thread, SerialHeap *heap, ClassFile *class)
@@ -385,6 +399,17 @@ void init_class(Thread *thread, SerialHeap *heap, ClassFile *class)
         CodeAttribute *clinit_code = get_method_code(*clinit);
         create_vm_frame_by_method(thread, class->constant_pool, clinit, clinit_code);
     }
+
+    ClassFile *super = get_super_class(thread, heap, class);
+    if (NULL != super && super->init_state == CLASS_NOT_INIT) {
+        init_class(thread, heap, super);
+    }
+}
+
+void init_class_and_exec(Thread *thread, SerialHeap *heap, ClassFile *class)
+{
+    init_class(thread, heap, class);
+    invoke_method(thread, heap);
     class->init_state = CLASS_INITED;
 }
 
