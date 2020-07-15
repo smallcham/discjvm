@@ -304,7 +304,6 @@ ClassFile *load_class(Thread *thread, SerialHeap *heap, char *full_class_name)
 
 void set_field(Thread *thread, SerialHeap *heap, Frame *frame, CONSTANT_Fieldref_info field_ref_info)
 {
-    //TODO add hook, set init state after init.
     CONSTANT_NameAndType_info name_and_type_info = *(CONSTANT_NameAndType_info*)frame->constant_pool[field_ref_info.name_and_type_index].info;
     CONSTANT_Utf8_info field_type_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.name_index].info;
     CONSTANT_Utf8_info field_desc_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info;
@@ -371,6 +370,7 @@ void create_object(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
         init_class(thread, heap, class);
         return;
     }
+    //TODO create Object by Class, write here. The method init is being call by 'invokespecial', check is it needed call automatic.
 }
 
 ClassFile *load_class_by_class_info_name_index(Thread *thread, SerialHeap *heap, ConstantPool *constant_pool, u2 index)
@@ -416,8 +416,7 @@ void init_class(Thread *thread, SerialHeap *heap, ClassFile *class)
     class->runtime_fields = malloc(sizeof(Field) * class->fields_count);
     MethodInfo *init = find_method(*class, "<init>");
     CodeAttribute *init_code = get_method_code(*init);
-//    create_vm_frame_by_method(thread, class, init, init_code);
-    Frame *frame = create_vm_frame_by_method_add_hook(thread, class, init, init_code, (PopHook) set_class_inited_by_frame);
+    create_vm_frame_by_method_add_hook(thread, class, init, init_code, (PopHook) set_class_inited_by_frame);
 
     MethodInfo *clinit = find_method(*class, "<clinit>");
     if (NULL != clinit) {
