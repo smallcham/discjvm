@@ -115,64 +115,80 @@ u1 step_pc1_and_read_code(Frame *frame)
 void nop(SerialHeap *heap, u1 *code, Frame *frame) {
     step_pc_1(frame);
 }
+
 void aconst_null(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void iconst_m1(SerialHeap *heap, Thread *thread, Frame *frame) {}
+
 void iconst_0(SerialHeap *heap, Thread *thread, Frame *frame) {
     step_pc_1(frame);
     push_int(&(frame->operand_stack), 0);
 }
+
 void iconst_1(SerialHeap *heap, Thread *thread, Frame *frame) {
     step_pc_1(frame);
     push_int(&(frame->operand_stack), 1);
 }
+
 void iconst_2(SerialHeap *heap, Thread *thread, Frame *frame) {
     step_pc_1(frame);
     push_int(&(frame->operand_stack), 2);
 }
+
 void iconst_3(SerialHeap *heap, Thread *thread, Frame *frame) {
     step_pc_1(frame);
     push_int(&(frame->operand_stack), 3);
 }
+
 void iconst_4(SerialHeap *heap, Thread *thread, Frame *frame) {
     step_pc_1(frame);
     push_int(&(frame->operand_stack), 4);
 }
+
 void iconst_5(SerialHeap *heap, Thread *thread, Frame *frame) {
     step_pc_1(frame);
     push_int(&(frame->operand_stack), 5);
 }
+
 void lconst_0(SerialHeap *heap, Thread *thread, Frame *frame) {
     step_pc_1(frame);
     push_long(&(frame->operand_stack), 0);
 }
+
 void lconst_1(SerialHeap *heap, Thread *thread, Frame *frame) {
     step_pc_1(frame);
     push_long(&(frame->operand_stack), 1);
 }
+
 void fconst_0(SerialHeap *heap, Thread *thread, Frame *frame) {
     step_pc_1(frame);
     push_float(&(frame->operand_stack), 0);
 }
+
 void fconst_1(SerialHeap *heap, Thread *thread, Frame *frame) {
     step_pc_1(frame);
     push_float(&(frame->operand_stack), 1);
 }
+
 void fconst_2(SerialHeap *heap, Thread *thread, Frame *frame) {
     step_pc_1(frame);
     push_float(&(frame->operand_stack), 2);
 }
+
 void dconst_0(SerialHeap *heap, Thread *thread, Frame *frame) {
     step_pc_1(frame);
     push_double(&(frame->operand_stack), 0);
 }
+
 void dconst_1(SerialHeap *heap, Thread *thread, Frame *frame) {
     step_pc_1(frame);
     push_float(&(frame->operand_stack), 1);
 }
+
 void bipush(SerialHeap *heap, Thread *thread, Frame *frame) {
     push_int(&(frame->operand_stack), step_pc1_and_read_code(frame));
     step_pc_1(frame);
 }
+
 void sipush(SerialHeap *heap, Thread *thread, Frame *frame) {
     u1 byte2 = step_pc1_and_read_code(frame);
     u1 byte1 = step_pc1_and_read_code(frame);
@@ -180,11 +196,14 @@ void sipush(SerialHeap *heap, Thread *thread, Frame *frame) {
     push_int(&(frame->operand_stack), (int)value);
     step_pc_1(frame);
 }
+
 void ldc(SerialHeap *heap, Thread *thread, Frame *frame) {
     int index = step_pc1_and_read_code(frame);
     //将值push进入常量池
 }
+
 void ldc_w(SerialHeap *heap, Thread *thread, Frame *frame) {}
+
 void ldc2_w(SerialHeap *heap, Thread *thread, Frame *frame) {
     u1 byte1 = step_pc1_and_read_code(frame);
     u1 byte2 = step_pc1_and_read_code(frame);
@@ -193,103 +212,126 @@ void ldc2_w(SerialHeap *heap, Thread *thread, Frame *frame) {
     push_int(&(frame->operand_stack), long_info.high_bytes);
     push_int(&(frame->operand_stack), long_info.low_bytes);
 }
+
 void iload(SerialHeap *heap, Thread *thread, Frame *frame) {
     push_int(&(frame->operand_stack), frame->local_variables[step_pc1_and_read_code(frame)]);
     step_pc_1(frame);
 }
+
 void lload(SerialHeap *heap, Thread *thread, Frame *frame) {
     u1 index = step_pc1_and_read_code(frame);
     push_int(&(frame->operand_stack), frame->local_variables[index + 1]);
     push_int(&(frame->operand_stack), frame->local_variables[index]);
     step_pc_1(frame);
 }
+
 void fload(SerialHeap *heap, Thread *thread, Frame *frame) {
     push_float(&(frame->operand_stack), frame->local_variables[step_pc1_and_read_code(frame)]);
     step_pc_1(frame);
 }
+
 void dload(SerialHeap *heap, Thread *thread, Frame *frame) {
     u1 index = step_pc1_and_read_code(frame);
     push_int(&(frame->operand_stack), frame->local_variables[index + 1]);
     push_int(&(frame->operand_stack), frame->local_variables[index]);
     step_pc_1(frame);
 }
+
 void aload(SerialHeap *heap, Thread *thread, Frame *frame) {}
+
 void iload_0(SerialHeap *heap, Thread *thread, Frame *frame) {
     step_pc_1(frame);
     push_int(&(frame->operand_stack), frame->local_variables[0]);
 }
+
 void iload_1(SerialHeap *heap, Thread *thread, Frame *frame) {
     step_pc_1(frame);
     push_int(&(frame->operand_stack), frame->local_variables[1]);
 }
+
 void iload_2(SerialHeap *heap, Thread *thread, Frame *frame) {
     step_pc_1(frame);
     push_int(&(frame->operand_stack), frame->local_variables[2]);
 }
+
 void iload_3(SerialHeap *heap, Thread *thread, Frame *frame) {
     step_pc_1(frame);
     push_int(&(frame->operand_stack), frame->local_variables[3]);
 }
+
 void lload_0(SerialHeap *heap, Thread *thread, Frame *frame) {
     push_int(&(frame->operand_stack), 0);
     push_int(&(frame->operand_stack), 0);
     step_pc_1(frame);
 }
+
 void lload_1(SerialHeap *heap, Thread *thread, Frame *frame) {
     push_int(&(frame->operand_stack), 0);
     push_int(&(frame->operand_stack), 1);
     step_pc_1(frame);
 }
+
 void lload_2(SerialHeap *heap, Thread *thread, Frame *frame) {
     push_int(&(frame->operand_stack), 0);
     push_int(&(frame->operand_stack), 2);
     step_pc_1(frame);
 }
+
 void lload_3(SerialHeap *heap, Thread *thread, Frame *frame) {
     push_int(&(frame->operand_stack), 0);
     push_int(&(frame->operand_stack), 3);
     step_pc_1(frame);
 }
+
 void fload_0(SerialHeap *heap, Thread *thread, Frame *frame) {
     push_float(&(frame->operand_stack), 0);
     step_pc_1(frame);
 }
+
 void fload_1(SerialHeap *heap, Thread *thread, Frame *frame) {
     push_float(&(frame->operand_stack), 1);
     step_pc_1(frame);
 }
+
 void fload_2(SerialHeap *heap, Thread *thread, Frame *frame) {
     push_float(&(frame->operand_stack), 2);
     step_pc_1(frame);
 }
+
 void fload_3(SerialHeap *heap, Thread *thread, Frame *frame) {
     push_float(&(frame->operand_stack), 3);
     step_pc_1(frame);
 }
+
 void dload_0(SerialHeap *heap, Thread *thread, Frame *frame) {
     push_int(&(frame->operand_stack), 0);
     push_int(&(frame->operand_stack), 0);
     step_pc_1(frame);
 }
+
 void dload_1(SerialHeap *heap, Thread *thread, Frame *frame) {
     push_int(&(frame->operand_stack), 0);
     push_int(&(frame->operand_stack), 0);
     step_pc_1(frame);
 }
+
 void dload_2(SerialHeap *heap, Thread *thread, Frame *frame) {
     push_int(&(frame->operand_stack), 0);
     push_int(&(frame->operand_stack), 2);
     step_pc_1(frame);
 }
+
 void dload_3(SerialHeap *heap, Thread *thread, Frame *frame) {
     push_int(&(frame->operand_stack), 0);
     push_int(&(frame->operand_stack), 3);
     step_pc_1(frame);
 }
+
 void aload_0(SerialHeap *heap, Thread *thread, Frame *frame) {
 //    push_stack(&(frame->operand_stack), frame->local_variables[0]);
     step_pc_1(frame);
 }
+
 void aload_1(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void aload_2(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void aload_3(SerialHeap *heap, Thread *thread, Frame *frame) {}
@@ -307,38 +349,46 @@ void fstore(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void dstore(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void astore(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void istore_0(SerialHeap *heap, Thread *thread, Frame *frame) {}
+
 void istore_1(SerialHeap *heap, Thread *thread, Frame *frame) {
     frame->local_variables[1] = pop_int(&(frame->operand_stack));
     step_pc_1(frame);
 }
+
 void istore_2(SerialHeap *heap, Thread *thread, Frame *frame) {
     frame->local_variables[2] = pop_int(&(frame->operand_stack));
     step_pc_1(frame);
 }
+
 void istore_3(SerialHeap *heap, Thread *thread, Frame *frame) {
     frame->local_variables[3] = pop_int(&(frame->operand_stack));
     step_pc_1(frame);
 }
+
 void lstore_0(SerialHeap *heap, Thread *thread, Frame *frame) {
     frame->local_variables[0] = pop_int(&(frame->operand_stack));
     frame->local_variables[1] = pop_int(&(frame->operand_stack));
     step_pc_1(frame);
 }
+
 void lstore_1(SerialHeap *heap, Thread *thread, Frame *frame) {
     frame->local_variables[1] = pop_int(&(frame->operand_stack));
     frame->local_variables[2] = pop_int(&(frame->operand_stack));
     step_pc_1(frame);
 }
+
 void lstore_2(SerialHeap *heap, Thread *thread, Frame *frame) {
     frame->local_variables[2] = pop_int(&(frame->operand_stack));
     frame->local_variables[3] = pop_int(&(frame->operand_stack));
     step_pc_1(frame);
 }
+
 void lstore_3(SerialHeap *heap, Thread *thread, Frame *frame) {
     frame->local_variables[3] = pop_int(&(frame->operand_stack));
     frame->local_variables[4] = pop_int(&(frame->operand_stack));
     step_pc_1(frame);
 }
+
 void fstore_0(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void fstore_1(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void fstore_2(SerialHeap *heap, Thread *thread, Frame *frame) {}
@@ -361,6 +411,7 @@ void castore(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void sastore(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void j_pop(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void pop2(SerialHeap *heap, Thread *thread, Frame *frame) {}
+
 void dup(SerialHeap *heap, Thread *thread, Frame *frame) {
     void *value = get_stack(&(frame->operand_stack));
     push_stack(&(frame->operand_stack), value);
@@ -373,10 +424,12 @@ void dup2(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void dup2_x1(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void dup2_x2(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void swap(SerialHeap *heap, Thread *thread, Frame *frame) {}
+
 void iadd(SerialHeap *heap, Thread *thread, Frame *frame) {
     step_pc_1(frame);
     push_int(&(frame->operand_stack), pop_int(&(frame->operand_stack)) + pop_int(&(frame->operand_stack)));
 }
+
 void ladd(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void fadd(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void dadd(SerialHeap *heap, Thread *thread, Frame *frame) {}
@@ -412,12 +465,14 @@ void ior(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void lor(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void ixor(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void lxor(SerialHeap *heap, Thread *thread, Frame *frame) {}
+
 void iinc(SerialHeap *heap, Thread *thread, Frame *frame) {
     u4 index = step_pc1_and_read_code(frame);
     u4 increment =  step_pc1_and_read_code(frame);
     frame->local_variables[index] += increment;
     step_pc_1(frame);
 }
+
 void i2l(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void i2f(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void i2d(SerialHeap *heap, Thread *thread, Frame *frame) {}
@@ -444,6 +499,7 @@ void iflt(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void ifge(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void ifgt(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void ifle(SerialHeap *heap, Thread *thread, Frame *frame) {}
+
 void if_icmpeq(SerialHeap *heap, Thread *thread, Frame *frame) {
     int value2 = pop_int(&(frame->operand_stack));
     int value1 = pop_int(&(frame->operand_stack));
@@ -451,9 +507,11 @@ void if_icmpeq(SerialHeap *heap, Thread *thread, Frame *frame) {
     u1 branch2 = step_pc2_and_read_code_no_submit(frame);
     frame->pc = (value1 == value2) ? step_pc_and_read_pc(frame, (branch1 << 8) | branch2) : step_pc_and_read_pc(frame, 3);
 }
+
 void if_icmpne(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void if_icmplt(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void if_icmpge(SerialHeap *heap, Thread *thread, Frame *frame) {}
+
 void if_icmpgt(SerialHeap *heap, Thread *thread, Frame *frame) {
     int value2 = pop_int(&(frame->operand_stack));
     int value1 = pop_int(&(frame->operand_stack));
@@ -462,39 +520,48 @@ void if_icmpgt(SerialHeap *heap, Thread *thread, Frame *frame) {
     // 如果条件成立，则将程序计数器pc前移分支1、2计算得出的offset偏移量， 否则将程pc前移3步（分别为 - 1：前移指令、2：分支一指令、3：分支二指令）
     frame->pc = (value1 > value2) ? step_pc_and_read_pc(frame, (short)((branch1 << 8) | branch2)) : step_pc_and_read_pc(frame, 3);
 }
+
 void if_icmple(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void if_acmpeq(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void if_acmpne(SerialHeap *heap, Thread *thread, Frame *frame) {}
+
 void j_goto(SerialHeap *heap, Thread *thread, Frame *frame) {
     u1 branch1 = step_pc1_and_read_code_no_submit(frame);
     u1 branch2 = step_pc2_and_read_code_no_submit(frame);
     frame->pc = step_pc_and_read_pc(frame, (short)((branch1 << 8) | branch2));
 }
+
 void jsr(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void ret(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void tableswitch(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void lookupswitch(SerialHeap *heap, Thread *thread, Frame *frame) {}
+
 int ireturn(SerialHeap *heap, Thread *thread, Frame *frame) {
-    pop_stack(thread->vm_stack);
+    pop_frame(thread->vm_stack);
     return pop_int(&(frame->operand_stack));
 }
+
 long lreturn(SerialHeap *heap, Thread *thread, Frame *frame) {
-    pop_stack(thread->vm_stack);
+    pop_frame(thread->vm_stack);
     return pop_long(&(frame->operand_stack));
 }
+
 float freturn(SerialHeap *heap, Thread *thread, Frame *frame) {
-    pop_stack(thread->vm_stack);
+    pop_frame(thread->vm_stack);
     return pop_float(&(frame->operand_stack));
 }
+
 double dreturn(SerialHeap *heap, Thread *thread, Frame *frame) {
-    pop_stack(thread->vm_stack);
+    pop_frame(thread->vm_stack);
     return pop_double(&(frame->operand_stack));
 }
+
 void areturn(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void j_return(SerialHeap *heap, Thread *thread, Frame *frame) {
     printf("%d", frame->local_variables[1]);
-    pop_stack(thread->vm_stack);
+    pop_frame(thread->vm_stack);
 }
+
 void getstatic(SerialHeap *heap, Thread *thread, Frame *frame) {
     u1 byte1 = step_pc1_and_read_code(frame);
     u1 byte2 = step_pc1_and_read_code(frame);
@@ -505,6 +572,7 @@ void getstatic(SerialHeap *heap, Thread *thread, Frame *frame) {
     CONSTANT_Utf8_info field_type_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.name_index].info;
     CONSTANT_Utf8_info field_desc_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info;
 }
+
 void putstatic(SerialHeap *heap, Thread *thread, Frame *frame) {
     u1 byte1 = step_pc1_and_read_code(frame);
     u1 byte2 = step_pc1_and_read_code(frame);
@@ -776,6 +844,12 @@ void init_instructions()
     instructions[0xca] = breakpoint;
     instructions[0xfe] = impdep1;
     instructions[0xff] = impdep2;
+}
+
+void pop_frame(Stack *vm_stack)
+{
+    Frame *frame = pop_stack(vm_stack);
+    if (NULL != frame->pop_hook) frame->pop_hook(frame);
 }
 
 void exec(Operator operator, SerialHeap *heap, Thread *thread, Frame *frame)

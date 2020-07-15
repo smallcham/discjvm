@@ -20,6 +20,6 @@ void start_vm(char *class_path)
     CodeAttribute *main_code = get_method_code(*main);
 
     if (NULL == main) exit(-1);
-    create_vm_frame_by_method(&thread, class->constant_pool, main, main_code);
+    create_vm_frame_by_method(&thread, class, main, main_code);
     invoke_method(&thread, heap);
 }

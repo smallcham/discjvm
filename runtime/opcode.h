@@ -46,6 +46,8 @@ u1 step_pc_and_read_code_no_submit(u1 *code, Frame *frame, u4 offset);
 
 u1 step_pc1_and_read_code(Frame *frame);
 
+void pop_frame(Stack *vm_stack);
+
 void init_instructions();
 
 void invoke_method(Thread *thread, SerialHeap *heap);

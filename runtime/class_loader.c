@@ -311,7 +311,7 @@ void set_field(Thread *thread, SerialHeap *heap, Frame *frame, CONSTANT_Fieldref
     CONSTANT_Class_info class_info = *(CONSTANT_Class_info*)frame->constant_pool[field_ref_info.class_index].info;
     CONSTANT_Utf8_info class_name_info = *(CONSTANT_Utf8_info*)frame->constant_pool[class_info.name_index].info;
     ClassFile *class = load_class(thread, heap, class_name_info.bytes);
-    if (class->init_state == CLASS_NOT_INIT) {
+    if (class_is_not_init(class)) {
         back_pc_1(frame);
         init_class(thread, heap, class);
         return;
@@ -363,9 +363,14 @@ void set_field_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u1 index
     set_field(thread, heap, frame, *(CONSTANT_Fieldref_info*)frame->constant_pool[index].info);
 }
 
-void create_object(Thread *thread, SerialHeap *heap, Frame *frame, u1 index)
+void create_object(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
 {
-//    ClassFile *class = load_class(thread, heap, );
+    ClassFile *class = load_class_by_class_info_index(thread, heap, frame->constant_pool, index);
+    if (class_is_not_init(class)) {
+        back_pc_1(frame);
+        init_class(thread, heap, class);
+        return;
+    }
 }
 
 ClassFile *load_class_by_class_info_name_index(Thread *thread, SerialHeap *heap, ConstantPool *constant_pool, u2 index)
@@ -379,25 +384,45 @@ ClassFile *load_class_by_class_info(Thread *thread, SerialHeap *heap, ConstantPo
     return load_class_by_class_info_name_index(thread, heap, constant_pool, class_info.name_index);
 }
 
+ClassFile *load_class_by_class_info_index(Thread *thread, SerialHeap *heap, ConstantPool *constant_pool, u2 index)
+{
+    return load_class_by_class_info(thread, heap, constant_pool, *(CONSTANT_Class_info*)constant_pool[index].info);
+}
+
 ClassFile *get_super_class(Thread *thread, SerialHeap *heap, ClassFile *class)
 {
     if (class->super_class == 0) return NULL;
     return load_class_by_class_info(thread, heap, class->constant_pool, *(CONSTANT_Class_info*)class->constant_pool[class->super_class].info);
 }
 
+int class_is_not_init(ClassFile *class)
+{
+    return class->init_state == CLASS_NOT_INIT;
+}
+
+int class_is_in_init(ClassFile *class)
+{
+    return class->init_state == CLASS_IN_INIT;
+}
+
+void set_class_inited_by_frame(Frame *frame)
+{
+    frame->class->init_state = CLASS_INITED;
+}
+
 void init_class(Thread *thread, SerialHeap *heap, ClassFile *class)
 {
     class->init_state = CLASS_IN_INIT;
     class->runtime_fields = malloc(sizeof(Field) * class->fields_count);
-
     MethodInfo *init = find_method(*class, "<init>");
     CodeAttribute *init_code = get_method_code(*init);
-    create_vm_frame_by_method(thread, class->constant_pool, init, init_code);
+//    create_vm_frame_by_method(thread, class, init, init_code);
+    Frame *frame = create_vm_frame_by_method_add_hook(thread, class, init, init_code, (PopHook) set_class_inited_by_frame);
 
     MethodInfo *clinit = find_method(*class, "<clinit>");
     if (NULL != clinit) {
         CodeAttribute *clinit_code = get_method_code(*clinit);
-        create_vm_frame_by_method(thread, class->constant_pool, clinit, clinit_code);
+        create_vm_frame_by_method(thread, class, clinit, clinit_code);
     }
 
     ClassFile *super = get_super_class(thread, heap, class);
@@ -410,7 +435,6 @@ void init_class_and_exec(Thread *thread, SerialHeap *heap, ClassFile *class)
 {
     init_class(thread, heap, class);
     invoke_method(thread, heap);
-    class->init_state = CLASS_INITED;
 }
 
 u1* get_class_bytes(char *path)
