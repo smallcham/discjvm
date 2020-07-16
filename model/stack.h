@@ -22,11 +22,9 @@ typedef struct {
     Entry *tail;
 } Stack;
 
-Stack create_unlimit_stack();
+Stack *create_unlimit_stack();
 
-Stack create_stack(int max_size);
-
-Stack *create_pstack(int max_size);
+Stack *create_stack(int max_size);
 
 int is_full(Stack *stack);
 

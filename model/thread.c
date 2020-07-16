@@ -29,7 +29,7 @@ Thread create_thread(int vm_stack_size, int c_stack_size)
 {
     int len = sizeof(Stack);
     Thread thread = { malloc(len), malloc(len) };
-    thread.vm_stack = create_pstack(vm_stack_size);
-    thread.c_stack = create_pstack(c_stack_size);
+    thread.vm_stack = create_stack(vm_stack_size);
+    thread.c_stack = create_stack(c_stack_size);
     return thread;
 }

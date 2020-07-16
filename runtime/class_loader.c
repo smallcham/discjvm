@@ -330,31 +330,40 @@ void set_field(Thread *thread, SerialHeap *heap, Frame *frame, CONSTANT_Fieldref
     str_start_with(field_desc_info.bytes, "S") ||
     str_start_with(field_desc_info.bytes, "Z")) {
         //Int
-        int value = pop_int(&(frame->operand_stack));
+        int value = pop_int(frame->operand_stack);
         class->runtime_fields[index].slot = malloc(sizeof(Slot));
         class->runtime_fields[index].slot->value = value;
     }
     else if (str_start_with(field_desc_info.bytes, "F")) {
         //Float
-        float value = pop_float(&(frame->operand_stack));
+        float value = pop_float(frame->operand_stack);
         class->runtime_fields[index].slot = malloc(sizeof(Slot));
         class->runtime_fields[index].slot->value = value;
     }
     else if (str_start_with(field_desc_info.bytes, "D") ||
             str_start_with(field_desc_info.bytes, "J")) {
         //Long
-        int higher = pop_int(&(frame->operand_stack));
-        int lower = pop_int(&(frame->operand_stack));
+        int higher = pop_int(frame->operand_stack);
+        int lower = pop_int(frame->operand_stack);
         class->runtime_fields[index].slot = malloc(sizeof(Slot) * 2);
         class->runtime_fields[index].slot[0].value = lower;
         class->runtime_fields[index].slot[1].value = higher;
     }
     else if (str_start_with(field_desc_info.bytes, "L")) {
         //Object
+        class->runtime_fields[index].slot = malloc(sizeof(Slot));
+        class->runtime_fields[index].slot->object_value = pop_stack(frame->operand_stack);
     }
     else if (str_start_with(field_desc_info.bytes, "[")) {
         //Array
     }
+}
+
+char *get_str_from_string_index(ConstantPool *constant_pool, int index)
+{
+    CONSTANT_String_info string_info = *(CONSTANT_String_info*)constant_pool[index].info;
+    CONSTANT_Utf8_info content_info = *(CONSTANT_Utf8_info*)constant_pool[string_info.string_index].info;
+    return content_info.bytes;
 }
 
 void set_field_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u1 index)
@@ -371,6 +380,9 @@ void create_object(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
         return;
     }
     //TODO create Object by Class, write here. The method init is being call by 'invokespecial', check is it needed call automatic.
+    Object *object = (Object*)malloc(sizeof(Object));
+    object->class = class;
+    push_stack(frame->operand_stack, object);
 }
 
 ClassFile *load_class_by_class_info_name_index(Thread *thread, SerialHeap *heap, ConstantPool *constant_pool, u2 index)
@@ -412,6 +424,7 @@ void set_class_inited_by_frame(Frame *frame)
 
 void init_class(Thread *thread, SerialHeap *heap, ClassFile *class)
 {
+    if (class->init_state == CLASS_INITED) return;
     class->init_state = CLASS_IN_INIT;
     class->runtime_fields = malloc(sizeof(Field) * class->fields_count);
     MethodInfo *init = find_method(*class, "<init>");

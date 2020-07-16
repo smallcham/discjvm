@@ -4,33 +4,17 @@
 
 #include "stack.h"
 
-Stack create_unlimit_stack()
+Stack *create_unlimit_stack()
 {
-    Stack stack = *(Stack*)malloc(sizeof(Stack));
-    stack.size = 0;
-    stack.max_size = -1;
-    stack.head = NULL;
-    stack.tail = NULL;
+    Stack *stack = (Stack*)malloc(sizeof(Stack));
+    stack->size = 0;
+    stack->max_size = -1;
+    stack->head = NULL;
+    stack->tail = NULL;
     return stack;
 }
 
-Stack create_stack(int max_size)
-{
-    Stack stack = *(Stack*)malloc(sizeof(Stack));
-    stack.size = 0;
-    stack.max_size = max_size;
-    stack.head = malloc(sizeof(Entry));
-    stack.tail = malloc(sizeof(Entry));
-    stack.head->value = NULL;
-    stack.head->prev = NULL;
-    stack.head->next = NULL;
-    stack.tail->next = NULL;
-    stack.tail->next = NULL;
-    stack.tail->next = NULL;
-    return stack;
-}
-
-Stack *create_pstack(int max_size)
+Stack *create_stack(int max_size)
 {
     Stack *stack = (Stack*)malloc(sizeof(Stack));
     stack->size = 0;
@@ -54,8 +38,12 @@ int is_full(Stack *stack)
 int push_stack(Stack *stack, void *value)
 {
     if (is_full(stack)) return 0;
-    if (NULL == stack->head->value && NULL == stack->head->next)
+    if (NULL == stack->head || (NULL == stack->head->value && NULL == stack->head->next))
     {
+        if (NULL == stack->head) {
+            Entry *next = (Entry*) malloc(sizeof(Entry));
+            stack->head = next;
+        }
         stack->head->value = value;
         stack->head->prev = (struct Entry *) stack->head;
         stack->head->next = (struct Entry *) stack->tail;

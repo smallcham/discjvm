@@ -13,12 +13,15 @@
 #include "../share/gc/serial/serial_heap.h"
 #include "../runtime/opcode.h"
 #include "../runtime/jmod.h"
+#include "../model/object.h"
 
 ClassFile *load_class(Thread *thread, SerialHeap *heap, char *full_class_name);
 
 void set_field(Thread *thread, SerialHeap *heap, Frame *frame, CONSTANT_Fieldref_info field_ref_info);
 
 void set_field_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u1 index);
+
+char *get_str_from_string_index(ConstantPool *constant_pool, int index);
 
 ClassFile *load_class_by_class_info_name_index(Thread *thread, SerialHeap *heap, ConstantPool *constant_pool, u2 index);
 

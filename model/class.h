@@ -117,6 +117,7 @@ typedef struct {
 
 typedef struct {
     u4 value;
+    void *object_value;
 } Slot;
 
 typedef struct {

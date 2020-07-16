@@ -12,7 +12,7 @@ typedef void (*PopHook)(void *);
 
 typedef struct {
     u4 pc;
-    Stack operand_stack;
+    Stack *operand_stack;
     ClassFile *class;
     ConstantPool *constant_pool;
     MethodInfo *method;
