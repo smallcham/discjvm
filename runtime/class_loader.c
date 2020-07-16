@@ -302,6 +302,34 @@ ClassFile *load_class(Thread *thread, SerialHeap *heap, char *full_class_name)
     return class;
 }
 
+void do_invokestatic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
+{
+    CONSTANT_Methodref_info method_ref_info = *(CONSTANT_Methodref_info*)frame->constant_pool[index].info;
+    CONSTANT_Class_info class_info = *(CONSTANT_Class_info*)frame->constant_pool[method_ref_info.class_index].info;
+    CONSTANT_NameAndType_info name_and_type_info = *(CONSTANT_NameAndType_info*)frame->constant_pool[method_ref_info.name_and_type_index].info;
+    CONSTANT_Utf8_info class_name_info = *(CONSTANT_Utf8_info*)frame->constant_pool[class_info.name_index].info;
+    CONSTANT_Utf8_info method_name_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.name_index].info;
+    CONSTANT_Utf8_info method_desc_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info;
+    ClassFile *class = load_class(thread, heap, class_name_info.bytes);
+    //TODO invokestatic
+}
+
+Slot *get_field_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
+{
+    CONSTANT_Fieldref_info field_ref_info = *(CONSTANT_Fieldref_info*)frame->constant_pool[index].info;
+    CONSTANT_Class_info class_info = *(CONSTANT_Class_info*)frame->constant_pool[field_ref_info.class_index].info;
+    CONSTANT_NameAndType_info name_and_type_info = *(CONSTANT_NameAndType_info*)frame->constant_pool[field_ref_info.name_and_type_index].info;
+    CONSTANT_Utf8_info class_name_info = *(CONSTANT_Utf8_info*)frame->constant_pool[class_info.name_index].info;
+    CONSTANT_Utf8_info field_type_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.name_index].info;
+    CONSTANT_Utf8_info field_desc_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info;
+    ClassFile *class = load_class(thread, heap, class_name_info.bytes);
+    if (class_is_not_init(class)) {
+        back_pc_1(frame);
+        init_class(thread, heap, class);
+        return NULL;
+    }
+}
+
 void set_field(Thread *thread, SerialHeap *heap, Frame *frame, CONSTANT_Fieldref_info field_ref_info)
 {
     CONSTANT_NameAndType_info name_and_type_info = *(CONSTANT_NameAndType_info*)frame->constant_pool[field_ref_info.name_and_type_index].info;
@@ -359,14 +387,14 @@ void set_field(Thread *thread, SerialHeap *heap, Frame *frame, CONSTANT_Fieldref
     }
 }
 
-char *get_str_from_string_index(ConstantPool *constant_pool, int index)
+char *get_str_from_string_index(ConstantPool *constant_pool, u2 index)
 {
     CONSTANT_String_info string_info = *(CONSTANT_String_info*)constant_pool[index].info;
     CONSTANT_Utf8_info content_info = *(CONSTANT_Utf8_info*)constant_pool[string_info.string_index].info;
     return content_info.bytes;
 }
 
-void set_field_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u1 index)
+void set_field_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
 {
     set_field(thread, heap, frame, *(CONSTANT_Fieldref_info*)frame->constant_pool[index].info);
 }

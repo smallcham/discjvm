@@ -116,7 +116,11 @@ void nop(SerialHeap *heap, u1 *code, Frame *frame) {
     step_pc_1(frame);
 }
 
-void aconst_null(SerialHeap *heap, Thread *thread, Frame *frame) {}
+void aconst_null(SerialHeap *heap, Thread *thread, Frame *frame) {
+    push_stack(frame->operand_stack, NULL);
+    step_pc_1(frame);
+}
+
 void iconst_m1(SerialHeap *heap, Thread *thread, Frame *frame) {}
 
 void iconst_0(SerialHeap *heap, Thread *thread, Frame *frame) {
@@ -523,7 +527,14 @@ void if_icmpgt(SerialHeap *heap, Thread *thread, Frame *frame) {
 
 void if_icmple(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void if_acmpeq(SerialHeap *heap, Thread *thread, Frame *frame) {}
-void if_acmpne(SerialHeap *heap, Thread *thread, Frame *frame) {}
+void if_acmpne(SerialHeap *heap, Thread *thread, Frame *frame) {
+    Object *value2 = pop_stack(frame->operand_stack);
+    Object *value1 = pop_stack(frame->operand_stack);
+    u1 branch1 = step_pc1_and_read_code_no_submit(frame);
+    u1 branch2 = step_pc2_and_read_code_no_submit(frame);
+    // 如果条件成立，则将程序计数器pc前移分支1、2计算得出的offset偏移量， 否则将程pc前移3步（分别为 - 1：前移指令、2：分支一指令、3：分支二指令）
+    frame->pc = (value1 > value2) ? step_pc_and_read_pc(frame, (short)((branch1 << 8) | branch2)) : step_pc_and_read_pc(frame, 3);
+}
 
 void j_goto(SerialHeap *heap, Thread *thread, Frame *frame) {
     u1 branch1 = step_pc1_and_read_code_no_submit(frame);
@@ -565,12 +576,13 @@ void j_return(SerialHeap *heap, Thread *thread, Frame *frame) {
 void getstatic(SerialHeap *heap, Thread *thread, Frame *frame) {
     u1 byte1 = step_pc1_and_read_code(frame);
     u1 byte2 = step_pc1_and_read_code(frame);
-    CONSTANT_Fieldref_info field_ref_info = *(CONSTANT_Fieldref_info*)frame->constant_pool[(byte1 << 8) | byte2].info;
-    CONSTANT_Class_info class_info = *(CONSTANT_Class_info*)frame->constant_pool[field_ref_info.class_index].info;
-    CONSTANT_NameAndType_info name_and_type_info = *(CONSTANT_NameAndType_info*)frame->constant_pool[field_ref_info.name_and_type_index].info;
-    CONSTANT_Utf8_info class_name_info = *(CONSTANT_Utf8_info*)frame->constant_pool[class_info.name_index].info;
-    CONSTANT_Utf8_info field_type_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.name_index].info;
-    CONSTANT_Utf8_info field_desc_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info;
+//    CONSTANT_Fieldref_info field_ref_info = *(CONSTANT_Fieldref_info*)frame->constant_pool[(byte1 << 8) | byte2].info;
+//    CONSTANT_Class_info class_info = *(CONSTANT_Class_info*)frame->constant_pool[field_ref_info.class_index].info;
+//    CONSTANT_NameAndType_info name_and_type_info = *(CONSTANT_NameAndType_info*)frame->constant_pool[field_ref_info.name_and_type_index].info;
+//    CONSTANT_Utf8_info class_name_info = *(CONSTANT_Utf8_info*)frame->constant_pool[class_info.name_index].info;
+//    CONSTANT_Utf8_info field_type_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.name_index].info;
+//    CONSTANT_Utf8_info field_desc_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info;
+    get_field_by_index(thread, heap, frame, (byte1 << 8) | byte2);
 }
 
 void putstatic(SerialHeap *heap, Thread *thread, Frame *frame) {
@@ -591,6 +603,9 @@ void invokespecial(SerialHeap *heap, Thread *thread, Frame *frame) {
     step_pc(frame, 3);
 }
 void invokestatic(SerialHeap *heap, Thread *thread, Frame *frame) {
+    u1 byte1 = step_pc1_and_read_code(frame);
+    u1 byte2 = step_pc1_and_read_code(frame);
+    do_invokestatic_by_index(thread, heap, frame, (byte1 << 8) | byte2);
     step_pc(frame, 3);
 }
 void invokeinterface(SerialHeap *heap, Thread *thread, Frame *frame) {}

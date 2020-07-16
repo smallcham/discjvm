@@ -129,6 +129,7 @@ void *get_map(HashMap **map, char *key)
     HashEntry entry = (*map)->entries[index];
     while (NULL != entry.key) {
         if (strcmp(entry.key, key) == 0) return entry.value;
+        if (NULL == entry.next) return NULL;
         entry = *entry.next;
     }
     return NULL;
