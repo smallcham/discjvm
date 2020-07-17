@@ -606,7 +606,7 @@ void invokestatic(SerialHeap *heap, Thread *thread, Frame *frame) {
     u1 byte1 = step_pc1_and_read_code(frame);
     u1 byte2 = step_pc1_and_read_code(frame);
     do_invokestatic_by_index(thread, heap, frame, (byte1 << 8) | byte2);
-    step_pc(frame, 3);
+    step_pc(frame, 1);
 }
 void invokeinterface(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void invokedynamic(SerialHeap *heap, Thread *thread, Frame *frame) {}

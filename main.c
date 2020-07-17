@@ -8,6 +8,7 @@ int main(int argc, char *argv[]) {
 
     sprintf(path, "%s/../test/class/Hello.class", buf);
     start_vm(path);
+
 //    start_vm("java/lang/Object.class");
     return 0;
 }

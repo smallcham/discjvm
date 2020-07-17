@@ -311,6 +311,9 @@ void do_invokestatic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2
     CONSTANT_Utf8_info method_name_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.name_index].info;
     CONSTANT_Utf8_info method_desc_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info;
     ClassFile *class = load_class(thread, heap, class_name_info.bytes);
+    MethodInfo *method = find_method_with_desc(*class, method_name_info.bytes, method_desc_info.bytes);
+    if (NULL == method) exit(-1);
+    create_vm_frame_by_method(thread, class, method, get_method_code(*method));
     //TODO invokestatic
 }
 
@@ -638,14 +641,25 @@ void print_class_info(ClassFile class)
     }
 }
 
+MethodInfo *find_method_with_desc(ClassFile class, char *name, char *desc) {
+    for (int i = 0; i < class.methods_count; i++)
+    {
+        CONSTANT_Utf8_info method_info = *(CONSTANT_Utf8_info*)class.constant_pool[class.methods[i].name_index].info;
+        CONSTANT_Utf8_info method_desc = *(CONSTANT_Utf8_info*)class.constant_pool[class.methods[i].descriptor_index].info;
+//        char method_name[method_info.length + 1];
+//        memcpy(method_name, method_info.bytes, method_info.length + 1);
+        if (strcmp(method_info.bytes, name) == 0 && strcmp(method_desc.bytes, desc) == 0) return &class.methods[i];
+    }
+    return NULL;
+}
+
 MethodInfo *find_method(ClassFile class, char *name) {
     for (int i = 0; i < class.methods_count; i++)
     {
         CONSTANT_Utf8_info method_info = *(CONSTANT_Utf8_info*)class.constant_pool[class.methods[i].name_index].info;
-        char method_name[method_info.length + 1];
-        memcpy(method_name, method_info.bytes, method_info.length);
-        method_name[method_info.length] = '\0';
-        if (strcmp(method_name, name) == 0) return &class.methods[i];
+//        char method_name[method_info.length + 1];
+//        memcpy(method_name, method_info.bytes, method_info.length + 1);
+        if (strcmp(method_info.bytes, name) == 0) return &class.methods[i];
     }
     return NULL;
 }

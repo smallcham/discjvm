@@ -51,6 +51,8 @@ void print_class_info(ClassFile class);
 
 CodeAttribute *get_method_code(MethodInfo method);
 
+MethodInfo *find_method_with_desc(ClassFile class, char *name, char *desc);
+
 MethodInfo *find_method(ClassFile class, char *name);
 
 #endif //DISCJVM_CLASS_LOADER_H
