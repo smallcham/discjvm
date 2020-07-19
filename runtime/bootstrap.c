@@ -16,7 +16,7 @@ void start_vm(char *class_path)
     ClassFile *class = load_class(&thread, heap, class_path);
     init_class_and_exec(&thread, heap, class);
 
-    MethodInfo *main = find_method(*class, "main");
+    MethodInfo *main = find_method(&thread, heap, class, "main");
     CodeAttribute *main_code = get_method_code(*main);
 
     if (NULL == main) exit(-1);

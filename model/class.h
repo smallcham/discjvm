@@ -142,6 +142,7 @@ typedef struct {
     MethodInfo *methods; // [methods_count]
     u2 attributes_count;
     AttributeInfo *attributes; // [attributes_count]
+    u2 runtime_fields_count;
     Field *runtime_fields;
     u1 init_state;
 } ClassFile;

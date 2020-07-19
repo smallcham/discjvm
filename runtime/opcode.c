@@ -316,7 +316,7 @@ void dload_0(SerialHeap *heap, Thread *thread, Frame *frame) {
 void dload_1(SerialHeap *heap, Thread *thread, Frame *frame) {
     push_int(frame->operand_stack, 0);
     push_int(frame->operand_stack, 0);
-    step_pc_1(frame);
+    step_pc_1(frame)
 }
 
 void dload_2(SerialHeap *heap, Thread *thread, Frame *frame) {
@@ -332,7 +332,7 @@ void dload_3(SerialHeap *heap, Thread *thread, Frame *frame) {
 }
 
 void aload_0(SerialHeap *heap, Thread *thread, Frame *frame) {
-    push_stack(frame->operand_stack, &(frame->class->runtime_fields->slot[0]));
+    push_stack(frame->operand_stack, &(frame->local_variables[0]));
     step_pc_1(frame);
 }
 
@@ -569,20 +569,15 @@ double dreturn(SerialHeap *heap, Thread *thread, Frame *frame) {
 
 void areturn(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void j_return(SerialHeap *heap, Thread *thread, Frame *frame) {
-    printf("%d", frame->local_variables[1]);
+//    printf("%d", frame->local_variables[1]);
     pop_frame(thread->vm_stack);
 }
 
 void getstatic(SerialHeap *heap, Thread *thread, Frame *frame) {
     u1 byte1 = step_pc1_and_read_code(frame);
     u1 byte2 = step_pc1_and_read_code(frame);
-//    CONSTANT_Fieldref_info field_ref_info = *(CONSTANT_Fieldref_info*)frame->constant_pool[(byte1 << 8) | byte2].info;
-//    CONSTANT_Class_info class_info = *(CONSTANT_Class_info*)frame->constant_pool[field_ref_info.class_index].info;
-//    CONSTANT_NameAndType_info name_and_type_info = *(CONSTANT_NameAndType_info*)frame->constant_pool[field_ref_info.name_and_type_index].info;
-//    CONSTANT_Utf8_info class_name_info = *(CONSTANT_Utf8_info*)frame->constant_pool[class_info.name_index].info;
-//    CONSTANT_Utf8_info field_type_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.name_index].info;
-//    CONSTANT_Utf8_info field_desc_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info;
-    get_field_by_index(thread, heap, frame, (byte1 << 8) | byte2);
+    put_field_to_opstack_by_index(thread, heap, frame, (byte1 << 8) | byte2);
+    step_pc_1(frame);
 }
 
 void putstatic(SerialHeap *heap, Thread *thread, Frame *frame) {
@@ -598,10 +593,22 @@ void putfield(SerialHeap *heap, Thread *thread, Frame *frame) {
     set_field_by_index(thread, heap, frame, (byte1 << 8) | byte2);
     step_pc_1(frame);
 }
-void invokevirtual(SerialHeap *heap, Thread *thread, Frame *frame) {}
-void invokespecial(SerialHeap *heap, Thread *thread, Frame *frame) {
-    step_pc(frame, 3);
+void invokevirtual(SerialHeap *heap, Thread *thread, Frame *frame) {
+    //TODO next doing..
+    u1 byte1 = step_pc1_and_read_code(frame);
+    u1 byte2 = step_pc1_and_read_code(frame);
+    do_invokevirtual_by_index(thread, heap, frame, (byte1 << 8) | byte2);
+    step_pc(frame, 1);
 }
+
+void invokespecial(SerialHeap *heap, Thread *thread, Frame *frame) {
+    //TODO next doing..
+    u1 byte1 = step_pc1_and_read_code(frame);
+    u1 byte2 = step_pc1_and_read_code(frame);
+    do_invokespecial_by_index(thread, heap, frame, (byte1 << 8) | byte2);
+    step_pc(frame, 1);
+}
+
 void invokestatic(SerialHeap *heap, Thread *thread, Frame *frame) {
     u1 byte1 = step_pc1_and_read_code(frame);
     u1 byte2 = step_pc1_and_read_code(frame);
@@ -622,8 +629,15 @@ void arraylength(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void athrow(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void checkcast(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void instanceof(SerialHeap *heap, Thread *thread, Frame *frame) {}
-void monitorenter(SerialHeap *heap, Thread *thread, Frame *frame) {}
-void monitorexit(SerialHeap *heap, Thread *thread, Frame *frame) {}
+
+void monitorenter(SerialHeap *heap, Thread *thread, Frame *frame) {
+    step_pc_1(frame);
+}
+
+void monitorexit(SerialHeap *heap, Thread *thread, Frame *frame) {
+    step_pc_1(frame);
+}
+
 void wide(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void multianewarray(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void ifnull(SerialHeap *heap, Thread *thread, Frame *frame) {}

@@ -6,6 +6,7 @@
 
 Frame *create_vm_frame_by_method(Thread* thread, ClassFile *class, MethodInfo *method, CodeAttribute *code)
 {
+    if (NULL == code) return NULL;
     Frame *frame = (Frame*)malloc(sizeof(Frame) + (sizeof(u4) * code->max_locals));
     frame->operand_stack = create_stack(code->max_stack);
     frame->constant_pool = class->constant_pool;
