@@ -316,7 +316,7 @@ void dload_0(SerialHeap *heap, Thread *thread, Frame *frame) {
 void dload_1(SerialHeap *heap, Thread *thread, Frame *frame) {
     push_int(frame->operand_stack, 0);
     push_int(frame->operand_stack, 0);
-    step_pc_1(frame)
+    step_pc_1(frame);
 }
 
 void dload_2(SerialHeap *heap, Thread *thread, Frame *frame) {
