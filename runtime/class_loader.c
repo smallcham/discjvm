@@ -354,7 +354,7 @@ void put_field_to_opstack_by_index(Thread *thread, SerialHeap *heap, Frame *fram
     CONSTANT_Utf8_info field_desc_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info;
     ClassFile *class = load_class(thread, heap, class_name_info.bytes);
     if (class_is_not_init(class)) {
-        back_pc_1(frame);
+        back_pc(frame, 3);
         init_class(thread, heap, class);
         return;
     }
@@ -401,7 +401,7 @@ void set_field(Thread *thread, SerialHeap *heap, Frame *frame, CONSTANT_Fieldref
     CONSTANT_Utf8_info class_name_info = *(CONSTANT_Utf8_info*)frame->constant_pool[class_info.name_index].info;
     ClassFile *class = load_class(thread, heap, class_name_info.bytes);
     if (class_is_not_init(class)) {
-        back_pc_1(frame);
+        back_pc(frame, 3);
         init_class(thread, heap, class);
         return;
     }
@@ -466,7 +466,7 @@ void create_object(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
 {
     ClassFile *class = load_class_by_class_info_index(thread, heap, frame->constant_pool, index);
     if (class_is_not_init(class)) {
-        back_pc_1(frame);
+        back_pc(frame, 3);
         init_class(thread, heap, class);
         return;
     }
@@ -508,6 +508,11 @@ int class_is_in_init(ClassFile *class)
     return class->init_state == CLASS_IN_INIT;
 }
 
+int class_is_inited(ClassFile *class)
+{
+    return class->init_state == CLASS_INITED;
+}
+
 void set_class_inited_by_frame(Frame *frame)
 {
     frame->class->init_state = CLASS_INITED;
@@ -515,7 +520,7 @@ void set_class_inited_by_frame(Frame *frame)
 
 void init_class(Thread *thread, SerialHeap *heap, ClassFile *class)
 {
-    if (class->init_state == CLASS_INITED) return;
+    if (class_is_inited(class)) return;
     class->init_state = CLASS_IN_INIT;
     class->runtime_fields = malloc(sizeof(Field) * class->fields_count);
 //    MethodInfo *init = find_method_with_desc(thread, heap, class, "<init>", "()V");
@@ -527,10 +532,12 @@ void init_class(Thread *thread, SerialHeap *heap, ClassFile *class)
         CodeAttribute *clinit_code = get_method_code(*clinit);
 //        create_vm_frame_by_method(thread, class, clinit, clinit_code);
         create_vm_frame_by_method_add_hook(thread, class, clinit, clinit_code, (PopHook) set_class_inited_by_frame);
+    } else {
+        class->init_state = CLASS_INITED;
     }
 
     ClassFile *super = get_super_class(thread, heap, class);
-    if (NULL != super && super->init_state == CLASS_NOT_INIT) {
+    if (NULL != super && class_is_not_init(super)) {
         init_class(thread, heap, super);
     }
 }

@@ -22,7 +22,11 @@ int step_pc_and_read_pc(Frame *frame, int offset);
 
 void step_pc_1(Frame *frame);
 
+void back_pc(Frame *frame, u4 offset);
+
 void back_pc_1(Frame *frame);
+
+void back_pc_2(Frame *frame);
 
 u4 step_pc_no_submit(Frame *frame, u4 offset);
 

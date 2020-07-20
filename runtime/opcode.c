@@ -20,9 +20,19 @@ void step_pc_1(Frame *frame)
     frame->pc ++;
 }
 
+void back_pc(Frame *frame, u4 offset)
+{
+    frame->pc -= offset;
+}
+
 void back_pc_1(Frame *frame)
 {
     frame->pc --;
+}
+
+void back_pc_2(Frame *frame)
+{
+    frame->pc -= 2;
 }
 
 u4 step_pc_no_submit(Frame *frame, u4 offset)
