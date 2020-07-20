@@ -36,7 +36,11 @@ int push_float(Stack *stack, float value);
 
 int push_long(Stack *stack, long value);
 
+void push_long_from(Stack *source, Stack *target);
+
 int push_double(Stack *stack, double value);
+
+void push_double_from(Stack *source, Stack *target);
 
 int is_empty_stack(Stack *stack);
 

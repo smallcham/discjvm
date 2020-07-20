@@ -81,9 +81,25 @@ int push_long(Stack *stack, long value)
     return c + push_int(stack, (int) (value >> 32)) == 2;
 }
 
+void push_long_from(Stack *source, Stack *target)
+{
+    int higher = pop_int(source);
+    int lower = pop_int(source);
+    push_int(target, lower);
+    push_int(target, higher);
+}
+
 int push_double(Stack *stack, double value)
 {
     return push_long(stack, (long) value);
+}
+
+void push_double_from(Stack *source, Stack *target)
+{
+    int higher = pop_int(source);
+    int lower = pop_int(source);
+    push_int(target, higher);
+    push_int(target, lower);
 }
 
 int is_empty_stack(Stack *stack)

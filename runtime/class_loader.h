@@ -55,6 +55,8 @@ void print_class_info(ClassFile class);
 
 CodeAttribute *get_method_code(MethodInfo method);
 
+MethodInfo *find_method_iter_super_with_desc(Thread *thread, SerialHeap *heap, ClassFile *class, char *name, char *desc);
+
 MethodInfo *find_method_with_desc(Thread *thread, SerialHeap *heap, ClassFile *class, char *name, char *desc);
 
 MethodInfo *find_method(Thread *thread, SerialHeap *heap, ClassFile *class, char *name);

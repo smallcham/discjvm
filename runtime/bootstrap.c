@@ -12,6 +12,7 @@ void start_vm(char *class_path)
 
     SerialHeap *heap = init_gc();
     init_instructions();
+    init_instructions_desc();
     Thread thread = create_thread(100, 100);
     ClassFile *class = load_class(&thread, heap, class_path);
     init_class_and_exec(&thread, heap, class);

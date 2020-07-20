@@ -12,6 +12,10 @@
 
 typedef void (*Operator)(SerialHeap *heap, Thread *, Frame *);
 
+Operator instructions[0x100];
+
+char *instructions_desc[0x100];
+
 void step_pc(Frame *frame, int offset);
 
 int step_pc_and_read_pc(Frame *frame, int offset);
@@ -49,6 +53,8 @@ u1 step_pc1_and_read_code(Frame *frame);
 void pop_frame(Stack *vm_stack);
 
 void init_instructions();
+
+void init_instructions_desc();
 
 void invoke_method(Thread *thread, SerialHeap *heap);
 

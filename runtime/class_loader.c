@@ -387,6 +387,7 @@ void put_field_to_opstack_by_index(Thread *thread, SerialHeap *heap, Frame *fram
             else if (str_start_with(field_desc_info.bytes, "[")) {
                 //Array
             }
+            return;
         }
     }
 }
@@ -517,14 +518,15 @@ void init_class(Thread *thread, SerialHeap *heap, ClassFile *class)
     if (class->init_state == CLASS_INITED) return;
     class->init_state = CLASS_IN_INIT;
     class->runtime_fields = malloc(sizeof(Field) * class->fields_count);
-    MethodInfo *init = find_method(thread, heap, class, "<init>");
-    CodeAttribute *init_code = get_method_code(*init);
-    create_vm_frame_by_method_add_hook(thread, class, init, init_code, (PopHook) set_class_inited_by_frame);
+//    MethodInfo *init = find_method_with_desc(thread, heap, class, "<init>", "()V");
+//    CodeAttribute *init_code = get_method_code(*init);
+//    create_vm_frame_by_method_add_hook(thread, class, init, init_code, (PopHook) set_class_inited_by_frame);
 
-    MethodInfo *clinit = find_method(thread, heap, class, "<clinit>");
+    MethodInfo *clinit = find_method_with_desc(thread, heap, class, "<clinit>", "()V");
     if (NULL != clinit) {
         CodeAttribute *clinit_code = get_method_code(*clinit);
-        create_vm_frame_by_method(thread, class, clinit, clinit_code);
+//        create_vm_frame_by_method(thread, class, clinit, clinit_code);
+        create_vm_frame_by_method_add_hook(thread, class, clinit, clinit_code, (PopHook) set_class_inited_by_frame);
     }
 
     ClassFile *super = get_super_class(thread, heap, class);
@@ -703,29 +705,31 @@ void print_class_info(ClassFile class)
     }
 }
 
-MethodInfo *find_method_with_desc(Thread *thread, SerialHeap *heap, ClassFile *class, char *name, char *desc) {
+MethodInfo *find_method_iter_super_with_desc(Thread *thread, SerialHeap *heap, ClassFile *class, char *name, char *desc) {
     while (NULL != class)
     {
-        for (int i = 0; i < class->methods_count; i++)
-        {
-            CONSTANT_Utf8_info method_info = *(CONSTANT_Utf8_info*)class->constant_pool[class->methods[i].name_index].info;
-            CONSTANT_Utf8_info method_desc = *(CONSTANT_Utf8_info*)class->constant_pool[class->methods[i].descriptor_index].info;
-            if (strcmp(method_info.bytes, name) == 0 && strcmp(method_desc.bytes, desc) == 0) return &class->methods[i];
-        }
+        MethodInfo *method = find_method_with_desc(thread, heap, class, name, desc);
+        if (NULL != method) return method;
         class = get_super_class(thread, heap, class);
     }
     return NULL;
 }
 
-MethodInfo *find_method(Thread *thread, SerialHeap *heap, ClassFile *class, char *name) {
-    while (NULL != class)
+MethodInfo *find_method_with_desc(Thread *thread, SerialHeap *heap, ClassFile *class, char *name, char *desc) {
+    for (int i = 0; i < class->methods_count; i++)
     {
-        for (int i = 0; i < class->methods_count; i++)
-        {
-            CONSTANT_Utf8_info method_info = *(CONSTANT_Utf8_info*)class->constant_pool[class->methods[i].name_index].info;
-            if (strcmp(method_info.bytes, name) == 0) return &class->methods[i];
-        }
-        class = get_super_class(thread, heap, class);
+        CONSTANT_Utf8_info method_info = *(CONSTANT_Utf8_info*)class->constant_pool[class->methods[i].name_index].info;
+        CONSTANT_Utf8_info method_desc = *(CONSTANT_Utf8_info*)class->constant_pool[class->methods[i].descriptor_index].info;
+        if (strcmp(method_info.bytes, name) == 0 && strcmp(method_desc.bytes, desc) == 0) return &class->methods[i];
+    }
+    return NULL;
+}
+
+MethodInfo *find_method(Thread *thread, SerialHeap *heap, ClassFile *class, char *name) {
+    for (int i = 0; i < class->methods_count; i++)
+    {
+        CONSTANT_Utf8_info method_info = *(CONSTANT_Utf8_info*)class->constant_pool[class->methods[i].name_index].info;
+        if (strcmp(method_info.bytes, name) == 0) return &class->methods[i];
     }
     return NULL;
 }

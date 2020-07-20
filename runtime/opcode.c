@@ -112,7 +112,7 @@ u1 step_pc1_and_read_code(Frame *frame)
     return op_code;
 }
 
-void nop(SerialHeap *heap, u1 *code, Frame *frame) {
+void nop(SerialHeap *heap, Thread *thread, Frame *frame) {
     step_pc_1(frame);
 }
 
@@ -336,9 +336,21 @@ void aload_0(SerialHeap *heap, Thread *thread, Frame *frame) {
     step_pc_1(frame);
 }
 
-void aload_1(SerialHeap *heap, Thread *thread, Frame *frame) {}
-void aload_2(SerialHeap *heap, Thread *thread, Frame *frame) {}
-void aload_3(SerialHeap *heap, Thread *thread, Frame *frame) {}
+void aload_1(SerialHeap *heap, Thread *thread, Frame *frame) {
+    push_stack(frame->operand_stack, &(frame->local_variables[1]));
+    step_pc_1(frame);
+}
+
+void aload_2(SerialHeap *heap, Thread *thread, Frame *frame) {
+    push_stack(frame->operand_stack, &(frame->local_variables[2]));
+    step_pc_1(frame);
+}
+
+void aload_3(SerialHeap *heap, Thread *thread, Frame *frame) {
+    push_stack(frame->operand_stack, &(frame->local_variables[3]));
+    step_pc_1(frame);
+}
+
 void iaload(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void laload(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void faload(SerialHeap *heap, Thread *thread, Frame *frame) {}
@@ -347,7 +359,10 @@ void aaload(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void baload(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void caload(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void saload(SerialHeap *heap, Thread *thread, Frame *frame) {}
-void istore(SerialHeap *heap, Thread *thread, Frame *frame) {}
+void istore(SerialHeap *heap, Thread *thread, Frame *frame) {
+    frame->local_variables[step_pc1_and_read_code(frame)] = pop_int(frame->operand_stack);
+    step_pc_1(frame);
+}
 void lstore(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void fstore(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void dstore(SerialHeap *heap, Thread *thread, Frame *frame) {}
@@ -401,10 +416,27 @@ void dstore_0(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void dstore_1(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void dstore_2(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void dstore_3(SerialHeap *heap, Thread *thread, Frame *frame) {}
-void astore_0(SerialHeap *heap, Thread *thread, Frame *frame) {}
-void astore_1(SerialHeap *heap, Thread *thread, Frame *frame) {}
-void astore_2(SerialHeap *heap, Thread *thread, Frame *frame) {}
-void astore_3(SerialHeap *heap, Thread *thread, Frame *frame) {}
+
+void astore_0(SerialHeap *heap, Thread *thread, Frame *frame) {
+    frame->local_variables[0] = pop_stack(frame->operand_stack);
+    step_pc_1(frame);
+}
+
+void astore_1(SerialHeap *heap, Thread *thread, Frame *frame) {
+    frame->local_variables[1] = pop_stack(frame->operand_stack);
+    step_pc_1(frame);
+}
+
+void astore_2(SerialHeap *heap, Thread *thread, Frame *frame) {
+    frame->local_variables[2] = pop_stack(frame->operand_stack);
+    step_pc_1(frame);
+}
+
+void astore_3(SerialHeap *heap, Thread *thread, Frame *frame) {
+    frame->local_variables[3] = pop_stack(frame->operand_stack);
+    step_pc_1(frame);
+}
+
 void iastore(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void lastore(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void fastore(SerialHeap *heap, Thread *thread, Frame *frame) {}
@@ -497,12 +529,47 @@ void fcmpl(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void fcmpg(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void dcmpl(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void dcmpg(SerialHeap *heap, Thread *thread, Frame *frame) {}
-void ifeq(SerialHeap *heap, Thread *thread, Frame *frame) {}
-void ifne(SerialHeap *heap, Thread *thread, Frame *frame) {}
-void iflt(SerialHeap *heap, Thread *thread, Frame *frame) {}
-void ifge(SerialHeap *heap, Thread *thread, Frame *frame) {}
-void ifgt(SerialHeap *heap, Thread *thread, Frame *frame) {}
-void ifle(SerialHeap *heap, Thread *thread, Frame *frame) {}
+
+void ifeq(SerialHeap *heap, Thread *thread, Frame *frame) {
+    int value = pop_int(frame->operand_stack);
+    u1 branch1 = step_pc1_and_read_code_no_submit(frame);
+    u1 branch2 = step_pc2_and_read_code_no_submit(frame);
+    frame->pc = (value == 0) ? step_pc_and_read_pc(frame, (branch1 << 8) | branch2) : step_pc_and_read_pc(frame, 3);
+}
+
+void ifne(SerialHeap *heap, Thread *thread, Frame *frame) {
+    int value = pop_int(frame->operand_stack);
+    u1 branch1 = step_pc1_and_read_code_no_submit(frame);
+    u1 branch2 = step_pc2_and_read_code_no_submit(frame);
+    frame->pc = (value != 0) ? step_pc_and_read_pc(frame, (branch1 << 8) | branch2) : step_pc_and_read_pc(frame, 3);
+}
+
+void iflt(SerialHeap *heap, Thread *thread, Frame *frame) {
+    int value = pop_int(frame->operand_stack);
+    u1 branch1 = step_pc1_and_read_code_no_submit(frame);
+    u1 branch2 = step_pc2_and_read_code_no_submit(frame);
+    frame->pc = (value < 0) ? step_pc_and_read_pc(frame, (branch1 << 8) | branch2) : step_pc_and_read_pc(frame, 3);
+}
+
+void ifge(SerialHeap *heap, Thread *thread, Frame *frame) {
+    int value = pop_int(frame->operand_stack);
+    u1 branch1 = step_pc1_and_read_code_no_submit(frame);
+    u1 branch2 = step_pc2_and_read_code_no_submit(frame);
+    frame->pc = (value >= 0) ? step_pc_and_read_pc(frame, (branch1 << 8) | branch2) : step_pc_and_read_pc(frame, 3);
+}
+
+void ifgt(SerialHeap *heap, Thread *thread, Frame *frame) {
+    int value = pop_int(frame->operand_stack);
+    u1 branch1 = step_pc1_and_read_code_no_submit(frame);
+    u1 branch2 = step_pc2_and_read_code_no_submit(frame);
+    frame->pc = (value > 0) ? step_pc_and_read_pc(frame, (branch1 << 8) | branch2) : step_pc_and_read_pc(frame, 3);
+}
+void ifle(SerialHeap *heap, Thread *thread, Frame *frame) {
+    int value = pop_int(frame->operand_stack);
+    u1 branch1 = step_pc1_and_read_code_no_submit(frame);
+    u1 branch2 = step_pc2_and_read_code_no_submit(frame);
+    frame->pc = (value <= 0) ? step_pc_and_read_pc(frame, (branch1 << 8) | branch2) : step_pc_and_read_pc(frame, 3);
+}
 
 void if_icmpeq(SerialHeap *heap, Thread *thread, Frame *frame) {
     int value2 = pop_int(frame->operand_stack);
@@ -547,29 +614,37 @@ void ret(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void tableswitch(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void lookupswitch(SerialHeap *heap, Thread *thread, Frame *frame) {}
 
-int ireturn(SerialHeap *heap, Thread *thread, Frame *frame) {
+void ireturn(SerialHeap *heap, Thread *thread, Frame *frame) {
     pop_frame(thread->vm_stack);
-    return pop_int(frame->operand_stack);
+    Frame *next = get_stack(thread->vm_stack);
+    if (NULL != next) push_int(next->operand_stack, pop_int(frame->operand_stack));
 }
 
-long lreturn(SerialHeap *heap, Thread *thread, Frame *frame) {
+void lreturn(SerialHeap *heap, Thread *thread, Frame *frame) {
     pop_frame(thread->vm_stack);
-    return pop_long(frame->operand_stack);
+    Frame *next = get_stack(thread->vm_stack);
+    if (NULL != next) push_long_from(frame->operand_stack, next->operand_stack);
 }
 
-float freturn(SerialHeap *heap, Thread *thread, Frame *frame) {
+void freturn(SerialHeap *heap, Thread *thread, Frame *frame) {
     pop_frame(thread->vm_stack);
-    return pop_float(frame->operand_stack);
+    Frame *next = get_stack(thread->vm_stack);
+    if (NULL != next) push_float(next->operand_stack, pop_float(frame->operand_stack));
 }
 
-double dreturn(SerialHeap *heap, Thread *thread, Frame *frame) {
+void dreturn(SerialHeap *heap, Thread *thread, Frame *frame) {
     pop_frame(thread->vm_stack);
-    return pop_double(frame->operand_stack);
+    Frame *next = get_stack(thread->vm_stack);
+    if (NULL != next) push_double_from(frame->operand_stack, next->operand_stack);
 }
 
-void areturn(SerialHeap *heap, Thread *thread, Frame *frame) {}
+void areturn(SerialHeap *heap, Thread *thread, Frame *frame) {
+    pop_frame(thread->vm_stack);
+    Frame *next = get_stack(thread->vm_stack);
+    if (NULL != next) push_stack(next->operand_stack, pop_stack(frame->operand_stack));
+}
+
 void j_return(SerialHeap *heap, Thread *thread, Frame *frame) {
-//    printf("%d", frame->local_variables[1]);
     pop_frame(thread->vm_stack);
 }
 
@@ -586,7 +661,14 @@ void putstatic(SerialHeap *heap, Thread *thread, Frame *frame) {
     set_field_by_index(thread, heap, frame, (byte1 << 8) | byte2);
     step_pc_1(frame);
 }
-void getfield(SerialHeap *heap, Thread *thread, Frame *frame) {}
+
+void getfield(SerialHeap *heap, Thread *thread, Frame *frame) {
+    u1 byte1 = step_pc1_and_read_code(frame);
+    u1 byte2 = step_pc1_and_read_code(frame);
+    put_field_to_opstack_by_index(thread, heap, frame, (byte1 << 8) | byte2);
+    step_pc_1(frame);
+}
+
 void putfield(SerialHeap *heap, Thread *thread, Frame *frame) {
     u1 byte1 = step_pc1_and_read_code(frame);
     u1 byte2 = step_pc1_and_read_code(frame);
@@ -640,15 +722,26 @@ void monitorexit(SerialHeap *heap, Thread *thread, Frame *frame) {
 
 void wide(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void multianewarray(SerialHeap *heap, Thread *thread, Frame *frame) {}
-void ifnull(SerialHeap *heap, Thread *thread, Frame *frame) {}
-void ifnonnull(SerialHeap *heap, Thread *thread, Frame *frame) {}
+
+void ifnull(SerialHeap *heap, Thread *thread, Frame *frame) {
+    void *value = pop_stack(frame->operand_stack);
+    u1 branch1 = step_pc1_and_read_code_no_submit(frame);
+    u1 branch2 = step_pc2_and_read_code_no_submit(frame);
+    frame->pc = (value == NULL) ? step_pc_and_read_pc(frame, (branch1 << 8) | branch2) : step_pc_and_read_pc(frame, 3);
+}
+
+void ifnonnull(SerialHeap *heap, Thread *thread, Frame *frame) {
+    void *value = pop_stack(frame->operand_stack);
+    u1 branch1 = step_pc1_and_read_code_no_submit(frame);
+    u1 branch2 = step_pc2_and_read_code_no_submit(frame);
+    frame->pc = (value != NULL) ? step_pc_and_read_pc(frame, (branch1 << 8) | branch2) : step_pc_and_read_pc(frame, 3);
+}
+
 void goto_w(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void jsr_w(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void breakpoint(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void impdep1(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void impdep2(SerialHeap *heap, Thread *thread, Frame *frame) {}
-
-Operator instructions[0x100];
 
 void init_instructions()
 {
@@ -880,6 +973,215 @@ void init_instructions()
     instructions[0xff] = impdep2;
 }
 
+void init_instructions_desc()
+{
+    instructions_desc[0x00] = "nop";
+    instructions_desc[0x01] = "aconst_null";
+    instructions_desc[0x02] = "iconst_m1";
+    instructions_desc[0x03] = "iconst_0";
+    instructions_desc[0x04] = "iconst_1";
+    instructions_desc[0x05] = "iconst_2";
+    instructions_desc[0x06] = "iconst_3";
+    instructions_desc[0x07] = "iconst_4";
+    instructions_desc[0x08] = "iconst_5";
+    instructions_desc[0x09] = "lconst_0";
+    instructions_desc[0x0a] = "lconst_1";
+    instructions_desc[0x0b] = "fconst_0";
+    instructions_desc[0x0c] = "fconst_1";
+    instructions_desc[0x0d] = "fconst_2";
+    instructions_desc[0x0e] = "dconst_0";
+    instructions_desc[0x0f] = "dconst_1";
+    instructions_desc[0x10] = "bipush";
+    instructions_desc[0x11] = "sipush";
+    instructions_desc[0x12] = "ldc";
+    instructions_desc[0x13] = "ldc_w";
+    instructions_desc[0x14] = "ldc2_w";
+    instructions_desc[0x15] = "iload";
+    instructions_desc[0x16] = "lload";
+    instructions_desc[0x17] = "fload";
+    instructions_desc[0x18] = "dload";
+    instructions_desc[0x19] = "aload";
+    instructions_desc[0x1a] = "iload_0";
+    instructions_desc[0x1b] = "iload_1";
+    instructions_desc[0x1c] = "iload_2";
+    instructions_desc[0x1d] = "iload_3";
+    instructions_desc[0x1e] = "lload_0";
+    instructions_desc[0x1f] = "lload_1";
+    instructions_desc[0x20] = "lload_2";
+    instructions_desc[0x21] = "lload_3";
+    instructions_desc[0x22] = "fload_0";
+    instructions_desc[0x23] = "fload_1";
+    instructions_desc[0x24] = "fload_2";
+    instructions_desc[0x25] = "fload_3";
+    instructions_desc[0x26] = "dload_0";
+    instructions_desc[0x27] = "dload_1";
+    instructions_desc[0x28] = "dload_2";
+    instructions_desc[0x29] = "dload_3";
+    instructions_desc[0x2a] = "aload_0";
+    instructions_desc[0x2b] = "aload_1";
+    instructions_desc[0x2c] = "aload_2";
+    instructions_desc[0x2d] = "aload_3";
+    instructions_desc[0x2e] = "iaload";
+    instructions_desc[0x2f] = "laload";
+    instructions_desc[0x30] = "faload";
+    instructions_desc[0x31] = "daload";
+    instructions_desc[0x32] = "aaload";
+    instructions_desc[0x33] = "baload";
+    instructions_desc[0x34] = "caload";
+    instructions_desc[0x35] = "saload";
+    instructions_desc[0x36] = "istore";
+    instructions_desc[0x37] = "lstore";
+    instructions_desc[0x38] = "fstore";
+    instructions_desc[0x39] = "dstore";
+    instructions_desc[0x3a] = "astore";
+    instructions_desc[0x3b] = "istore_0";
+    instructions_desc[0x3c] = "istore_1";
+    instructions_desc[0x3d] = "istore_2";
+    instructions_desc[0x3e] = "istore_3";
+    instructions_desc[0x3f] = "lstore_0";
+    instructions_desc[0x40] = "lstore_1";
+    instructions_desc[0x41] = "lstore_2";
+    instructions_desc[0x42] = "lstore_3";
+    instructions_desc[0x43] = "fstore_0";
+    instructions_desc[0x44] = "fstore_1";
+    instructions_desc[0x45] = "fstore_2";
+    instructions_desc[0x46] = "fstore_3";
+    instructions_desc[0x47] = "dstore_0";
+    instructions_desc[0x48] = "dstore_1";
+    instructions_desc[0x49] = "dstore_2";
+    instructions_desc[0x4a] = "dstore_3";
+    instructions_desc[0x4b] = "astore_0";
+    instructions_desc[0x4c] = "astore_1";
+    instructions_desc[0x4d] = "astore_2";
+    instructions_desc[0x4e] = "astore_3";
+    instructions_desc[0x4f] = "iastore";
+    instructions_desc[0x50] = "lastore";
+    instructions_desc[0x51] = "fastore";
+    instructions_desc[0x52] = "dastore";
+    instructions_desc[0x53] = "aastore";
+    instructions_desc[0x54] = "bastore";
+    instructions_desc[0x55] = "castore";
+    instructions_desc[0x56] = "sastore";
+    instructions_desc[0x57] = "j_pop";
+    instructions_desc[0x58] = "pop2";
+    instructions_desc[0x59] = "dup";
+    instructions_desc[0x5a] = "dup_x1";
+    instructions_desc[0x5b] = "dup_x2";
+    instructions_desc[0x5c] = "dup2";
+    instructions_desc[0x5d] = "dup2_x1";
+    instructions_desc[0x5e] = "dup2_x2";
+    instructions_desc[0x5f] = "swap";
+    instructions_desc[0x60] = "iadd";
+    instructions_desc[0x61] = "ladd";
+    instructions_desc[0x62] = "fadd";
+    instructions_desc[0x63] = "dadd";
+    instructions_desc[0x64] = "isub";
+    instructions_desc[0x65] = "lsub";
+    instructions_desc[0x66] = "fsub";
+    instructions_desc[0x67] = "dsub";
+    instructions_desc[0x68] = "imul";
+    instructions_desc[0x69] = "lmul";
+    instructions_desc[0x6a] = "fmul";
+    instructions_desc[0x6b] = "dmul";
+    instructions_desc[0x6c] = "idiv";
+    instructions_desc[0x6d] = "j_ldiv";
+    instructions_desc[0x6e] = "fdiv";
+    instructions_desc[0x6f] = "ddiv";
+    instructions_desc[0x70] = "irem";
+    instructions_desc[0x71] = "lrem";
+    instructions_desc[0x72] = "frem";
+    instructions_desc[0x73] = "j_drem";
+    instructions_desc[0x74] = "ineg";
+    instructions_desc[0x75] = "lneg";
+    instructions_desc[0x76] = "fneg";
+    instructions_desc[0x77] = "dneg";
+    instructions_desc[0x78] = "ishl";
+    instructions_desc[0x79] = "lshl";
+    instructions_desc[0x7a] = "ishr";
+    instructions_desc[0x7b] = "lshr";
+    instructions_desc[0x7c] = "iushr";
+    instructions_desc[0x7d] = "lushr";
+    instructions_desc[0x7e] = "iand";
+    instructions_desc[0x7f] = "land";
+    instructions_desc[0x80] = "ior";
+    instructions_desc[0x81] = "lor";
+    instructions_desc[0x82] = "ixor";
+    instructions_desc[0x83] = "lxor";
+    instructions_desc[0x84] = "iinc";
+    instructions_desc[0x85] = "i2l";
+    instructions_desc[0x86] = "i2f";
+    instructions_desc[0x87] = "i2d";
+    instructions_desc[0x88] = "l2i";
+    instructions_desc[0x89] = "l2f";
+    instructions_desc[0x8a] = "l2d";
+    instructions_desc[0x8b] = "f2i";
+    instructions_desc[0x8c] = "f2l";
+    instructions_desc[0x8d] = "f2d";
+    instructions_desc[0x8e] = "d2i";
+    instructions_desc[0x8f] = "d2l";
+    instructions_desc[0x90] = "d2f";
+    instructions_desc[0x91] = "i2b";
+    instructions_desc[0x92] = "i2c";
+    instructions_desc[0x93] = "i2s";
+    instructions_desc[0x94] = "lcmp";
+    instructions_desc[0x95] = "fcmpl";
+    instructions_desc[0x96] = "fcmpg";
+    instructions_desc[0x97] = "dcmpl";
+    instructions_desc[0x98] = "dcmpg";
+    instructions_desc[0x99] = "ifeq";
+    instructions_desc[0x9a] = "ifne";
+    instructions_desc[0x9b] = "iflt";
+    instructions_desc[0x9c] = "ifge";
+    instructions_desc[0x9d] = "ifgt";
+    instructions_desc[0x9e] = "ifle";
+    instructions_desc[0x9f] = "if_icmpeq";
+    instructions_desc[0xa0] = "if_icmpne";
+    instructions_desc[0xa1] = "if_icmplt";
+    instructions_desc[0xa2] = "if_icmpge";
+    instructions_desc[0xa3] = "if_icmpgt";
+    instructions_desc[0xa4] = "if_icmple";
+    instructions_desc[0xa5] = "if_acmpeq";
+    instructions_desc[0xa6] = "if_acmpne";
+    instructions_desc[0xa7] = "j_goto";
+    instructions_desc[0xa8] = "jsr";
+    instructions_desc[0xa9] = "ret";
+    instructions_desc[0xaa] = "tableswitch";
+    instructions_desc[0xab] = "lookupswitch";
+    instructions_desc[0xac] = "ireturn";
+    instructions_desc[0xad] = "lreturn";
+    instructions_desc[0xae] = "freturn";
+    instructions_desc[0xaf] = "dreturn";
+    instructions_desc[0xb0] = "areturn";
+    instructions_desc[0xb1] = "j_return";
+    instructions_desc[0xb2] = "getstatic";
+    instructions_desc[0xb3] = "putstatic";
+    instructions_desc[0xb4] = "getfield";
+    instructions_desc[0xb5] = "putfield";
+    instructions_desc[0xb6] = "invokevirtual";
+    instructions_desc[0xb7] = "invokespecial";
+    instructions_desc[0xb8] = "invokestatic";
+    instructions_desc[0xb9] = "invokeinterface";
+    instructions_desc[0xba] = "invokedynamic";
+    instructions_desc[0xbb] = "new";
+    instructions_desc[0xbc] = "newarray";
+    instructions_desc[0xbd] = "anewarray";
+    instructions_desc[0xbe] = "arraylength";
+    instructions_desc[0xbf] = "athrow";
+    instructions_desc[0xc0] = "checkcast";
+    instructions_desc[0xc1] = "instanceof";
+    instructions_desc[0xc2] = "monitorenter";
+    instructions_desc[0xc3] = "monitorexit";
+    instructions_desc[0xc4] = "wide";
+    instructions_desc[0xc5] = "multianewarray";
+    instructions_desc[0xc6] = "ifnull";
+    instructions_desc[0xc7] = "ifnonnull";
+    instructions_desc[0xc8] = "goto_w";
+    instructions_desc[0xc9] = "jsr_w";
+    instructions_desc[0xca] = "breakpoint";
+    instructions_desc[0xfe] = "impdep1";
+    instructions_desc[0xff] = "impdep2";
+}
+
 void pop_frame(Stack *vm_stack)
 {
     Frame *frame = pop_stack(vm_stack);
@@ -888,6 +1190,11 @@ void pop_frame(Stack *vm_stack)
 
 void exec(Operator operator, SerialHeap *heap, Thread *thread, Frame *frame)
 {
+    CONSTANT_Class_info class_name_info = *(CONSTANT_Class_info*)frame->constant_pool[frame->class->this_class].info;
+    CONSTANT_Utf8_info class_name = *(CONSTANT_Utf8_info*)frame->constant_pool[class_name_info.name_index].info;
+    CONSTANT_Utf8_info method_name = *(CONSTANT_Utf8_info*)frame->constant_pool[frame->method->name_index].info;
+    CONSTANT_Utf8_info method_desc = *(CONSTANT_Utf8_info*)frame->constant_pool[frame->method->descriptor_index].info;
+    printf("%20s\t\t - %s.%s%s\n", instructions_desc[read_code(frame)], class_name.bytes, method_name.bytes, method_desc.bytes);
     operator(heap, thread, frame);
 }
 
@@ -895,6 +1202,5 @@ void invoke_method(Thread *thread, SerialHeap *heap) {
     do {
         Frame *frame = get_stack(thread->vm_stack);
         exec(instructions[read_code(frame)], heap, thread, frame);
-        printf("%#x\n", read_code(frame));
     } while (!is_empty_stack(thread->vm_stack));
 }
