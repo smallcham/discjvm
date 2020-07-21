@@ -715,8 +715,20 @@ void new(SerialHeap *heap, Thread *thread, Frame *frame) {
     create_object(thread, heap, frame, (byte1 << 8) | byte2);
     step_pc_1(frame);
 }
-void newarray(SerialHeap *heap, Thread *thread, Frame *frame) {}
-void anewarray(SerialHeap *heap, Thread *thread, Frame *frame) {}
+
+void newarray(SerialHeap *heap, Thread *thread, Frame *frame) {
+    u1 type = step_pc1_and_read_code(frame);
+//    create_object(thread, heap, frame, (byte1 << 8) | byte2);
+    step_pc_1(frame);
+}
+
+void anewarray(SerialHeap *heap, Thread *thread, Frame *frame) {
+    u1 byte1 = step_pc1_and_read_code(frame);
+    u1 byte2 = step_pc1_and_read_code(frame);
+//    create_object(thread, heap, frame, (byte1 << 8) | byte2);
+    step_pc_1(frame);
+}
+
 void arraylength(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void athrow(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void checkcast(SerialHeap *heap, Thread *thread, Frame *frame) {}

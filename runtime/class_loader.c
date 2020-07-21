@@ -342,7 +342,7 @@ void do_invokevirtual_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
     CONSTANT_Utf8_info method_desc_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info;
     ClassFile *class = load_class(thread, heap, class_name_info.bytes);
     printf("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class_name_info.bytes, name_and_type_info.name_index, method_name_info.bytes, name_and_type_info.descriptor_index, method_desc_info.bytes);
-    MethodInfo *method = find_method_with_desc(thread, heap, class, method_name_info.bytes, method_desc_info.bytes);
+    MethodInfo *method = find_method_iter_super_with_desc(thread, heap, &class, method_name_info.bytes, method_desc_info.bytes);
     if (NULL == method) exit(-1);
     create_vm_frame_by_method(thread, class, method, get_method_code(*method));
 }
@@ -715,12 +715,12 @@ void print_class_info(ClassFile class)
     }
 }
 
-MethodInfo *find_method_iter_super_with_desc(Thread *thread, SerialHeap *heap, ClassFile *class, char *name, char *desc) {
+MethodInfo *find_method_iter_super_with_desc(Thread *thread, SerialHeap *heap, ClassFile **class, char *name, char *desc) {
     while (NULL != class)
     {
-        MethodInfo *method = find_method_with_desc(thread, heap, class, name, desc);
+        MethodInfo *method = find_method_with_desc(thread, heap, *class, name, desc);
         if (NULL != method) return method;
-        class = get_super_class(thread, heap, class);
+        *class = get_super_class(thread, heap, *class);
     }
     return NULL;
 }
