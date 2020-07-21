@@ -1204,7 +1204,7 @@ void exec(Operator operator, SerialHeap *heap, Thread *thread, Frame *frame)
     CONSTANT_Utf8_info class_name = *(CONSTANT_Utf8_info*)frame->constant_pool[class_name_info.name_index].info;
     CONSTANT_Utf8_info method_name = *(CONSTANT_Utf8_info*)frame->constant_pool[frame->method->name_index].info;
     CONSTANT_Utf8_info method_desc = *(CONSTANT_Utf8_info*)frame->constant_pool[frame->method->descriptor_index].info;
-    printf("%20s\t\t - %s.%s%s\n", instructions_desc[read_code(frame)], class_name.bytes, method_name.bytes, method_desc.bytes);
+    printf("%20s - %s.%s%s\n", instructions_desc[read_code(frame)], class_name.bytes, method_name.bytes, method_desc.bytes);
     operator(heap, thread, frame);
 }
 
