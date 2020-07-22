@@ -725,11 +725,14 @@ void newarray(SerialHeap *heap, Thread *thread, Frame *frame) {
 void anewarray(SerialHeap *heap, Thread *thread, Frame *frame) {
     u1 byte1 = step_pc1_and_read_code(frame);
     u1 byte2 = step_pc1_and_read_code(frame);
-//    create_object(thread, heap, frame, (byte1 << 8) | byte2);
+    create_array_reference(thread, heap, frame, (byte1 << 8) | byte2, pop_int(frame->operand_stack));
     step_pc_1(frame);
 }
 
-void arraylength(SerialHeap *heap, Thread *thread, Frame *frame) {}
+void arraylength(SerialHeap *heap, Thread *thread, Frame *frame) {
+
+}
+
 void athrow(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void checkcast(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void instanceof(SerialHeap *heap, Thread *thread, Frame *frame) {}

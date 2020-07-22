@@ -467,16 +467,22 @@ void set_field_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index
 
 void create_object(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
 {
+    create_array_reference(thread, heap, frame, index, 1);
+}
+
+void create_array_reference(Thread *thread, SerialHeap *heap, Frame *frame, u2 index, u1 count)
+{
     ClassFile *class = load_class_by_class_info_index(thread, heap, frame->constant_pool, index);
     if (class_is_not_init(class)) {
         back_pc(frame, 3);
         init_class(thread, heap, class);
         return;
     }
-    //TODO create Object by Class, write here. The method init is being call by 'invokespecial', check is it needed call automatic.
-    Object *object = (Object*)malloc(sizeof(Object));
-    object->class = class;
-    push_stack(frame->operand_stack, object);
+    Object *objects = (Object*)malloc(sizeof(Object) * count);
+    for (int i = 0; i < count; i++) {
+        objects[i].class = class;
+    }
+    push_stack(frame->operand_stack, objects);
 }
 
 ClassFile *load_class_by_class_info_name_index(Thread *thread, SerialHeap *heap, ConstantPool *constant_pool, u2 index)
