@@ -467,7 +467,15 @@ void set_field_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index
 
 void create_object(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
 {
-    create_array_reference(thread, heap, frame, index, 1);
+    ClassFile *class = load_class_by_class_info_index(thread, heap, frame->constant_pool, index);
+    if (class_is_not_init(class)) {
+        back_pc(frame, 3);
+        init_class(thread, heap, class);
+        return;
+    }
+    Object *object = (Object*)malloc(sizeof(Object));
+    object->class = class;
+    push_stack(frame->operand_stack, object);
 }
 
 void create_array_reference(Thread *thread, SerialHeap *heap, Frame *frame, u2 index, u1 count)
@@ -475,6 +483,7 @@ void create_array_reference(Thread *thread, SerialHeap *heap, Frame *frame, u2 i
     ClassFile *class = load_class_by_class_info_index(thread, heap, frame->constant_pool, index);
     if (class_is_not_init(class)) {
         back_pc(frame, 3);
+        push_int(frame->operand_stack, count);
         init_class(thread, heap, class);
         return;
     }
