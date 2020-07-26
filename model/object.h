@@ -11,4 +11,9 @@ typedef struct {
     ClassFile *class;
 } Object;
 
+typedef struct {
+    u4 length;
+    Object *objects;
+} Array;
+
 #endif //DISCJVM_OBJECT_H

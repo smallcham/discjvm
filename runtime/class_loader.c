@@ -9,7 +9,6 @@ ClassFile *load_class(Thread *thread, SerialHeap *heap, char *full_class_name)
 
     ClassFile *class = (ClassFile*)malloc(sizeof(ClassFile));
     class->init_state = CLASS_NOT_INIT;
-    class->runtime_fields_count = 0;
     u1 *class_file = get_class_bytes(full_class_name);
     class->magic = l2b_4(*(u4 *) class_file);
     class_file += sizeof(u4);
@@ -225,6 +224,7 @@ ClassFile *load_class(Thread *thread, SerialHeap *heap, char *full_class_name)
     class_file += sizeof(u2);
     if (class->fields_count > 0) {
         class->fields = (FieldInfo *) malloc(class->fields_count * sizeof(FieldInfo));
+        class->runtime_fields = (Field *) malloc(class->fields_count * sizeof(Field));
         for (int i = 0; i < class->fields_count; i++) {
             class->fields[i].access_flags = l2b_2(*(u2 *) class_file);
             class_file += sizeof(u2);
@@ -250,6 +250,8 @@ ClassFile *load_class(Thread *thread, SerialHeap *heap, char *full_class_name)
                     }
                 }
             }
+            class->runtime_fields[i].field_info = &class->fields[i];
+            class->runtime_fields[i].slot = NULL;
         }
     }
     class->methods_count = l2b_2(*(u2 *) class_file);
@@ -298,11 +300,26 @@ ClassFile *load_class(Thread *thread, SerialHeap *heap, char *full_class_name)
             }
         }
     }
-    put_class_to_cache(heap->class_pool, class);
+    put_class_to_cache(&heap->class_pool, class);
     return class;
 }
 
 void do_invokestatic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
+{
+    CONSTANT_Methodref_info method_ref_info = *(CONSTANT_Methodref_info*)frame->constant_pool[index].info;
+    CONSTANT_Class_info class_info = *(CONSTANT_Class_info*)frame->constant_pool[method_ref_info.class_index].info;
+    CONSTANT_NameAndType_info name_and_type_info = *(CONSTANT_NameAndType_info*)frame->constant_pool[method_ref_info.name_and_type_index].info;
+    CONSTANT_Utf8_info class_name_info = *(CONSTANT_Utf8_info*)frame->constant_pool[class_info.name_index].info;
+    CONSTANT_Utf8_info method_name_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.name_index].info;
+    CONSTANT_Utf8_info method_desc_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info;
+    ClassFile *class = load_class(thread, heap, class_name_info.bytes);
+    printf("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class_name_info.bytes, name_and_type_info.name_index, method_name_info.bytes, name_and_type_info.descriptor_index, method_desc_info.bytes);
+    MethodInfo *method = find_method_with_desc(thread, heap, class, method_name_info.bytes, method_desc_info.bytes);
+    if (NULL == method) exit(-1);
+    create_vm_frame_by_method(thread, class, method, get_method_code(*method));
+}
+
+void do_invokeinterface_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
 {
     CONSTANT_Methodref_info method_ref_info = *(CONSTANT_Methodref_info*)frame->constant_pool[index].info;
     CONSTANT_Class_info class_info = *(CONSTANT_Class_info*)frame->constant_pool[method_ref_info.class_index].info;
@@ -362,7 +379,8 @@ void put_field_to_opstack_by_index(Thread *thread, SerialHeap *heap, Frame *fram
         return;
     }
 
-    for (int i = 0; i < class->runtime_fields_count; i++) {
+    for (int i = 0; i < class->fields_count; i++) {
+        if (NULL == class->runtime_fields[i].slot) continue;
         if (class->runtime_fields[i].field_info->name_index == name_and_type_info.name_index &&
                 class->runtime_fields[i].field_info->descriptor_index == name_and_type_info.descriptor_index) {
             if (str_start_with(field_desc_info.bytes, "B") ||
@@ -383,12 +401,10 @@ void put_field_to_opstack_by_index(Thread *thread, SerialHeap *heap, Frame *fram
                 push_int(frame->operand_stack, class->runtime_fields[i].slot[0].value);
                 push_int(frame->operand_stack, class->runtime_fields[i].slot[1].value);
             }
-            else if (str_start_with(field_desc_info.bytes, "L")) {
-                //Object
+            else if (str_start_with(field_desc_info.bytes, "L") ||
+                     str_start_with(field_desc_info.bytes, "[")) {
+                //Object | Array
                 push_stack(frame->operand_stack, class->runtime_fields[i].slot->object_value);
-            }
-            else if (str_start_with(field_desc_info.bytes, "[")) {
-                //Array
             }
             return;
         }
@@ -416,8 +432,7 @@ void set_field(Thread *thread, SerialHeap *heap, Frame *frame, CONSTANT_Fieldref
         }
     }
     if (index == -1) exit(-1);
-    class->runtime_fields[index].field_info = &class->fields[index];
-    class->runtime_fields_count++;
+//    class->runtime_fields[index].field_info = &class->fields[index];
     if (str_start_with(field_desc_info.bytes, "B") ||
     str_start_with(field_desc_info.bytes, "C") ||
     str_start_with(field_desc_info.bytes, "I") ||
@@ -443,13 +458,11 @@ void set_field(Thread *thread, SerialHeap *heap, Frame *frame, CONSTANT_Fieldref
         class->runtime_fields[index].slot[0].value = lower;
         class->runtime_fields[index].slot[1].value = higher;
     }
-    else if (str_start_with(field_desc_info.bytes, "L")) {
-        //Object
+    else if (str_start_with(field_desc_info.bytes, "L") ||
+            str_start_with(field_desc_info.bytes, "[")) {
+        //Object | Array
         class->runtime_fields[index].slot = malloc(sizeof(Slot));
         class->runtime_fields[index].slot->object_value = pop_stack(frame->operand_stack);
-    }
-    else if (str_start_with(field_desc_info.bytes, "[")) {
-        //Array
     }
 }
 
@@ -487,11 +500,14 @@ void create_array_reference(Thread *thread, SerialHeap *heap, Frame *frame, u2 i
         init_class(thread, heap, class);
         return;
     }
+    Array *array = (Array *)malloc(sizeof(Array));
     Object *objects = (Object*)malloc(sizeof(Object) * count);
     for (int i = 0; i < count; i++) {
         objects[i].class = class;
     }
-    push_stack(frame->operand_stack, objects);
+    array->objects = objects;
+    array->length = count;
+    push_stack(frame->operand_stack, array);
 }
 
 ClassFile *load_class_by_class_info_name_index(Thread *thread, SerialHeap *heap, ConstantPool *constant_pool, u2 index)
@@ -540,7 +556,7 @@ void init_class(Thread *thread, SerialHeap *heap, ClassFile *class)
 {
     if (class_is_inited(class)) return;
     class->init_state = CLASS_IN_INIT;
-    class->runtime_fields = malloc(sizeof(Field) * class->fields_count);
+//    class->runtime_fields = malloc(sizeof(Field) * class->fields_count);
 //    MethodInfo *init = find_method_with_desc(thread, heap, class, "<init>", "()V");
 //    CodeAttribute *init_code = get_method_code(*init);
 //    create_vm_frame_by_method_add_hook(thread, class, init, init_code, (PopHook) set_class_inited_by_frame);
