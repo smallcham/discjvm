@@ -50,6 +50,8 @@ void* get_stack(Stack *stack);
 
 char* find_in_stack(Stack *stack, char* value);
 
+int get_int(Stack *stack);
+
 int pop_int(Stack *stack);
 
 float pop_float(Stack *stack);

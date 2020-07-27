@@ -128,7 +128,7 @@ void nop(SerialHeap *heap, Thread *thread, Frame *frame) {
 }
 
 void aconst_null(SerialHeap *heap, Thread *thread, Frame *frame) {
-    push_stack(frame->operand_stack, NULL);
+    create_null_object(thread, heap, frame);
     step_pc_1(frame);
 }
 
@@ -469,9 +469,7 @@ void j_pop(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void pop2(SerialHeap *heap, Thread *thread, Frame *frame) {}
 
 void dup(SerialHeap *heap, Thread *thread, Frame *frame) {
-    void *value = get_stack(frame->operand_stack);
-    push_stack(frame->operand_stack, value);
-    push_stack(frame->operand_stack, value);
+    push_stack(frame->operand_stack, get_stack(frame->operand_stack));
     step_pc_1(frame);
 }
 void dup_x1(SerialHeap *heap, Thread *thread, Frame *frame) {}
@@ -783,6 +781,7 @@ void invokeinterface(SerialHeap *heap, Thread *thread, Frame *frame) {
 }
 
 void invokedynamic(SerialHeap *heap, Thread *thread, Frame *frame) {}
+
 void new(SerialHeap *heap, Thread *thread, Frame *frame) {
     u1 byte1 = step_pc1_and_read_code(frame);
     u1 byte2 = step_pc1_and_read_code(frame);
@@ -799,7 +798,7 @@ void newarray(SerialHeap *heap, Thread *thread, Frame *frame) {
 void anewarray(SerialHeap *heap, Thread *thread, Frame *frame) {
     u1 byte1 = step_pc1_and_read_code(frame);
     u1 byte2 = step_pc1_and_read_code(frame);
-    create_array_reference(thread, heap, frame, (byte1 << 8) | byte2, pop_int(frame->operand_stack));
+    create_array_reference(thread, heap, frame, (byte1 << 8) | byte2);
     step_pc_1(frame);
 }
 

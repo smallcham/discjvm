@@ -135,6 +135,11 @@ char* find_in_stack(Stack *stack, char* value)
     return NULL;
 }
 
+int get_int(Stack *stack)
+{
+    return *(int*) get_stack(stack);
+}
+
 int pop_int(Stack *stack)
 {
     return *(int*) pop_stack(stack);

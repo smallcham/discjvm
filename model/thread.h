@@ -28,6 +28,8 @@ typedef struct {
 
 Frame *create_vm_frame_by_method(Thread* thread, ClassFile *class, MethodInfo *method, CodeAttribute *code);
 
+Frame *create_vm_frame_by_method_add_params(Thread* thread, ClassFile *class, Frame *frame, MethodInfo *method, CONSTANT_Utf8_info method_desc_info, CodeAttribute *code);
+
 Frame *create_vm_frame_by_method_add_hook(Thread* thread, ClassFile *class, MethodInfo *method, CodeAttribute *code, PopHook hook);
 
 Thread create_thread(int vm_stack_size, int c_stack_size);

@@ -313,10 +313,15 @@ void do_invokestatic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2
     CONSTANT_Utf8_info method_name_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.name_index].info;
     CONSTANT_Utf8_info method_desc_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info;
     ClassFile *class = load_class(thread, heap, class_name_info.bytes);
+    if (class_is_not_init(class)) {
+        back_pc(frame, 3);
+        init_class(thread, heap, class);
+        return;
+    }
     printf("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class_name_info.bytes, name_and_type_info.name_index, method_name_info.bytes, name_and_type_info.descriptor_index, method_desc_info.bytes);
     MethodInfo *method = find_method_with_desc(thread, heap, class, method_name_info.bytes, method_desc_info.bytes);
     if (NULL == method) exit(-1);
-    create_vm_frame_by_method(thread, class, method, get_method_code(*method));
+    create_vm_frame_by_method_add_params(thread, class, frame, method, method_desc_info, get_method_code(*method));
 }
 
 void do_invokeinterface_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index, u1 count)
@@ -347,7 +352,7 @@ void do_invokespecial_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
     CONSTANT_Utf8_info method_desc_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info;
     ClassFile *class = load_class(thread, heap, class_name_info.bytes);
     printf("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class_name_info.bytes, name_and_type_info.name_index, method_name_info.bytes, name_and_type_info.descriptor_index, method_desc_info.bytes);
-    MethodInfo *method = find_method_with_desc(thread, heap, class, method_name_info.bytes, method_desc_info.bytes);
+    MethodInfo *method = find_method_iter_super_with_desc(thread, heap, &class, method_name_info.bytes, method_desc_info.bytes);
     if (NULL == method) exit(-1);
     create_vm_frame_by_method(thread, class, method, get_method_code(*method));
 }
@@ -482,6 +487,15 @@ void set_field_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index
     set_field(thread, heap, frame, *(CONSTANT_Fieldref_info*)frame->constant_pool[index].info);
 }
 
+void create_null_object(Thread *thread, SerialHeap *heap, Frame *frame)
+{
+    Object *object = (Object*)malloc(sizeof(Object));
+    object->class = NULL;
+    object->length = 0;
+    object->fields = NULL;
+    push_stack(frame->operand_stack, object);
+}
+
 void create_object(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
 {
     ClassFile *class = load_class_by_class_info_index(thread, heap, frame->constant_pool, index);
@@ -497,15 +511,15 @@ void create_object(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
     push_stack(frame->operand_stack, object);
 }
 
-void create_array_reference(Thread *thread, SerialHeap *heap, Frame *frame, u2 index, u1 count)
+void create_array_reference(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
 {
     ClassFile *class = load_class_by_class_info_index(thread, heap, frame->constant_pool, index);
     if (class_is_not_init(class)) {
         back_pc(frame, 3);
-        push_int(frame->operand_stack, count);
         init_class(thread, heap, class);
         return;
     }
+    int count = pop_int(frame->operand_stack);
     Object *object = malloc(sizeof(Object));
     object->fields = malloc(sizeof(Field) * count);
     object->class = class;
@@ -636,12 +650,15 @@ CodeAttribute *get_method_code(MethodInfo method) {
     bytes += sizeof(u2);
     if (code_attribute->attributes_count > 0) {
         code_attribute->attributes = malloc(sizeof(AttributeInfo) * code_attribute->attributes_count);
-        code_attribute->attributes->attribute_name_index = l2b_2(*(u2*) bytes);
-        bytes += sizeof(u2);
-        code_attribute->attributes->attribute_length = l2b_4(*(u4*) bytes);
-        bytes += sizeof(u4);
-        code_attribute->attributes->info = malloc(code_attribute->attributes->attribute_length);
-        memcpy(code_attribute->attributes->info, bytes, code_attribute->attributes->attribute_length);
+        for (int i = 0; i < code_attribute->attributes_count; i++) {
+            code_attribute->attributes[i].attribute_name_index = l2b_2(*(u2*) bytes);
+            bytes += sizeof(u2);
+            code_attribute->attributes[i].attribute_length = l2b_4(*(u4*) bytes);
+            bytes += sizeof(u4);
+            code_attribute->attributes[i].info = malloc(code_attribute->attributes[i].attribute_length);
+            memcpy(code_attribute->attributes[i].info, bytes, code_attribute->attributes[i].attribute_length);
+            bytes += code_attribute->attributes[i].attribute_length;
+        }
     }
     return code_attribute;
 }

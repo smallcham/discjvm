@@ -33,6 +33,8 @@ ClassFile *load_class_by_class_info_index(Thread *thread, SerialHeap *heap, Cons
 
 ClassFile *get_super_class(Thread *thread, SerialHeap *heap, ClassFile *class);
 
+void create_null_object(Thread *thread, SerialHeap *heap, Frame *frame);
+
 void create_object(Thread *thread, SerialHeap *heap, Frame *frame, u2 index);
 
 void do_invokestatic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index);
@@ -59,7 +61,7 @@ void print_class_info(ClassFile class);
 
 CodeAttribute *get_method_code(MethodInfo method);
 
-void create_array_reference(Thread *thread, SerialHeap *heap, Frame *frame, u2 index, u1 count);
+void create_array_reference(Thread *thread, SerialHeap *heap, Frame *frame, u2 index);
 
 MethodInfo *find_method_iter_super_with_desc(Thread *thread, SerialHeap *heap, ClassFile **class, char *name, char *desc);
 
