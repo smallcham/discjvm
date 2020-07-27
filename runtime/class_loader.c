@@ -319,17 +319,20 @@ void do_invokestatic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2
     create_vm_frame_by_method(thread, class, method, get_method_code(*method));
 }
 
-void do_invokeinterface_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
+void do_invokeinterface_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index, u1 count)
 {
-    CONSTANT_Methodref_info method_ref_info = *(CONSTANT_Methodref_info*)frame->constant_pool[index].info;
-    CONSTANT_Class_info class_info = *(CONSTANT_Class_info*)frame->constant_pool[method_ref_info.class_index].info;
-    CONSTANT_NameAndType_info name_and_type_info = *(CONSTANT_NameAndType_info*)frame->constant_pool[method_ref_info.name_and_type_index].info;
+    CONSTANT_InterfaceMethodref_info interface_ref_info = *(CONSTANT_InterfaceMethodref_info*)frame->constant_pool[index].info;
+    CONSTANT_Class_info class_info = *(CONSTANT_Class_info*)frame->constant_pool[interface_ref_info.class_index].info;
+    CONSTANT_NameAndType_info name_and_type_info = *(CONSTANT_NameAndType_info*)frame->constant_pool[interface_ref_info.name_and_type_index].info;
     CONSTANT_Utf8_info class_name_info = *(CONSTANT_Utf8_info*)frame->constant_pool[class_info.name_index].info;
     CONSTANT_Utf8_info method_name_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.name_index].info;
     CONSTANT_Utf8_info method_desc_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info;
     ClassFile *class = load_class(thread, heap, class_name_info.bytes);
+    Object *object = pop_stack(frame->operand_stack);
+//    for (int i = 0; i < count; i++) {
+//    }
     printf("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class_name_info.bytes, name_and_type_info.name_index, method_name_info.bytes, name_and_type_info.descriptor_index, method_desc_info.bytes);
-    MethodInfo *method = find_method_with_desc(thread, heap, class, method_name_info.bytes, method_desc_info.bytes);
+    MethodInfo *method = find_method_iter_super_with_desc(thread, heap, &class, method_name_info.bytes, method_desc_info.bytes);
     if (NULL == method) exit(-1);
     create_vm_frame_by_method(thread, class, method, get_method_code(*method));
 }
@@ -359,6 +362,7 @@ void do_invokevirtual_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
     CONSTANT_Utf8_info method_desc_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info;
     ClassFile *class = load_class(thread, heap, class_name_info.bytes);
     printf("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class_name_info.bytes, name_and_type_info.name_index, method_name_info.bytes, name_and_type_info.descriptor_index, method_desc_info.bytes);
+    Object *object = pop_stack(frame->operand_stack);
     MethodInfo *method = find_method_iter_super_with_desc(thread, heap, &class, method_name_info.bytes, method_desc_info.bytes);
     if (NULL == method) exit(-1);
     create_vm_frame_by_method(thread, class, method, get_method_code(*method));
@@ -488,6 +492,8 @@ void create_object(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
     }
     Object *object = (Object*)malloc(sizeof(Object));
     object->class = class;
+    object->length = 1;
+    object->fields = class->runtime_fields;
     push_stack(frame->operand_stack, object);
 }
 
@@ -500,14 +506,14 @@ void create_array_reference(Thread *thread, SerialHeap *heap, Frame *frame, u2 i
         init_class(thread, heap, class);
         return;
     }
-    Array *array = (Array *)malloc(sizeof(Array));
-    Object *objects = (Object*)malloc(sizeof(Object) * count);
+    Object *object = malloc(sizeof(Object));
+    object->fields = malloc(sizeof(Field) * count);
+    object->class = class;
+    object->length = count;
     for (int i = 0; i < count; i++) {
-        objects[i].class = class;
+        object->fields[i] = *class->runtime_fields;
     }
-    array->objects = objects;
-    array->length = count;
-    push_stack(frame->operand_stack, array);
+    push_stack(frame->operand_stack, object);
 }
 
 ClassFile *load_class_by_class_info_name_index(Thread *thread, SerialHeap *heap, ConstantPool *constant_pool, u2 index)

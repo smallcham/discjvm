@@ -9,11 +9,8 @@
 
 typedef struct {
     ClassFile *class;
-} Object;
-
-typedef struct {
     u4 length;
-    Object *objects;
-} Array;
+    Field *fields;
+} Object;
 
 #endif //DISCJVM_OBJECT_H

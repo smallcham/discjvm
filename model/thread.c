@@ -7,7 +7,12 @@
 Frame *create_vm_frame_by_method(Thread* thread, ClassFile *class, MethodInfo *method, CodeAttribute *code)
 {
     if (NULL == code) return NULL;
-    Frame *frame = (Frame*)malloc(sizeof(Frame) + (sizeof(u8) * code->max_locals));
+    Frame *frame = (Frame*)malloc(sizeof(Frame) + (sizeof(Slot) * code->max_locals));
+    for (int i = 0; i < code->max_locals; i++) {
+        frame->local_variables[i] = malloc(sizeof(Slot));
+        frame->local_variables[i]->value = 0;
+        frame->local_variables[i]->object_value = NULL;
+    }
     frame->operand_stack = create_stack(code->max_stack);
     frame->constant_pool = class->constant_pool;
     frame->method = method;

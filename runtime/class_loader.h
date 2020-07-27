@@ -39,7 +39,7 @@ void do_invokestatic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2
 
 void do_invokespecial_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index);
 
-void do_invokeinterface_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index);
+void do_invokeinterface_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index, u1 count);
 
 void do_invokevirtual_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index);
 

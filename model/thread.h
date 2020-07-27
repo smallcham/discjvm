@@ -18,7 +18,7 @@ typedef struct {
     MethodInfo *method;
     CodeAttribute *code_info;
     PopHook pop_hook;
-    u8 local_variables[];
+    Slot *local_variables[];
 } Frame;
 
 typedef struct {
