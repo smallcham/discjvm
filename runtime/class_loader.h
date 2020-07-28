@@ -55,11 +55,13 @@ int class_is_inited(ClassFile *class);
 
 void set_class_inited_by_frame(Frame *frame);
 
+LocalVariableTableAttribute *get_local_variable(ConstantPool *pool, CodeAttribute *code);
+
 void init_class_and_exec(Thread *thread, SerialHeap *heap, ClassFile *class);
 
 void print_class_info(ClassFile class);
 
-CodeAttribute *get_method_code(MethodInfo method);
+CodeAttribute *get_method_code(ConstantPool *pool, MethodInfo method);
 
 void create_array_reference(Thread *thread, SerialHeap *heap, Frame *frame, u2 index);
 

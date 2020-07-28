@@ -18,7 +18,7 @@ void start_vm(char *class_path)
     init_class_and_exec(&thread, heap, class);
 
     MethodInfo *main = find_method(&thread, heap, class, "main");
-    CodeAttribute *main_code = get_method_code(*main);
+    CodeAttribute *main_code = get_method_code(class->constant_pool, *main);
 
     if (NULL == main) exit(-1);
     create_vm_frame_by_method(&thread, class, main, main_code);

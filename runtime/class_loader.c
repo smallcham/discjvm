@@ -321,7 +321,9 @@ void do_invokestatic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2
     printf("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class_name_info.bytes, name_and_type_info.name_index, method_name_info.bytes, name_and_type_info.descriptor_index, method_desc_info.bytes);
     MethodInfo *method = find_method_with_desc(thread, heap, class, method_name_info.bytes, method_desc_info.bytes);
     if (NULL == method) exit(-1);
-    create_vm_frame_by_method_add_params(thread, class, frame, method, method_desc_info, get_method_code(*method));
+    printf("************GET LOCAL VARIABLE***************\n");
+    get_local_variable(class->constant_pool, get_method_code(class->constant_pool, *method));
+    create_vm_frame_by_method_add_params(thread, class, frame, method, method_desc_info, get_method_code(class->constant_pool, *method));
 }
 
 void do_invokeinterface_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index, u1 count)
@@ -339,7 +341,7 @@ void do_invokeinterface_by_index(Thread *thread, SerialHeap *heap, Frame *frame,
     printf("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class_name_info.bytes, name_and_type_info.name_index, method_name_info.bytes, name_and_type_info.descriptor_index, method_desc_info.bytes);
     MethodInfo *method = find_method_iter_super_with_desc(thread, heap, &class, method_name_info.bytes, method_desc_info.bytes);
     if (NULL == method) exit(-1);
-    create_vm_frame_by_method(thread, class, method, get_method_code(*method));
+    create_vm_frame_by_method(thread, class, method, get_method_code(class->constant_pool, *method));
 }
 
 void do_invokespecial_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
@@ -354,7 +356,7 @@ void do_invokespecial_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
     printf("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class_name_info.bytes, name_and_type_info.name_index, method_name_info.bytes, name_and_type_info.descriptor_index, method_desc_info.bytes);
     MethodInfo *method = find_method_iter_super_with_desc(thread, heap, &class, method_name_info.bytes, method_desc_info.bytes);
     if (NULL == method) exit(-1);
-    create_vm_frame_by_method(thread, class, method, get_method_code(*method));
+    create_vm_frame_by_method(thread, class, method, get_method_code(class->constant_pool, *method));
 }
 
 void do_invokevirtual_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
@@ -370,7 +372,7 @@ void do_invokevirtual_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
     Object *object = pop_stack(frame->operand_stack);
     MethodInfo *method = find_method_iter_super_with_desc(thread, heap, &class, method_name_info.bytes, method_desc_info.bytes);
     if (NULL == method) exit(-1);
-    create_vm_frame_by_method(thread, class, method, get_method_code(*method));
+    create_vm_frame_by_method(thread, class, method, get_method_code(class->constant_pool, *method));
 }
 
 void put_field_to_opstack_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
@@ -583,7 +585,7 @@ void init_class(Thread *thread, SerialHeap *heap, ClassFile *class)
 
     MethodInfo *clinit = find_method_with_desc(thread, heap, class, "<clinit>", "()V");
     if (NULL != clinit) {
-        CodeAttribute *clinit_code = get_method_code(*clinit);
+        CodeAttribute *clinit_code = get_method_code(class->constant_pool, *clinit);
 //        create_vm_frame_by_method(thread, class, clinit, clinit_code);
         create_vm_frame_by_method_add_hook(thread, class, clinit, clinit_code, (PopHook) set_class_inited_by_frame);
     } else {
@@ -620,9 +622,18 @@ u1* get_class_bytes(char *path)
     return class_file;
 }
 
-CodeAttribute *get_method_code(MethodInfo method) {
+CodeAttribute *get_method_code(ConstantPool *pool, MethodInfo method) {
     if (method.attributes_count == 0) return NULL;
-    AttributeInfo code_info = method.attributes[0];
+    int index = -1;
+    for (int i = 0; i < method.attributes_count; i++) {
+        CONSTANT_Utf8_info info = *(CONSTANT_Utf8_info *) pool[method.attributes[i].attribute_name_index].info;
+        if (strcmp(info.bytes, "Code") == 0) {
+            index = i;
+            break;
+        }
+    }
+    if (index == -1) return NULL;
+    AttributeInfo code_info = method.attributes[index];
     CodeAttribute *code_attribute = (CodeAttribute*) malloc(sizeof(CodeAttribute));
     code_attribute->attribute_name_index = code_info.attribute_name_index;
     code_attribute->attribute_length = code_info.attribute_length;
@@ -661,6 +672,32 @@ CodeAttribute *get_method_code(MethodInfo method) {
         }
     }
     return code_attribute;
+}
+
+LocalVariableTableAttribute *get_local_variable(ConstantPool *pool, CodeAttribute *code)
+{
+    if (NULL == code) return NULL;
+    for (int i = 0; i < code->attributes_count; i++) {
+        CONSTANT_Utf8_info info = *(CONSTANT_Utf8_info*)pool[code->attributes[i].attribute_name_index].info;
+        if (strcmp(info.bytes, "LocalVariableTable") == 0) {
+            LocalVariableTableAttribute *local_variable_table_attr = (LocalVariableTableAttribute*)malloc(sizeof(LocalVariableTableAttribute));
+            local_variable_table_attr->attribute_name_index = l2b_2(*(u2*)code->attributes[i].info);
+            code->attributes[i].info += sizeof(u2);
+            local_variable_table_attr->attribute_length = l2b_4(*(u4*)code->attributes[i].info);
+            code->attributes[i].info += sizeof(u4);
+            local_variable_table_attr->local_variable_table_length = l2b_2(*(u2*)code->attributes[i].info);
+            code->attributes[i].info += sizeof(u2);
+            local_variable_table_attr->local_variable_table = malloc(local_variable_table_attr->local_variable_table_length * sizeof(LocalVariableTable));
+            for (int j = 0; j < local_variable_table_attr->local_variable_table_length; j++) {
+                local_variable_table_attr->local_variable_table[j].start_pc = l2b_2(*(u2*)code->attributes[i].info);
+                local_variable_table_attr->local_variable_table[j].length = l2b_2(*(u2*)code->attributes[i].info);
+                local_variable_table_attr->local_variable_table[j].name_index = l2b_2(*(u2*)code->attributes[i].info);
+                local_variable_table_attr->local_variable_table[j].descriptor_index = l2b_2(*(u2*)code->attributes[i].info);
+                local_variable_table_attr->local_variable_table[j].index = l2b_2(*(u2*)code->attributes[i].info);
+                code->attributes[i].info += sizeof(u2) * 5;
+            }
+        }
+    }
 }
 
 void print_class_info(ClassFile class)
@@ -754,7 +791,7 @@ void print_class_info(ClassFile class)
             CONSTANT_Utf8_info attribute_name = *(CONSTANT_Utf8_info*)class.constant_pool[class.methods[i].attributes[j].attribute_name_index].info;
             printf("\t\t[%d] %s #%d %d\n", j, attribute_name.bytes, class.methods[i].attributes[j].attribute_name_index, class.methods[i].attributes[j].attribute_length);
             if (strcmp(attribute_name.bytes, "Code") == 0) {
-                CodeAttribute *code = get_method_code(class.methods[i]);
+                CodeAttribute *code = get_method_code(class.constant_pool, class.methods[i]);
                 printf("\t\t\t[%d] MaxStack: %d | CodeLength: %d\n", j, code->max_stack, code->code_length);
                 for (int k = 0; k < code->code_length; k++) {
                     printf("\t\t\t%#X\n", code->code[k]);

@@ -96,16 +96,18 @@ typedef struct {
 } LineNumberTableAttribute;
 
 typedef struct {
+    u2 start_pc;
+    u2 length;
+    u2 name_index;
+    u2 descriptor_index;
+    u2 index;
+} LocalVariableTable;
+
+typedef struct {
     u2 attribute_name_index;
     u4 attribute_length;
     u2 local_variable_table_length;
-    struct {
-        u2 start_pc;
-        u2 length;
-        u2 name_index;
-        u2 descriptor_index;
-        u2 index;
-    } *local_variable_table;
+    LocalVariableTable *local_variable_table;
 } LocalVariableTableAttribute;
 
 typedef struct {
