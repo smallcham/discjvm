@@ -680,22 +680,41 @@ LocalVariableTableAttribute *get_local_variable(ConstantPool *pool, CodeAttribut
     for (int i = 0; i < code->attributes_count; i++) {
         CONSTANT_Utf8_info info = *(CONSTANT_Utf8_info*)pool[code->attributes[i].attribute_name_index].info;
         if (strcmp(info.bytes, "LocalVariableTable") == 0) {
-            LocalVariableTableAttribute *local_variable_table_attr = (LocalVariableTableAttribute*)malloc(sizeof(LocalVariableTableAttribute));
-            local_variable_table_attr->attribute_name_index = l2b_2(*(u2*)code->attributes[i].info);
-            code->attributes[i].info += sizeof(u2);
-            local_variable_table_attr->attribute_length = l2b_4(*(u4*)code->attributes[i].info);
-            code->attributes[i].info += sizeof(u4);
-            local_variable_table_attr->local_variable_table_length = l2b_2(*(u2*)code->attributes[i].info);
-            code->attributes[i].info += sizeof(u2);
-            local_variable_table_attr->local_variable_table = malloc(local_variable_table_attr->local_variable_table_length * sizeof(LocalVariableTable));
-            for (int j = 0; j < local_variable_table_attr->local_variable_table_length; j++) {
-                local_variable_table_attr->local_variable_table[j].start_pc = l2b_2(*(u2*)code->attributes[i].info);
-                local_variable_table_attr->local_variable_table[j].length = l2b_2(*(u2*)code->attributes[i].info);
-                local_variable_table_attr->local_variable_table[j].name_index = l2b_2(*(u2*)code->attributes[i].info);
-                local_variable_table_attr->local_variable_table[j].descriptor_index = l2b_2(*(u2*)code->attributes[i].info);
-                local_variable_table_attr->local_variable_table[j].index = l2b_2(*(u2*)code->attributes[i].info);
-                code->attributes[i].info += sizeof(u2) * 5;
-            }
+//            LocalVariableTable *test = (LocalVariableTable*)malloc(sizeof(LocalVariableTable));
+//            test->start_pc = l2b_2(*(u2*)code->attributes[i].info);
+//            code->attributes[i].info += sizeof(u2);
+//            test->length = l2b_2(*(u2*)code->attributes[i].info);
+//            code->attributes[i].info += sizeof(u2);
+//            test->name_index = l2b_2(*(u2*)code->attributes[i].info);
+//            code->attributes[i].info += sizeof(u2);
+//            test->descriptor_index = l2b_2(*(u2*)code->attributes[i].info);
+//            code->attributes[i].info += sizeof(u2);
+//            test->index = l2b_2(*(u2*)code->attributes[i].info);
+//            code->attributes[i].info += sizeof(u2);
+
+            unsigned long size = sizeof(LocalVariableTableAttribute) + code->attributes[i].attribute_length * 10;
+            LocalVariableTableAttribute *local_variable_table_attr = malloc(size);
+            memcpy(local_variable_table_attr, &code->attributes[i], size);
+            printf("%s", local_variable_table_attr->attribute_name_index);
+//            local_variable_table_attr->attribute_name_index = l2b_2(*(u2*)code->attributes[i].info);
+//            code->attributes[i].info += sizeof(u2);
+//            local_variable_table_attr->attribute_length = l2b_4(*(u4*)code->attributes[i].info);
+//            code->attributes[i].info += sizeof(u4);
+//            local_variable_table_attr->local_variable_table_length = l2b_2(*(u2*)code->attributes[i].info);
+//            code->attributes[i].info += sizeof(u2);
+//            local_variable_table_attr->local_variable_table = malloc(local_variable_table_attr->local_variable_table_length * sizeof(LocalVariableTable));
+//            for (int j = 0; j < local_variable_table_attr->local_variable_table_length; j++) {
+//                local_variable_table_attr->local_variable_table[j].start_pc = l2b_2(*(u2*)code->attributes[i].info);
+//                code->attributes[i].info += sizeof(u2);
+//                local_variable_table_attr->local_variable_table[j].length = l2b_2(*(u2*)code->attributes[i].info);
+//                code->attributes[i].info += sizeof(u2);
+//                local_variable_table_attr->local_variable_table[j].name_index = l2b_2(*(u2*)code->attributes[i].info);
+//                code->attributes[i].info += sizeof(u2);
+//                local_variable_table_attr->local_variable_table[j].descriptor_index = l2b_2(*(u2*)code->attributes[i].info);
+//                code->attributes[i].info += sizeof(u2);
+//                local_variable_table_attr->local_variable_table[j].index = l2b_2(*(u2*)code->attributes[i].info);
+//                code->attributes[i].info += sizeof(u2);
+//            }
         }
     }
 }
