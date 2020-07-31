@@ -322,7 +322,8 @@ void do_invokestatic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2
     MethodInfo *method = find_method_with_desc(thread, heap, class, method_name_info.bytes, method_desc_info.bytes);
     if (NULL == method) exit(-1);
     printf("************GET LOCAL VARIABLE***************\n");
-    get_local_variable(class->constant_pool, get_method_code(class->constant_pool, *method));
+    LocalVariableTableAttribute *local_variable = get_local_variable(class->constant_pool, get_method_code(class->constant_pool, *method));
+    //TODO add params
     create_vm_frame_by_method_add_params(thread, class, frame, method, method_desc_info, get_method_code(class->constant_pool, *method));
 }
 
@@ -331,15 +332,18 @@ void do_invokeinterface_by_index(Thread *thread, SerialHeap *heap, Frame *frame,
     CONSTANT_InterfaceMethodref_info interface_ref_info = *(CONSTANT_InterfaceMethodref_info*)frame->constant_pool[index].info;
     CONSTANT_Class_info class_info = *(CONSTANT_Class_info*)frame->constant_pool[interface_ref_info.class_index].info;
     CONSTANT_NameAndType_info name_and_type_info = *(CONSTANT_NameAndType_info*)frame->constant_pool[interface_ref_info.name_and_type_index].info;
-    CONSTANT_Utf8_info class_name_info = *(CONSTANT_Utf8_info*)frame->constant_pool[class_info.name_index].info;
-    CONSTANT_Utf8_info method_name_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.name_index].info;
-    CONSTANT_Utf8_info method_desc_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info;
-    ClassFile *class = load_class(thread, heap, class_name_info.bytes);
+//    CONSTANT_Utf8_info class_name_info = *(CONSTANT_Utf8_info*)frame->constant_pool[class_info.name_index].info;
+//    CONSTANT_Utf8_info method_name_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.name_index].info;
+//    CONSTANT_Utf8_info method_desc_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info;
+    u1 *class_name = get_utf8_bytes(frame->constant_pool, class_info.name_index);
+    u1 *method_name = get_utf8_bytes(frame->constant_pool, name_and_type_info.name_index);
+    u1 *method_desc = get_utf8_bytes(frame->constant_pool, name_and_type_info.descriptor_index);
+    ClassFile *class = load_class(thread, heap, class_name);
     Object *object = pop_stack(frame->operand_stack);
 //    for (int i = 0; i < count; i++) {
 //    }
-    printf("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class_name_info.bytes, name_and_type_info.name_index, method_name_info.bytes, name_and_type_info.descriptor_index, method_desc_info.bytes);
-    MethodInfo *method = find_method_iter_super_with_desc(thread, heap, &class, method_name_info.bytes, method_desc_info.bytes);
+    printf("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class_name, name_and_type_info.name_index, method_name, name_and_type_info.descriptor_index, method_desc);
+    MethodInfo *method = find_method_iter_super_with_desc(thread, heap, &class, method_name, method_name);
     if (NULL == method) exit(-1);
     create_vm_frame_by_method(thread, class, method, get_method_code(class->constant_pool, *method));
 }
@@ -480,8 +484,7 @@ void set_field(Thread *thread, SerialHeap *heap, Frame *frame, CONSTANT_Fieldref
 char *get_str_from_string_index(ConstantPool *constant_pool, u2 index)
 {
     CONSTANT_String_info string_info = *(CONSTANT_String_info*)constant_pool[index].info;
-    CONSTANT_Utf8_info content_info = *(CONSTANT_Utf8_info*)constant_pool[string_info.string_index].info;
-    return content_info.bytes;
+    return get_utf8_bytes(constant_pool, string_info.string_index);
 }
 
 void set_field_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
@@ -680,43 +683,36 @@ LocalVariableTableAttribute *get_local_variable(ConstantPool *pool, CodeAttribut
     for (int i = 0; i < code->attributes_count; i++) {
         CONSTANT_Utf8_info info = *(CONSTANT_Utf8_info*)pool[code->attributes[i].attribute_name_index].info;
         if (strcmp(info.bytes, "LocalVariableTable") == 0) {
-//            LocalVariableTable *test = (LocalVariableTable*)malloc(sizeof(LocalVariableTable));
-//            test->start_pc = l2b_2(*(u2*)code->attributes[i].info);
-//            code->attributes[i].info += sizeof(u2);
-//            test->length = l2b_2(*(u2*)code->attributes[i].info);
-//            code->attributes[i].info += sizeof(u2);
-//            test->name_index = l2b_2(*(u2*)code->attributes[i].info);
-//            code->attributes[i].info += sizeof(u2);
-//            test->descriptor_index = l2b_2(*(u2*)code->attributes[i].info);
-//            code->attributes[i].info += sizeof(u2);
-//            test->index = l2b_2(*(u2*)code->attributes[i].info);
-//            code->attributes[i].info += sizeof(u2);
-
             unsigned long size = sizeof(LocalVariableTableAttribute) + code->attributes[i].attribute_length * 10;
             LocalVariableTableAttribute *local_variable_table_attr = malloc(size);
-            memcpy(local_variable_table_attr, &code->attributes[i], size);
-            printf("%s", local_variable_table_attr->attribute_name_index);
-//            local_variable_table_attr->attribute_name_index = l2b_2(*(u2*)code->attributes[i].info);
-//            code->attributes[i].info += sizeof(u2);
-//            local_variable_table_attr->attribute_length = l2b_4(*(u4*)code->attributes[i].info);
-//            code->attributes[i].info += sizeof(u4);
-//            local_variable_table_attr->local_variable_table_length = l2b_2(*(u2*)code->attributes[i].info);
-//            code->attributes[i].info += sizeof(u2);
-//            local_variable_table_attr->local_variable_table = malloc(local_variable_table_attr->local_variable_table_length * sizeof(LocalVariableTable));
-//            for (int j = 0; j < local_variable_table_attr->local_variable_table_length; j++) {
-//                local_variable_table_attr->local_variable_table[j].start_pc = l2b_2(*(u2*)code->attributes[i].info);
-//                code->attributes[i].info += sizeof(u2);
-//                local_variable_table_attr->local_variable_table[j].length = l2b_2(*(u2*)code->attributes[i].info);
-//                code->attributes[i].info += sizeof(u2);
-//                local_variable_table_attr->local_variable_table[j].name_index = l2b_2(*(u2*)code->attributes[i].info);
-//                code->attributes[i].info += sizeof(u2);
-//                local_variable_table_attr->local_variable_table[j].descriptor_index = l2b_2(*(u2*)code->attributes[i].info);
-//                code->attributes[i].info += sizeof(u2);
-//                local_variable_table_attr->local_variable_table[j].index = l2b_2(*(u2*)code->attributes[i].info);
-//                code->attributes[i].info += sizeof(u2);
-//            }
+            local_variable_table_attr->attribute_name_index = code->attributes[i].attribute_name_index;
+            local_variable_table_attr->attribute_length = code->attributes[i].attribute_length;
+            local_variable_table_attr->local_variable_table_length = l2b_2(*(u2*)code->attributes[i].info);
+            code->attributes[i].info += sizeof(u2);
+            for (int j = 0; j < local_variable_table_attr->local_variable_table_length; j++) {
+                local_variable_table_attr->local_variable_table[j].start_pc = l2b_2(*(u2*)code->attributes[i].info);
+                code->attributes[i].info += sizeof(u2);
+                local_variable_table_attr->local_variable_table[j].length = l2b_2(*(u2*)code->attributes[i].info);
+                code->attributes[i].info += sizeof(u2);
+                local_variable_table_attr->local_variable_table[j].name_index = l2b_2(*(u2*)code->attributes[i].info);
+                code->attributes[i].info += sizeof(u2);
+                local_variable_table_attr->local_variable_table[j].descriptor_index = l2b_2(*(u2*)code->attributes[i].info);
+                code->attributes[i].info += sizeof(u2);
+                local_variable_table_attr->local_variable_table[j].index = l2b_2(*(u2*)code->attributes[i].info);
+                code->attributes[i].info += sizeof(u2);
+                local_variable_table_attr->local_variable_table[j].name = get_utf8_bytes(pool, local_variable_table_attr->local_variable_table[j].name_index);
+                local_variable_table_attr->local_variable_table[j].desc = get_utf8_bytes(pool, local_variable_table_attr->local_variable_table[j].descriptor_index);
+            }
+            return local_variable_table_attr;
         }
     }
+    return NULL;
+}
+
+u1 *get_utf8_bytes(ConstantPool *pool, u2 index)
+{
+    CONSTANT_Utf8_info *info = (CONSTANT_Utf8_info*)pool[index].info;
+    return info->bytes;
 }
 
 void print_class_info(ClassFile class)

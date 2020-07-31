@@ -35,6 +35,8 @@ ClassFile *get_super_class(Thread *thread, SerialHeap *heap, ClassFile *class);
 
 void create_null_object(Thread *thread, SerialHeap *heap, Frame *frame);
 
+u1 *get_utf8_bytes(ConstantPool *pool, u2 index);
+
 void create_object(Thread *thread, SerialHeap *heap, Frame *frame, u2 index);
 
 void do_invokestatic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index);

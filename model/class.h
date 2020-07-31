@@ -105,6 +105,8 @@ typedef struct {
         u2 name_index;
         u2 descriptor_index;
         u2 index;
+        u1 *name;
+        u1 *desc;
     } local_variable_table[];
 } LocalVariableTableAttribute;
 
