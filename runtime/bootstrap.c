@@ -22,5 +22,5 @@ void start_vm(char *class_path)
 
     if (NULL == main) exit(-1);
     create_vm_frame_by_method(&thread, class, main, main_code);
-    invoke_method(&thread, heap);
+    run(&thread, heap);
 }

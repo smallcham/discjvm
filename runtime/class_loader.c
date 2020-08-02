@@ -209,6 +209,7 @@ ClassFile *load_class(Thread *thread, SerialHeap *heap, char *full_class_name)
     class->access_flags = l2b_2(*(u2 *) class_file);
     class_file += sizeof(u2);
     class->this_class = l2b_2(*(u2 *) class_file);
+    class->class_name = get_class_name_by_index(class->constant_pool, class->this_class);
     class_file += sizeof(u2);
     class->super_class = l2b_2(*(u2 *) class_file);
     class_file += sizeof(u2);
@@ -282,6 +283,7 @@ ClassFile *load_class(Thread *thread, SerialHeap *heap, char *full_class_name)
                     }
                 }
             }
+            class->methods[i].params_count = parse_method_param_count(*(CONSTANT_Utf8_info*)class->constant_pool[class->methods[i].descriptor_index].info);
         }
     }
     class->attributes_count = l2b_2(*(u2 *) class_file);
@@ -304,6 +306,45 @@ ClassFile *load_class(Thread *thread, SerialHeap *heap, char *full_class_name)
     return class;
 }
 
+u1 *get_class_name_by_index(ConstantPool *pool, u2 index)
+{
+    CONSTANT_Class_info *info = pool[index].info;
+    CONSTANT_Utf8_info *name = pool[info->name_index].info;
+    return name->bytes;
+}
+
+u4 parse_method_param_count(CONSTANT_Utf8_info method_desc)
+{
+    u4 count = 0;
+    int idx = 0;
+    for (int i = 0; i < method_desc.length; i++) {
+        if (method_desc.bytes[i] == '(') {
+            idx = i + 1;
+            break;
+        }
+    }
+    for (int j = idx; j < method_desc.length; j++) {
+        switch (method_desc.bytes[j]) {
+            case ')': break;
+            case 'B': case 'C': case 'I': case 'S': case 'Z': case 'F':
+                count ++;
+                continue;
+            case 'D': case 'J':
+                count += 2;
+                continue;
+            case 'L': case '[': {
+                for (int k = j + 1; k < method_desc.length; k++) {
+                    if (method_desc.bytes[k] == ';') j = k;
+                }
+                count ++;
+                continue;
+            }
+        }
+        break;
+    }
+    return count;
+}
+
 void do_invokestatic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
 {
     CONSTANT_Methodref_info method_ref_info = *(CONSTANT_Methodref_info*)frame->constant_pool[index].info;
@@ -321,10 +362,7 @@ void do_invokestatic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2
     printf("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class_name_info.bytes, name_and_type_info.name_index, method_name_info.bytes, name_and_type_info.descriptor_index, method_desc_info.bytes);
     MethodInfo *method = find_method_with_desc(thread, heap, class, method_name_info.bytes, method_desc_info.bytes);
     if (NULL == method) exit(-1);
-    printf("************GET LOCAL VARIABLE***************\n");
-    LocalVariableTableAttribute *local_variable = get_local_variable(class->constant_pool, get_method_code(class->constant_pool, *method));
-    //TODO add params
-    create_vm_frame_by_method_add_params(thread, class, frame, method, method_desc_info, get_method_code(class->constant_pool, *method));
+    create_vm_frame_by_method_add_params(thread, class, frame, method, get_method_code(class->constant_pool, *method));
 }
 
 void do_invokeinterface_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index, u1 count)
@@ -339,13 +377,14 @@ void do_invokeinterface_by_index(Thread *thread, SerialHeap *heap, Frame *frame,
     u1 *method_name = get_utf8_bytes(frame->constant_pool, name_and_type_info.name_index);
     u1 *method_desc = get_utf8_bytes(frame->constant_pool, name_and_type_info.descriptor_index);
     ClassFile *class = load_class(thread, heap, class_name);
-    Object *object = pop_stack(frame->operand_stack);
+//    Slot **slots = pop_slot_with_num(frame->operand_stack, count);
+//    Object *object = pop_stack(frame->operand_stack);
 //    for (int i = 0; i < count; i++) {
 //    }
     printf("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class_name, name_and_type_info.name_index, method_name, name_and_type_info.descriptor_index, method_desc);
     MethodInfo *method = find_method_iter_super_with_desc(thread, heap, &class, method_name, method_name);
     if (NULL == method) exit(-1);
-    create_vm_frame_by_method(thread, class, method, get_method_code(class->constant_pool, *method));
+    create_vm_frame_by_method_add_params(thread, class, frame, method, get_method_code(class->constant_pool, *method));
 }
 
 void do_invokespecial_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
@@ -360,7 +399,7 @@ void do_invokespecial_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
     printf("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class_name_info.bytes, name_and_type_info.name_index, method_name_info.bytes, name_and_type_info.descriptor_index, method_desc_info.bytes);
     MethodInfo *method = find_method_iter_super_with_desc(thread, heap, &class, method_name_info.bytes, method_desc_info.bytes);
     if (NULL == method) exit(-1);
-    create_vm_frame_by_method(thread, class, method, get_method_code(class->constant_pool, *method));
+    create_vm_frame_by_method_add_params(thread, class, frame, method, get_method_code(class->constant_pool, *method));
 }
 
 void do_invokevirtual_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
@@ -373,10 +412,9 @@ void do_invokevirtual_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
     CONSTANT_Utf8_info method_desc_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info;
     ClassFile *class = load_class(thread, heap, class_name_info.bytes);
     printf("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class_name_info.bytes, name_and_type_info.name_index, method_name_info.bytes, name_and_type_info.descriptor_index, method_desc_info.bytes);
-    Object *object = pop_stack(frame->operand_stack);
     MethodInfo *method = find_method_iter_super_with_desc(thread, heap, &class, method_name_info.bytes, method_desc_info.bytes);
     if (NULL == method) exit(-1);
-    create_vm_frame_by_method(thread, class, method, get_method_code(class->constant_pool, *method));
+    create_vm_frame_by_method_add_params(thread, class, frame, method, get_method_code(class->constant_pool, *method));
 }
 
 void put_field_to_opstack_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
@@ -398,29 +436,27 @@ void put_field_to_opstack_by_index(Thread *thread, SerialHeap *heap, Frame *fram
         if (NULL == class->runtime_fields[i].slot) continue;
         if (class->runtime_fields[i].field_info->name_index == name_and_type_info.name_index &&
                 class->runtime_fields[i].field_info->descriptor_index == name_and_type_info.descriptor_index) {
-            if (str_start_with(field_desc_info.bytes, "B") ||
-                str_start_with(field_desc_info.bytes, "C") ||
-                str_start_with(field_desc_info.bytes, "I") ||
-                str_start_with(field_desc_info.bytes, "S") ||
-                str_start_with(field_desc_info.bytes, "Z")) {
-                //Int
-                push_int(frame->operand_stack, class->runtime_fields[i].slot->value);
-            }
-            else if (str_start_with(field_desc_info.bytes, "F")) {
-                //Float
-                push_float(frame->operand_stack, class->runtime_fields[i].slot->value);
-            }
-            else if (str_start_with(field_desc_info.bytes, "D") ||
-                     str_start_with(field_desc_info.bytes, "J")) {
-                //Long
-                push_int(frame->operand_stack, class->runtime_fields[i].slot[0].value);
-                push_int(frame->operand_stack, class->runtime_fields[i].slot[1].value);
-            }
-            else if (str_start_with(field_desc_info.bytes, "L") ||
-                     str_start_with(field_desc_info.bytes, "[")) {
-                //Object | Array
-                push_stack(frame->operand_stack, class->runtime_fields[i].slot->object_value);
-            }
+            push_slot(frame->operand_stack, class->runtime_fields[i].slot);
+//            if (str_start_with(field_desc_info.bytes, "B") ||
+//                str_start_with(field_desc_info.bytes, "C") ||
+//                str_start_with(field_desc_info.bytes, "I") ||
+//                str_start_with(field_desc_info.bytes, "S") ||
+//                str_start_with(field_desc_info.bytes, "Z") ||
+//                str_start_with(field_desc_info.bytes, "F")) {
+//                //Int
+//                push_slot(frame->operand_stack, class->runtime_fields[i].slot);
+//            }
+//            else if (str_start_with(field_desc_info.bytes, "D") ||
+//                     str_start_with(field_desc_info.bytes, "J")) {
+//                //Long
+//                push_int(frame->operand_stack, class->runtime_fields[i].slot[0].value);
+//                push_int(frame->operand_stack, class->runtime_fields[i].slot[1].value);
+//            }
+//            else if (str_start_with(field_desc_info.bytes, "L") ||
+//                     str_start_with(field_desc_info.bytes, "[")) {
+//                //Object | Array
+//                push_stack(frame->operand_stack, class->runtime_fields[i].slot->object_value);
+//            }
             return;
         }
     }
@@ -448,37 +484,39 @@ void set_field(Thread *thread, SerialHeap *heap, Frame *frame, CONSTANT_Fieldref
     }
     if (index == -1) exit(-1);
 //    class->runtime_fields[index].field_info = &class->fields[index];
-    if (str_start_with(field_desc_info.bytes, "B") ||
-    str_start_with(field_desc_info.bytes, "C") ||
-    str_start_with(field_desc_info.bytes, "I") ||
-    str_start_with(field_desc_info.bytes, "S") ||
-    str_start_with(field_desc_info.bytes, "Z")) {
-        //Int
-        int value = pop_int(frame->operand_stack);
-        class->runtime_fields[index].slot = malloc(sizeof(Slot));
-        class->runtime_fields[index].slot->value = value;
-    }
-    else if (str_start_with(field_desc_info.bytes, "F")) {
-        //Float
-        float value = pop_float(frame->operand_stack);
-        class->runtime_fields[index].slot = malloc(sizeof(Slot));
-        class->runtime_fields[index].slot->value = value;
-    }
-    else if (str_start_with(field_desc_info.bytes, "D") ||
-            str_start_with(field_desc_info.bytes, "J")) {
-        //Long
-        int higher = pop_int(frame->operand_stack);
-        int lower = pop_int(frame->operand_stack);
-        class->runtime_fields[index].slot = malloc(sizeof(Slot) * 2);
-        class->runtime_fields[index].slot[0].value = lower;
-        class->runtime_fields[index].slot[1].value = higher;
-    }
-    else if (str_start_with(field_desc_info.bytes, "L") ||
-            str_start_with(field_desc_info.bytes, "[")) {
-        //Object | Array
-        class->runtime_fields[index].slot = malloc(sizeof(Slot));
-        class->runtime_fields[index].slot->object_value = pop_stack(frame->operand_stack);
-    }
+    class->runtime_fields[index].slot = pop_slot(frame->operand_stack);
+
+//    if (str_start_with(field_desc_info.bytes, "B") ||
+//    str_start_with(field_desc_info.bytes, "C") ||
+//    str_start_with(field_desc_info.bytes, "I") ||
+//    str_start_with(field_desc_info.bytes, "S") ||
+//    str_start_with(field_desc_info.bytes, "Z")) {
+//        //Int
+//        int value = pop_int(frame->operand_stack);
+//        class->runtime_fields[index].slot = malloc(sizeof(Slot));
+//        class->runtime_fields[index].slot->value = value;
+//    }
+//    else if (str_start_with(field_desc_info.bytes, "F")) {
+//        //Float
+//        float value = pop_float(frame->operand_stack);
+//        class->runtime_fields[index].slot = malloc(sizeof(Slot));
+//        class->runtime_fields[index].slot->value = value;
+//    }
+//    else if (str_start_with(field_desc_info.bytes, "D") ||
+//            str_start_with(field_desc_info.bytes, "J")) {
+//        //Long
+//        int higher = pop_int(frame->operand_stack);
+//        int lower = pop_int(frame->operand_stack);
+//        class->runtime_fields[index].slot = malloc(sizeof(Slot) * 2);
+//        class->runtime_fields[index].slot[0].value = lower;
+//        class->runtime_fields[index].slot[1].value = higher;
+//    }
+//    else if (str_start_with(field_desc_info.bytes, "L") ||
+//            str_start_with(field_desc_info.bytes, "[")) {
+//        //Object | Array
+//        class->runtime_fields[index].slot = malloc(sizeof(Slot));
+//        class->runtime_fields[index].slot->object_value = pop_stack(frame->operand_stack);
+//    }
 }
 
 char *get_str_from_string_index(ConstantPool *constant_pool, u2 index)
@@ -498,7 +536,7 @@ void create_null_object(Thread *thread, SerialHeap *heap, Frame *frame)
     object->class = NULL;
     object->length = 0;
     object->fields = NULL;
-    push_stack(frame->operand_stack, object);
+    push_object(frame->operand_stack, object);
 }
 
 void create_object(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
@@ -513,7 +551,25 @@ void create_object(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
     object->class = class;
     object->length = 1;
     object->fields = class->runtime_fields;
-    push_stack(frame->operand_stack, object);
+    push_object(frame->operand_stack, object);
+}
+
+void create_string_object(Thread *thread, SerialHeap *heap, Frame *frame, char *str)
+{
+    ClassFile *class = load_class(thread, heap, "java/lang/String");
+    if (class_is_not_init(class)) {
+        back_pc(frame, 2);
+        init_class(thread, heap, class);
+        return;
+    }
+    Object *object = (Object*)malloc(sizeof(Object));
+    object->class = class;
+    object->length = 1;
+    object->fields = class->runtime_fields;
+    Slot *slot = create_slot();
+    slot->object_value = str;
+    object->fields->slot = slot;
+    push_object(frame->operand_stack, object);
 }
 
 void create_array_reference(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
@@ -532,7 +588,7 @@ void create_array_reference(Thread *thread, SerialHeap *heap, Frame *frame, u2 i
     for (int i = 0; i < count; i++) {
         object->fields[i] = *class->runtime_fields;
     }
-    push_stack(frame->operand_stack, object);
+    push_object(frame->operand_stack, object);
 }
 
 ClassFile *load_class_by_class_info_name_index(Thread *thread, SerialHeap *heap, ConstantPool *constant_pool, u2 index)
@@ -604,7 +660,7 @@ void init_class(Thread *thread, SerialHeap *heap, ClassFile *class)
 void init_class_and_exec(Thread *thread, SerialHeap *heap, ClassFile *class)
 {
     init_class(thread, heap, class);
-    invoke_method(thread, heap);
+    run(thread, heap);
 }
 
 u1* get_class_bytes(char *path)
@@ -675,44 +731,6 @@ CodeAttribute *get_method_code(ConstantPool *pool, MethodInfo method) {
         }
     }
     return code_attribute;
-}
-
-LocalVariableTableAttribute *get_local_variable(ConstantPool *pool, CodeAttribute *code)
-{
-    if (NULL == code) return NULL;
-    for (int i = 0; i < code->attributes_count; i++) {
-        CONSTANT_Utf8_info info = *(CONSTANT_Utf8_info*)pool[code->attributes[i].attribute_name_index].info;
-        if (strcmp(info.bytes, "LocalVariableTable") == 0) {
-            unsigned long size = sizeof(LocalVariableTableAttribute) + code->attributes[i].attribute_length * 10;
-            LocalVariableTableAttribute *local_variable_table_attr = malloc(size);
-            local_variable_table_attr->attribute_name_index = code->attributes[i].attribute_name_index;
-            local_variable_table_attr->attribute_length = code->attributes[i].attribute_length;
-            local_variable_table_attr->local_variable_table_length = l2b_2(*(u2*)code->attributes[i].info);
-            code->attributes[i].info += sizeof(u2);
-            for (int j = 0; j < local_variable_table_attr->local_variable_table_length; j++) {
-                local_variable_table_attr->local_variable_table[j].start_pc = l2b_2(*(u2*)code->attributes[i].info);
-                code->attributes[i].info += sizeof(u2);
-                local_variable_table_attr->local_variable_table[j].length = l2b_2(*(u2*)code->attributes[i].info);
-                code->attributes[i].info += sizeof(u2);
-                local_variable_table_attr->local_variable_table[j].name_index = l2b_2(*(u2*)code->attributes[i].info);
-                code->attributes[i].info += sizeof(u2);
-                local_variable_table_attr->local_variable_table[j].descriptor_index = l2b_2(*(u2*)code->attributes[i].info);
-                code->attributes[i].info += sizeof(u2);
-                local_variable_table_attr->local_variable_table[j].index = l2b_2(*(u2*)code->attributes[i].info);
-                code->attributes[i].info += sizeof(u2);
-                local_variable_table_attr->local_variable_table[j].name = get_utf8_bytes(pool, local_variable_table_attr->local_variable_table[j].name_index);
-                local_variable_table_attr->local_variable_table[j].desc = get_utf8_bytes(pool, local_variable_table_attr->local_variable_table[j].descriptor_index);
-            }
-            return local_variable_table_attr;
-        }
-    }
-    return NULL;
-}
-
-u1 *get_utf8_bytes(ConstantPool *pool, u2 index)
-{
-    CONSTANT_Utf8_info *info = (CONSTANT_Utf8_info*)pool[index].info;
-    return info->bytes;
 }
 
 void print_class_info(ClassFile class)

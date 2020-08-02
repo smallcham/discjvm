@@ -65,9 +65,45 @@ int push_stack(Stack *stack, void *value)
 
 int push_int(Stack *stack, int value)
 {
-    int *temp = malloc(sizeof(int));
-    *temp = value;
-    return push_stack(stack, temp);
+//    int *temp = malloc(sizeof(int));
+//    *temp = value;
+    Slot *slot = create_slot();
+    slot->value = value;
+    push_slot(stack, slot);
+    return slot->value;
+}
+
+Slot *push_slot(Stack *stack, Slot *slot)
+{
+    push_stack(stack, slot);
+    return slot;
+}
+
+Slot *push_object(Stack *stack, void *object)
+{
+    Slot *slot = create_slot();
+    slot->object_value = object;
+    push_slot(stack, slot);
+    return slot;
+}
+
+Slot *pop_slot(Stack *stack)
+{
+    return pop_stack(stack);
+}
+
+void push_slot_from(Stack *source, Stack *target)
+{
+    push_slot(target, pop_slot(source));
+}
+
+Slot **pop_slot_with_num(Stack *stack, int num)
+{
+    Slot **slots = malloc(sizeof(Slot) * num);
+    for (int i = 0; i < num; i++) {
+        slots[i] = pop_slot(stack);
+    }
+    return slots;
 }
 
 int push_float(Stack *stack, float value)
@@ -142,7 +178,14 @@ int get_int(Stack *stack)
 
 int pop_int(Stack *stack)
 {
-    return *(int*) pop_stack(stack);
+    Slot *slot = pop_stack(stack);
+    return slot->value;
+}
+
+void *pop_object(Stack *stack)
+{
+    Slot *slot = pop_slot(stack);
+    return slot->object_value;
 }
 
 float pop_float(Stack *stack)
@@ -160,4 +203,39 @@ long pop_long(Stack *stack)
 double pop_double(Stack *stack)
 {
     return (double) pop_long(stack);
+}
+
+void print_stack(Stack *stack)
+{
+    printf("operand stack <- ");
+    if (NULL == stack || stack->size == 0 || NULL == stack->tail) {
+        printf("... ->\n");
+        return;
+    }
+    Entry *temp = malloc(sizeof(Entry));
+    memcpy(temp, stack->tail, sizeof(Entry));
+    Slot *value = temp->value;
+    if (NULL != value->object_value) {
+        Object *obj = value->object_value;
+        if (NULL != obj->class) printf("%s", obj->class->class_name);
+        else printf("%p", obj);
+    } else {
+        printf("%u", value->value);
+    }
+    for  (int i = 0; i < stack->size; i++) {
+        printf(", ");
+        Entry *next = malloc(sizeof(Entry));
+        if (NULL == temp || NULL == temp->prev) break;
+        memcpy(next, temp->prev, sizeof(Entry));
+        if (NULL != value->object_value) {
+            Object *obj = value->object_value;
+            if (NULL != obj->class) printf("%s", obj->class->class_name);
+            else printf("%p", obj);
+        } else {
+            printf("%u", value->value);
+        }
+        free(next);
+    }
+    printf(" ->\n\n");
+    free(temp);
 }

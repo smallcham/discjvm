@@ -60,6 +60,6 @@ void init_instructions();
 
 void init_instructions_desc();
 
-void invoke_method(Thread *thread, SerialHeap *heap);
+void run(Thread *thread, SerialHeap *heap);
 
 #endif //DISCJVM_OPCODE_H

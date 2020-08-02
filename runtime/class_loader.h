@@ -13,7 +13,6 @@
 #include "../share/gc/serial/serial_heap.h"
 #include "../runtime/opcode.h"
 #include "../runtime/jmod.h"
-#include "../model/object.h"
 
 ClassFile *load_class(Thread *thread, SerialHeap *heap, char *full_class_name);
 
@@ -35,8 +34,6 @@ ClassFile *get_super_class(Thread *thread, SerialHeap *heap, ClassFile *class);
 
 void create_null_object(Thread *thread, SerialHeap *heap, Frame *frame);
 
-u1 *get_utf8_bytes(ConstantPool *pool, u2 index);
-
 void create_object(Thread *thread, SerialHeap *heap, Frame *frame, u2 index);
 
 void do_invokestatic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index);
@@ -49,6 +46,8 @@ void do_invokevirtual_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
 
 void init_class(Thread *thread, SerialHeap *heap, ClassFile *class);
 
+u4 parse_method_param_count(CONSTANT_Utf8_info method_desc);
+
 int class_is_not_init(ClassFile *class);
 
 int class_is_in_init(ClassFile *class);
@@ -57,13 +56,13 @@ int class_is_inited(ClassFile *class);
 
 void set_class_inited_by_frame(Frame *frame);
 
-LocalVariableTableAttribute *get_local_variable(ConstantPool *pool, CodeAttribute *code);
-
 void init_class_and_exec(Thread *thread, SerialHeap *heap, ClassFile *class);
 
 void print_class_info(ClassFile class);
 
 CodeAttribute *get_method_code(ConstantPool *pool, MethodInfo method);
+
+void create_string_object(Thread *thread, SerialHeap *heap, Frame *frame, char *str);
 
 void create_array_reference(Thread *thread, SerialHeap *heap, Frame *frame, u2 index);
 
@@ -72,5 +71,7 @@ MethodInfo *find_method_iter_super_with_desc(Thread *thread, SerialHeap *heap, C
 MethodInfo *find_method_with_desc(Thread *thread, SerialHeap *heap, ClassFile *class, char *name, char *desc);
 
 MethodInfo *find_method(Thread *thread, SerialHeap *heap, ClassFile *class, char *name);
+
+u1 *get_class_name_by_index(ConstantPool *pool, u2 index);
 
 #endif //DISCJVM_CLASS_LOADER_H

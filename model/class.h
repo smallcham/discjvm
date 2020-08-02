@@ -64,6 +64,7 @@ typedef struct {
     u2 name_index;
     u2 descriptor_index;
     u2 attributes_count;
+    u4 params_count;
     AttributeInfo *attributes;
 } MethodInfo;
 
@@ -173,6 +174,7 @@ typedef struct {
     ConstantPool *constant_pool; // [constant_pool_count - 1]
     u2 access_flags;
     u2 this_class;
+    u1 *class_name;
     u2 super_class;
     u2 interfaces_count;
     u2 *interfaces; // [interfaces_count]
@@ -185,6 +187,12 @@ typedef struct {
     Field *runtime_fields;
     u1 init_state;
 } ClassFile;
+
+typedef struct {
+    ClassFile *class;
+    u4 length;
+    Field *fields;
+} Object;
 
 //typedef struct{
 //    u2 *class_name;
@@ -203,5 +211,9 @@ typedef struct {
 //    AttributeInfo *attributes;
 //    u1 init_state;
 //} Class;
+
+u1 *get_utf8_bytes(ConstantPool *pool, u2 index);
+
+Slot *create_slot();
 
 #endif //DISCJVM_CLASS_H
