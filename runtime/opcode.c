@@ -446,7 +446,7 @@ void astore_0(SerialHeap *heap, Thread *thread, Frame *frame) {
 
 void astore_1(SerialHeap *heap, Thread *thread, Frame *frame) {
     frame->local_variables[1] = pop_slot(frame->operand_stack);
-    Slot slot = *(Slot*)frame->local_variables[1]->object_value;
+    Slot slot = *(Slot*)frame->local_variables[1];
     printf("%s\n", (*(Object*)slot.object_value).class->class_name);
     step_pc_1(frame);
 }
@@ -809,17 +809,7 @@ void new(SerialHeap *heap, Thread *thread, Frame *frame) {
 void newarray(SerialHeap *heap, Thread *thread, Frame *frame) {
     u1 type = step_pc1_and_read_code(frame);
     int count = pop_int(frame->operand_stack);
-//    switch (type) {
-//        case 4:
-//        case 5:
-//        case 6:
-//        case 7:
-//        case 8:
-//        case 9:
-//        case 10:
-//        case 11:
-//    }
-//    create_object(thread, heap, frame, (byte1 << 8) | byte2);
+    create_array_reference_by_type(thread, heap, frame, type, count);
     step_pc_1(frame);
 }
 
