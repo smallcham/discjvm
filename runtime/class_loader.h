@@ -74,4 +74,8 @@ MethodInfo *find_method(Thread *thread, SerialHeap *heap, ClassFile *class, char
 
 u1 *get_class_name_by_index(ConstantPool *pool, u2 index);
 
+Field *get_runtime_field_from_map(HashMap **map, u1 *class_name, u1 *name, u1 *desc);
+
+void put_runtime_field_to_map(HashMap **map, u1 *class_name, u1 *name, u1 *desc, Field *field);
+
 #endif //DISCJVM_CLASS_LOADER_H

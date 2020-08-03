@@ -60,6 +60,7 @@ int push_stack(Stack *stack, void *value)
         stack->tail = next;
     }
     stack->size ++;
+    printf("\t\t\t\tpush ↓\n");
     return 0;
 }
 
@@ -152,6 +153,7 @@ void* pop_stack(Stack *stack)
     stack->tail->next = NULL;
     stack->size--;
     if (stack->size == 0) stack->head = NULL;
+    printf("\t\t\t\tpop ↑\n");
     return value;
 }
 
@@ -207,35 +209,37 @@ double pop_double(Stack *stack)
 
 void print_stack(Stack *stack)
 {
-    printf("operand stack <- ");
+    printf("\t\t\t\t");
     if (NULL == stack || stack->size == 0 || NULL == stack->tail) {
-        printf("... ->\n");
+        printf("-> ...\n\n");
         return;
     }
-    Entry *temp = malloc(sizeof(Entry));
-    memcpy(temp, stack->tail, sizeof(Entry));
-    Slot *value = temp->value;
-    if (NULL != value->object_value) {
-        Object *obj = value->object_value;
-        if (NULL != obj->class) printf("%s", obj->class->class_name);
-        else printf("%p", obj);
-    } else {
-        printf("%u", value->value);
-    }
+    Entry *next = malloc(sizeof(Entry));
+    memcpy(next, stack->tail, sizeof(Entry));
+//    Slot *value = temp->value;
+//    if (NULL != value->object_value) {
+//        Object *obj = value->object_value;
+//        if (NULL != obj->class) printf("%s", obj->class->class_name);
+//        else printf("%p", obj);
+//    } else {
+//        printf("%u", value->value);
+//    }
+//    Entry *next = malloc(sizeof(Entry));
+//    memcpy(next, temp, sizeof(Entry));
+    printf("-> ");
     for  (int i = 0; i < stack->size; i++) {
-        printf(", ");
-        Entry *next = malloc(sizeof(Entry));
-        if (NULL == temp || NULL == temp->prev) break;
-        memcpy(next, temp->prev, sizeof(Entry));
+        if (NULL == next || NULL == next->prev) break;
+        Slot *value = next->value;
         if (NULL != value->object_value) {
             Object *obj = value->object_value;
             if (NULL != obj->class) printf("%s", obj->class->class_name);
             else printf("%p", obj);
         } else {
-            printf("%u", value->value);
+            printf("%d", value->value);
         }
-        free(next);
+        printf(", ");
+        memcpy(next, next->prev, sizeof(Entry));
     }
-    printf(" ->\n\n");
-    free(temp);
+    printf("\n\n");
+    free(next);
 }

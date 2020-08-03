@@ -23,6 +23,7 @@ Frame *create_vm_frame_by_method(Thread* thread, ClassFile *class, MethodInfo *m
     frame->pop_hook = NULL;
     frame->class = class;
     frame->pc = 0;
+    printf("\t\t\t\t[framestack]");
     push_stack(thread->vm_stack, frame);
     return frame;
 }
@@ -87,6 +88,7 @@ void add_params(Frame *frame, Frame *new_frame, MethodInfo *method, CodeAttribut
 //    LocalVariableTableAttribute *local_variable_table = get_local_variable(new_frame->constant_pool, code);
 //    if (NULL == local_variable_table) return;
     if (method->params_count == 0) return;
+    printf("\t\t\t\t[popparams]");
     Slot **slots = pop_slot_with_num(frame->operand_stack, method->params_count);
     for (int i = 0; i < method->params_count; i++) {
         new_frame->local_variables[i] = slots[i];

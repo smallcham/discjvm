@@ -348,22 +348,22 @@ void dload_3(SerialHeap *heap, Thread *thread, Frame *frame) {
 }
 
 void aload_0(SerialHeap *heap, Thread *thread, Frame *frame) {
-    push_stack(frame->operand_stack, &(frame->local_variables[0]->object_value));
+    push_slot(frame->operand_stack, frame->local_variables[0]);
     step_pc_1(frame);
 }
 
 void aload_1(SerialHeap *heap, Thread *thread, Frame *frame) {
-    push_stack(frame->operand_stack, &(frame->local_variables[1]->object_value));
+    push_slot(frame->operand_stack, frame->local_variables[1]);
     step_pc_1(frame);
 }
 
 void aload_2(SerialHeap *heap, Thread *thread, Frame *frame) {
-    push_stack(frame->operand_stack, &(frame->local_variables[2]->object_value));
+    push_slot(frame->operand_stack, frame->local_variables[2]);
     step_pc_1(frame);
 }
 
 void aload_3(SerialHeap *heap, Thread *thread, Frame *frame) {
-    push_stack(frame->operand_stack, &(frame->local_variables[3]->object_value));
+    push_slot(frame->operand_stack, frame->local_variables[3]);
     step_pc_1(frame);
 }
 
@@ -809,7 +809,6 @@ void new(SerialHeap *heap, Thread *thread, Frame *frame) {
 void newarray(SerialHeap *heap, Thread *thread, Frame *frame) {
     u1 type = step_pc1_and_read_code(frame);
     int count = pop_int(frame->operand_stack);
-    Object *object = pop_object(frame->operand_stack);
 //    switch (type) {
 //        case 4:
 //        case 5:
@@ -1319,6 +1318,7 @@ void init_instructions_desc()
 
 void pop_frame(Stack *vm_stack)
 {
+    printf("\t\t\t\t[framestack]");
     Frame *frame = pop_stack(vm_stack);
     if (NULL != frame->pop_hook) frame->pop_hook(frame);
 }
@@ -1331,6 +1331,7 @@ void exec(Operator operator, SerialHeap *heap, Thread *thread, Frame *frame)
     CONSTANT_Utf8_info method_desc = *(CONSTANT_Utf8_info*)frame->constant_pool[frame->method->descriptor_index].info;
     printf("%20s - %s.%s%s\n", instructions_desc[read_code(frame)], class_name.bytes, method_name.bytes, method_desc.bytes);
     operator(heap, thread, frame);
+    printf("\t\t\t\t[opstack]");
     print_stack(frame->operand_stack);
 }
 
