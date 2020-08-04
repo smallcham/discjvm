@@ -768,28 +768,28 @@ void j_return(SerialHeap *heap, Thread *thread, Frame *frame) {
 void getstatic(SerialHeap *heap, Thread *thread, Frame *frame) {
     u1 byte1 = step_pc1_and_read_code(frame);
     u1 byte2 = step_pc1_and_read_code(frame);
-    put_field_to_opstack_by_index(thread, heap, frame, (byte1 << 8) | byte2);
+    get_static_field_to_opstack_by_index(thread, heap, frame, (byte1 << 8) | byte2);
     step_pc_1(frame);
 }
 
 void putstatic(SerialHeap *heap, Thread *thread, Frame *frame) {
     u1 byte1 = step_pc1_and_read_code(frame);
     u1 byte2 = step_pc1_and_read_code(frame);
-    set_field_by_index(thread, heap, frame, (byte1 << 8) | byte2);
+    put_static_field_by_index(thread, heap, frame, (byte1 << 8) | byte2);
     step_pc_1(frame);
 }
 
 void getfield(SerialHeap *heap, Thread *thread, Frame *frame) {
     u1 byte1 = step_pc1_and_read_code(frame);
     u1 byte2 = step_pc1_and_read_code(frame);
-    put_field_to_opstack_by_index(thread, heap, frame, (byte1 << 8) | byte2);
+    get_field_to_opstack_by_index(thread, heap, frame, (byte1 << 8) | byte2);
     step_pc_1(frame);
 }
 
 void putfield(SerialHeap *heap, Thread *thread, Frame *frame) {
     u1 byte1 = step_pc1_and_read_code(frame);
     u1 byte2 = step_pc1_and_read_code(frame);
-    set_field_by_index(thread, heap, frame, (byte1 << 8) | byte2);
+    put_field_by_index(thread, heap, frame, (byte1 << 8) | byte2);
     step_pc_1(frame);
 }
 void invokevirtual(SerialHeap *heap, Thread *thread, Frame *frame) {

@@ -16,13 +16,19 @@
 
 ClassFile *load_class(Thread *thread, SerialHeap *heap, char *full_class_name);
 
-void set_field(Thread *thread, SerialHeap *heap, Frame *frame, CONSTANT_Fieldref_info field_ref_info);
+void put_static_field(Thread *thread, SerialHeap *heap, Frame *frame, CONSTANT_Fieldref_info field_ref_info);
 
-void set_field_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index);
+void put_static_field_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index);
+
+void put_field(Thread *thread, SerialHeap *heap, Frame *frame, CONSTANT_Fieldref_info field_ref_info);
+
+void put_field_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index);
 
 char *get_str_from_string_index(ConstantPool *constant_pool, u2 index);
 
-void put_field_to_opstack_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index);
+void get_static_field_to_opstack_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index);
+
+void get_field_to_opstack_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index);
 
 ClassFile *load_class_by_class_info_name_index(Thread *thread, SerialHeap *heap, ConstantPool *constant_pool, u2 index);
 

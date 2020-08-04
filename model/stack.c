@@ -101,7 +101,7 @@ void push_slot_from(Stack *source, Stack *target)
 Slot **pop_slot_with_num(Stack *stack, int num)
 {
     Slot **slots = malloc(sizeof(Slot) * num);
-    for (int i = 0; i < num; i++) {
+    for (int i = num - 1; i >= 0; i--) {
         slots[i] = pop_slot(stack);
     }
     return slots;
@@ -209,7 +209,7 @@ double pop_double(Stack *stack)
 
 void print_stack(Stack *stack)
 {
-    printf("[size: %d],[max: %d]", stack->size, stack->max_size);
+    printf("[size: %d, max: %d]", stack->size, stack->max_size);
     printf("\t\t\t\t");
     if (NULL == stack || stack->size == 0 || NULL == stack->tail) {
         printf("-> ...\n\n");
@@ -241,6 +241,6 @@ void print_stack(Stack *stack)
         printf(", ");
         memcpy(next, next->prev, sizeof(Entry));
     }
-    printf("\n\n");
+    printf("\n");
     free(next);
 }

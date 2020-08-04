@@ -162,5 +162,4 @@ void del_map(HashMap **map, char *key)
         pre = entry;
         entry = entry->next;
     }
-    return;
 }
