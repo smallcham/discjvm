@@ -214,8 +214,34 @@ void sipush(SerialHeap *heap, Thread *thread, Frame *frame) {
 
 void ldc(SerialHeap *heap, Thread *thread, Frame *frame) {
     u1 index = step_pc1_and_read_code(frame);
-    char *str = get_str_from_string_index(frame->constant_pool, index);
-    create_string_object(thread, heap, frame, str);
+    switch (frame->constant_pool[index].tag) {
+        case CONSTANT_String: {
+            char *str = get_str_from_string_index(frame->constant_pool, index);
+            create_string_object(thread, heap, frame, str);
+            break;
+        }
+        case CONSTANT_Class: {
+            create_object_with_backpc(thread, heap, frame, index, 2);
+            break;
+        }
+        case CONSTANT_InterfaceMethodref: {
+            CONSTANT_InterfaceMethodref_info info = *(CONSTANT_InterfaceMethodref_info*)frame->constant_pool[index].info;
+            create_object_with_backpc(thread, heap, frame, info.class_index, 2);
+        }
+        case CONSTANT_MethodType: {
+            create_object_with_class_name_and_backpc(thread, heap, frame, "java/lang/invoke/MethodType", 2);
+            break;
+        }
+        case CONSTANT_MethodHandle:
+            create_object_with_class_name_and_backpc(thread, heap, frame, "java/lang/invoke/MethodHandle", 2);
+            break;
+        case CONSTANT_Integer:
+            push_int(frame->operand_stack, get_u4_value_from_index(frame->constant_pool, index));
+            break;
+        case CONSTANT_Float:
+            push_float(frame->operand_stack, get_u4_value_from_index(frame->constant_pool, index));
+            break;
+    }
     step_pc_1(frame);
 }
 
@@ -255,7 +281,7 @@ void dload(SerialHeap *heap, Thread *thread, Frame *frame) {
 }
 
 void aload(SerialHeap *heap, Thread *thread, Frame *frame) {
-    push_stack(frame->operand_stack, &frame->local_variables[step_pc1_and_read_code(frame)]);
+    push_stack(frame->operand_stack, frame->local_variables[step_pc1_and_read_code(frame)]);
     step_pc_1(frame);
 }
 
@@ -452,7 +478,6 @@ void astore_1(SerialHeap *heap, Thread *thread, Frame *frame) {
 }
 
 void astore_2(SerialHeap *heap, Thread *thread, Frame *frame) {
-    Slot *slot = pop_slot(frame->operand_stack);
     frame->local_variables[2] = pop_slot(frame->operand_stack);
     step_pc_1(frame);
 }
@@ -709,7 +734,7 @@ void lookupswitch(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void ireturn(SerialHeap *heap, Thread *thread, Frame *frame) {
     pop_frame(thread->vm_stack);
     Frame *next = get_stack(thread->vm_stack);
-    if (NULL != next) push_int(next->operand_stack, pop_int(frame->operand_stack));
+    if (NULL != next) push_slot_from(frame->operand_stack, next->operand_stack);
 }
 
 void lreturn(SerialHeap *heap, Thread *thread, Frame *frame) {
@@ -855,10 +880,11 @@ void ifnull(SerialHeap *heap, Thread *thread, Frame *frame) {
 }
 
 void ifnonnull(SerialHeap *heap, Thread *thread, Frame *frame) {
-    void *value = pop_stack(frame->operand_stack);
+    Slot *slot = pop_slot(frame->operand_stack);
+    Object *object = slot->object_value;
     u1 branch1 = step_pc1_and_read_code_no_submit(frame);
     u1 branch2 = step_pc2_and_read_code_no_submit(frame);
-    frame->pc = (value != NULL) ? step_pc_and_read_pc(frame, (branch1 << 8) | branch2) : step_pc_and_read_pc(frame, 3);
+    frame->pc = (NULL != object && object->length != 0) ? step_pc_and_read_pc(frame, (branch1 << 8) | branch2) : step_pc_and_read_pc(frame, 3);
 }
 
 void goto_w(SerialHeap *heap, Thread *thread, Frame *frame) {}
@@ -1323,6 +1349,8 @@ void exec(Operator operator, SerialHeap *heap, Thread *thread, Frame *frame)
     operator(heap, thread, frame);
     printf("\t\t\t\t[opstack]");
     print_stack(frame->operand_stack);
+    printf("\t\t\t\t[localvars]");
+    print_local_variables(frame);
 }
 
 void run(Thread *thread, SerialHeap *heap) {

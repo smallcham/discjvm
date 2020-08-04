@@ -317,7 +317,7 @@ ClassFile *load_class(Thread *thread, SerialHeap *heap, char *full_class_name)
 Field *get_runtime_field_from_map(HashMap **map, u1 *class_name, u1 *name, u1 *desc)
 {
     char *key = malloc(strlen(class_name) + strlen(name) + strlen(desc) + 4);
-    sprintf(key, "%s.%s.%s\0", class_name, name, desc);
+    sprintf(key, "%s.%s.%s", class_name, name, desc);
     Field *field = get_map(map, key);
     free(key);
     return field;
@@ -326,7 +326,7 @@ Field *get_runtime_field_from_map(HashMap **map, u1 *class_name, u1 *name, u1 *d
 void put_runtime_field_to_map(HashMap **map, u1 *class_name, u1 *name, u1 *desc, Field *field)
 {
     char *key = malloc(strlen(class_name) + strlen(name) + strlen(desc) + 4);
-    sprintf(key, "%s.%s.%s\0", class_name, name, desc);
+    sprintf(key, "%s.%s.%s", class_name, name, desc);
     put_map(map, key, field);
 }
 
@@ -553,6 +553,12 @@ char *get_str_from_string_index(ConstantPool *constant_pool, u2 index)
     return get_utf8_bytes(constant_pool, string_info.string_index);
 }
 
+u4 get_u4_value_from_index(ConstantPool *constant_pool, u2 index)
+{
+    CONSTANT_Integer_info info = *(CONSTANT_Integer_info*)constant_pool[index].info;
+    return info.bytes;
+}
+
 void set_field_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
 {
     set_field(thread, heap, frame, *(CONSTANT_Fieldref_info*)frame->constant_pool[index].info);
@@ -563,28 +569,46 @@ void create_null_object(Thread *thread, SerialHeap *heap, Frame *frame)
     Object *object = (Object*)malloc(sizeof(Object));
     object->class = NULL;
     object->length = 0;
-    object->fields = NULL;
     push_object(frame->operand_stack, object);
 }
 
-void create_object(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
+void create_object_with_backpc(Thread *thread, SerialHeap *heap, Frame *frame, u2 index, int back)
 {
     ClassFile *class = load_class_by_class_info_index(thread, heap, frame->constant_pool, index);
     if (class_is_not_init(class)) {
-        back_pc(frame, 3);
+        back_pc(frame, back);
         init_class(thread, heap, class);
         return;
     }
     Object *object = (Object*)malloc(sizeof(Object));
     object->class = class;
     object->length = 1;
-    object->fields = class->runtime_fields;
     push_object(frame->operand_stack, object);
+}
+
+void create_object_with_class_name_and_backpc(Thread *thread, SerialHeap *heap, Frame *frame, char *class_name, int back)
+{
+    ClassFile *class = load_class(thread, heap, class_name);
+    if (class_is_not_init(class)) {
+        back_pc(frame, back);
+        init_class(thread, heap, class);
+        return;
+    }
+    Object *object = (Object*)malloc(sizeof(Object));
+    object->class = class;
+    object->length = 1;
+    push_object(frame->operand_stack, object);
+}
+
+void create_object(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
+{
+    create_object_with_backpc(thread, heap, frame, index, 3);
 }
 
 void create_array_reference_by_type(Thread *thread, SerialHeap *heap, Frame *frame, u1 type, int count)
 {
     ClassFile *class;
+    int size = 1;
     switch (type) {
         case 4:
             class = load_class(thread, heap, "java/lang/Boolean");
@@ -597,6 +621,7 @@ void create_array_reference_by_type(Thread *thread, SerialHeap *heap, Frame *fra
             break;
         case 7:
             class = load_class(thread, heap, "java/lang/Double");
+            size = 2;
             break;
         case 8:
             class = load_class(thread, heap, "java/lang/Byte");
@@ -609,6 +634,7 @@ void create_array_reference_by_type(Thread *thread, SerialHeap *heap, Frame *fra
             break;
         case 11:
             class = load_class(thread, heap, "java/lang/Long");
+            size = 2;
             break;
     }
     if (class_is_not_init(class)) {
@@ -620,9 +646,7 @@ void create_array_reference_by_type(Thread *thread, SerialHeap *heap, Frame *fra
     object->class = class;
     object->length = count;
     for (int i = 0; i < count; i++) {
-        object->fields[i] = *class->runtime_fields;
-        Slot *slot = create_slot();
-        slot->value = 0;
+        Slot *slot = create_slot_by_size(size);
         Field *field = malloc(sizeof(Field));
         for (int j = 0; j < class->fields_count; j++) {
             if (strcmp(class->fields[j].name, "value") == 0) {
@@ -633,7 +657,7 @@ void create_array_reference_by_type(Thread *thread, SerialHeap *heap, Frame *fra
         field->slot = slot;
         u1 *desc = malloc(strlen(class->class_name) + 3);
         sprintf(desc, "L%s;", class->class_name);
-        put_runtime_field_to_map(&object->fields, class->class_name, "value", desc, field);
+        put_runtime_field_to_map(&class->runtime_fields, class->class_name, "value", desc, field);
         free(desc);
     }
     push_object(frame->operand_stack, object);
@@ -651,7 +675,6 @@ void create_string_object(Thread *thread, SerialHeap *heap, Frame *frame, char *
     Object *object = (Object*)malloc(sizeof(Object));
     object->class = class;
     object->length = 1;
-    object->fields = class->runtime_fields;
     Slot *slot = create_slot();
     slot->object_value = str;
     Field *field = malloc(sizeof(Field));
@@ -662,7 +685,7 @@ void create_string_object(Thread *thread, SerialHeap *heap, Frame *frame, char *
         }
     }
     field->slot = slot;
-    put_runtime_field_to_map(&object->fields, class->class_name, "value", "Ljava/lang/String;", field);
+    put_runtime_field_to_map(&class->runtime_fields, class->class_name, "value", "Ljava/lang/String;", field);
     push_object(frame->operand_stack, object);
 }
 
@@ -676,19 +699,15 @@ void create_array_reference(Thread *thread, SerialHeap *heap, Frame *frame, u2 i
     }
     int count = pop_int(frame->operand_stack);
     Object *object = malloc(sizeof(Object));
-    object->fields = class->runtime_fields;
     object->class = class;
     object->length = count;
-    for (int i = 0; i < count; i++) {
-        object->fields[i] = *class->runtime_fields;
-    }
     push_object(frame->operand_stack, object);
 }
 
 ClassFile *load_class_by_class_info_name_index(Thread *thread, SerialHeap *heap, ConstantPool *constant_pool, u2 index)
 {
-    CONSTANT_Utf8_info class_name_info = *(CONSTANT_Utf8_info*)constant_pool[index].info;
-    return load_class(thread, heap, class_name_info.bytes);
+//    CONSTANT_Utf8_info class_name_info = *(CONSTANT_Utf8_info*)constant_pool[index].info;
+    return load_class(thread, heap, get_utf8_bytes(constant_pool, index));
 }
 
 ClassFile *load_class_by_class_info(Thread *thread, SerialHeap *heap, ConstantPool *constant_pool, CONSTANT_Class_info class_info)
@@ -763,6 +782,7 @@ u1* get_class_bytes(char *path)
     if (str_start_with(path, "java/lang/") == 1 ||
             str_start_with(path, "java/io/") == 1 ||
             str_start_with(path, "java/util/") == 1 ||
+            str_start_with(path, "java/security/") == 1 ||
             str_start_with(path, "java/nio/") == 1) {
         return load_from_jmod("java.base.jmod", path);
     }

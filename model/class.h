@@ -193,7 +193,6 @@ typedef struct {
 typedef struct {
     ClassFile *class;
     u4 length;
-    HashMap *fields;
 } Object;
 
 //typedef struct{
@@ -217,5 +216,7 @@ typedef struct {
 u1 *get_utf8_bytes(ConstantPool *pool, u2 index);
 
 Slot *create_slot();
+
+Slot *create_slot_by_size(int size);
 
 #endif //DISCJVM_CLASS_H

@@ -80,4 +80,10 @@ Field *get_runtime_field_from_map(HashMap **map, u1 *class_name, u1 *name, u1 *d
 
 void put_runtime_field_to_map(HashMap **map, u1 *class_name, u1 *name, u1 *desc, Field *field);
 
+u4 get_u4_value_from_index(ConstantPool *constant_pool, u2 index);
+
+void create_object_with_backpc(Thread *thread, SerialHeap *heap, Frame *frame, u2 index, int back);
+
+void create_object_with_class_name_and_backpc(Thread *thread, SerialHeap *heap, Frame *frame, char *class_name, int back);
+
 #endif //DISCJVM_CLASS_LOADER_H

@@ -17,3 +17,13 @@ Slot *create_slot()
     slot->object_value = NULL;
     return slot;
 }
+
+Slot *create_slot_by_size(int size)
+{
+    Slot *slot = malloc(sizeof(Slot) * size);
+    for (int i = 0; i < size; i++) {
+        slot[i].value = 0;
+        slot[i].object_value = NULL;
+    }
+    return slot;
+}

@@ -113,3 +113,20 @@ void add_params(Frame *frame, Frame *new_frame, MethodInfo *method, CodeAttribut
     }
     free(slots);
 }
+
+void print_local_variables(Frame *frame)
+{
+    printf("\t\t\t\t\t<");
+    for (int i = 0; i < frame->code_info->max_locals; i++) {
+        Slot *value = frame->local_variables[i];
+        if (NULL != value->object_value) {
+            Object *obj = value->object_value;
+            if (NULL != obj->class) printf("[%d-> %s],", i, obj->class->class_name);
+            else printf("[%d-> %p],", i, obj);
+        } else {
+            printf("[%d-> %d],", i, value->value);
+        }
+    }
+    printf(">");
+    printf("\n\n");
+}

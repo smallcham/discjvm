@@ -60,7 +60,7 @@ int push_stack(Stack *stack, void *value)
         stack->tail = next;
     }
     stack->size ++;
-    printf("\t\t\t\tpush ↓\n");
+    printf("\t\t\t\t\tpush ↓\n");
     return 0;
 }
 
@@ -153,7 +153,7 @@ void* pop_stack(Stack *stack)
     stack->tail->next = NULL;
     stack->size--;
     if (stack->size == 0) stack->head = NULL;
-    printf("\t\t\t\tpop ↑\n");
+    printf("\t\t\t\t\tpop ↑\n");
     return value;
 }
 
@@ -209,6 +209,7 @@ double pop_double(Stack *stack)
 
 void print_stack(Stack *stack)
 {
+    printf("[size: %d],[max: %d]", stack->size, stack->max_size);
     printf("\t\t\t\t");
     if (NULL == stack || stack->size == 0 || NULL == stack->tail) {
         printf("-> ...\n\n");
@@ -228,7 +229,7 @@ void print_stack(Stack *stack)
 //    memcpy(next, temp, sizeof(Entry));
     printf("-> ");
     for  (int i = 0; i < stack->size; i++) {
-        if (NULL == next || NULL == next->prev) break;
+        if (NULL == next || NULL == next->value || NULL == next->prev) break;
         Slot *value = next->value;
         if (NULL != value->object_value) {
             Object *obj = value->object_value;
