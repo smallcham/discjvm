@@ -250,10 +250,10 @@ ClassFile *load_class_by_bytes(Thread *thread, SerialHeap *heap, u1 *bytes)
                     }
                 }
             }
-            Field *field = malloc(sizeof(Field));
-            field->field_info = &class->fields[i];
-            field->slot = NULL;
-            put_runtime_field_to_map(&class->static_fields, class->class_name, class->fields[i].name, class->fields[i].desc, field);
+//            Field *field = malloc(sizeof(Field));
+//            field->field_info = &class->fields[i];
+//            field->slot = NULL;
+//            put_runtime_field_to_map(&class->static_fields, class->class_name, class->fields[i].name, class->fields[i].desc, field);
 //            class->static_fields[i].field_info = &class->fields[i];
 //            class->static_fields[i].slot = NULL;
         }
@@ -324,20 +324,36 @@ ClassFile *load_class(Thread *thread, SerialHeap *heap, char *full_class_name)
     return load_class_by_bytes(thread, heap, class_file);
 }
 
-Field *get_runtime_field_from_map(HashMap **map, u1 *class_name, u1 *name, u1 *desc)
+//Field *get_runtime_field_from_map(HashMap **map, u1 *class_name, u1 *name, u1 *desc)
+//{
+//    char *key = malloc(strlen(class_name) + strlen(name) + strlen(desc) + 4);
+//    sprintf(key, "%s.%s.%s", class_name, name, desc);
+//    Field *field = get_map(map, key);
+//    free(key);
+//    return field;
+//}
+
+Slot *get_field_from_map(HashMap **map, u1 *class_name, u1 *name, u1 *desc)
 {
     char *key = malloc(strlen(class_name) + strlen(name) + strlen(desc) + 4);
     sprintf(key, "%s.%s.%s", class_name, name, desc);
-    Field *field = get_map(map, key);
+    Slot *field = get_map(map, key);
     free(key);
     return field;
 }
 
-void put_runtime_field_to_map(HashMap **map, u1 *class_name, u1 *name, u1 *desc, Field *field)
+//void put_runtime_field_to_map(HashMap **map, u1 *class_name, u1 *name, u1 *desc, Field *field)
+//{
+//    char *key = malloc(strlen(class_name) + strlen(name) + strlen(desc) + 4);
+//    sprintf(key, "%s.%s.%s", class_name, name, desc);
+//    put_map(map, key, field);
+//}
+
+void put_field_to_map(HashMap **map, u1 *class_name, u1 *name, u1 *desc, Slot *value)
 {
     char *key = malloc(strlen(class_name) + strlen(name) + strlen(desc) + 4);
     sprintf(key, "%s.%s.%s", class_name, name, desc);
-    put_map(map, key, field);
+    put_map(map, key, value);
 }
 
 u1 *get_class_name_by_index(ConstantPool *pool, u2 index)
@@ -395,6 +411,9 @@ void do_invokestatic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2
     }
     printf("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class_name_info.bytes, name_and_type_info.name_index, method_name_info.bytes, name_and_type_info.descriptor_index, method_desc_info.bytes);
     MethodInfo *method = find_method_with_desc(thread, heap, class, method_name_info.bytes, method_desc_info.bytes);
+    if ((method->access_flags & ACC_NATIVE) != 0) {
+        printf("-----------%s\n", method->name);
+    }
     if (NULL == method) exit(-1);
     create_vm_frame_by_method_add_params(thread, class, frame, method, get_method_code(class->constant_pool, *method));
 }
@@ -417,6 +436,9 @@ void do_invokeinterface_by_index(Thread *thread, SerialHeap *heap, Frame *frame,
 //    }
     printf("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class_name, name_and_type_info.name_index, method_name, name_and_type_info.descriptor_index, method_desc);
     MethodInfo *method = find_method_iter_super_with_desc(thread, heap, &class, method_name, method_name);
+    if ((method->access_flags & ACC_NATIVE) != 0) {
+        printf("-----------%s\n", method->name);
+    }
     if (NULL == method) exit(-1);
     create_vm_frame_by_method_add_params_and_this(thread, class, frame, method, get_method_code(class->constant_pool, *method));
 }
@@ -432,6 +454,9 @@ void do_invokespecial_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
     ClassFile *class = load_class(thread, heap, class_name_info.bytes);
     printf("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class_name_info.bytes, name_and_type_info.name_index, method_name_info.bytes, name_and_type_info.descriptor_index, method_desc_info.bytes);
     MethodInfo *method = find_method_iter_super_with_desc(thread, heap, &class, method_name_info.bytes, method_desc_info.bytes);
+    if ((method->access_flags & ACC_NATIVE) != 0) {
+        printf("-----------%s\n", method->name);
+    }
     if (NULL == method) exit(-1);
     create_vm_frame_by_method_add_params_and_this(thread, class, frame, method, get_method_code(class->constant_pool, *method));
 }
@@ -447,6 +472,9 @@ void do_invokevirtual_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
     ClassFile *class = load_class(thread, heap, class_name_info.bytes);
     printf("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class_name_info.bytes, name_and_type_info.name_index, method_name_info.bytes, name_and_type_info.descriptor_index, method_desc_info.bytes);
     MethodInfo *method = find_method_iter_super_with_desc(thread, heap, &class, method_name_info.bytes, method_desc_info.bytes);
+    if ((method->access_flags & ACC_NATIVE) != 0) {
+        printf("-----------%s\n", method->name);
+    }
     if (NULL == method) exit(-1);
     create_vm_frame_by_method_add_params_and_this(thread, class, frame, method, get_method_code(class->constant_pool, *method));
 }
@@ -465,9 +493,10 @@ void get_field_to_opstack_by_index(Thread *thread, SerialHeap *heap, Frame *fram
         init_class(thread, heap, class);
         return;
     }
-    Field *field = get_runtime_field_from_map(&class->static_fields, class->class_name, field_type_info.bytes, field_desc_info.bytes);
     Object *object = pop_object(frame->operand_stack);
-    push_slot(frame->operand_stack, field->slot);
+    Slot *field = get_field_from_map(&object->fields, class->class_name, field_type_info.bytes, field_desc_info.bytes);
+
+    push_slot(frame->operand_stack, field);
 }
 
 void get_static_field_to_opstack_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
@@ -485,8 +514,8 @@ void get_static_field_to_opstack_by_index(Thread *thread, SerialHeap *heap, Fram
         return;
     }
 
-    Field *field = get_runtime_field_from_map(&class->static_fields, class->class_name, field_type_info.bytes, field_desc_info.bytes);
-    push_slot(frame->operand_stack, field->slot);
+    Slot *field = get_field_from_map(&class->static_fields, class->class_name, field_type_info.bytes, field_desc_info.bytes);
+    push_slot(frame->operand_stack, field);
 //    for (int i = 0; i < class->fields_count; i++) {
 //        if (NULL == class->static_fields[i].slot) continue;
 //        if (class->static_fields[i].field_info->name_index == name_and_type_info.name_index &&
@@ -520,7 +549,7 @@ void get_static_field_to_opstack_by_index(Thread *thread, SerialHeap *heap, Fram
 void put_field(Thread *thread, SerialHeap *heap, Frame *frame, CONSTANT_Fieldref_info field_ref_info)
 {
     CONSTANT_NameAndType_info name_and_type_info = *(CONSTANT_NameAndType_info*)frame->constant_pool[field_ref_info.name_and_type_index].info;
-    CONSTANT_Utf8_info field_type_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.name_index].info;
+    CONSTANT_Utf8_info field_name_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.name_index].info;
     CONSTANT_Utf8_info field_desc_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info;
     CONSTANT_Class_info class_info = *(CONSTANT_Class_info*)frame->constant_pool[field_ref_info.class_index].info;
     CONSTANT_Utf8_info class_name_info = *(CONSTANT_Utf8_info*)frame->constant_pool[class_info.name_index].info;
@@ -530,14 +559,23 @@ void put_field(Thread *thread, SerialHeap *heap, Frame *frame, CONSTANT_Fieldref
         init_class(thread, heap, class);
         return;
     }
-    Field *field = get_runtime_field_from_map(&class->static_fields, class->class_name, field_type_info.bytes, field_desc_info.bytes);
-    field->slot = pop_slot(frame->operand_stack);
+    Slot *field;
+    if (str_start_with(field_desc_info.bytes, "D") ||
+        str_start_with(field_desc_info.bytes, "J")) {
+        field = malloc(sizeof(Slot) * 2);
+        field[1] = *pop_slot(frame->operand_stack);
+        field[0] = *pop_slot(frame->operand_stack);
+    } else {
+        field = pop_slot(frame->operand_stack);
+    }
+    Object *object = pop_object(frame->operand_stack);
+    put_field_to_map(&object->fields, object->class->class_name, field_name_info.bytes, field_desc_info.bytes, field);
 }
 
 void put_static_field(Thread *thread, SerialHeap *heap, Frame *frame, CONSTANT_Fieldref_info field_ref_info)
 {
     CONSTANT_NameAndType_info name_and_type_info = *(CONSTANT_NameAndType_info*)frame->constant_pool[field_ref_info.name_and_type_index].info;
-    CONSTANT_Utf8_info field_type_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.name_index].info;
+    CONSTANT_Utf8_info field_name_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.name_index].info;
     CONSTANT_Utf8_info field_desc_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info;
     CONSTANT_Class_info class_info = *(CONSTANT_Class_info*)frame->constant_pool[field_ref_info.class_index].info;
     CONSTANT_Utf8_info class_name_info = *(CONSTANT_Utf8_info*)frame->constant_pool[class_info.name_index].info;
@@ -556,16 +594,17 @@ void put_static_field(Thread *thread, SerialHeap *heap, Frame *frame, CONSTANT_F
 //    }
 //    if (index == -1) exit(-1);
 //    class->static_fields[index].field_info = &class->fields[index];
-    Field *field = get_runtime_field_from_map(&class->static_fields, class->class_name, field_type_info.bytes, field_desc_info.bytes);
+    Slot *field = get_field_from_map(&class->static_fields, class->class_name, field_name_info.bytes, field_desc_info.bytes);
+    free(field);
     if (str_start_with(field_desc_info.bytes, "D") ||
         str_start_with(field_desc_info.bytes, "J")) {
-        Slot *slot = malloc(sizeof(Slot) * 2);
-        slot[1] = *pop_slot(frame->operand_stack);
-        slot[0] = *pop_slot(frame->operand_stack);
-        field->slot = slot;
+        field = malloc(sizeof(Slot) * 2);
+        field[1] = *pop_slot(frame->operand_stack);
+        field[0] = *pop_slot(frame->operand_stack);
     } else {
-        field->slot = pop_slot(frame->operand_stack);
+        field = pop_slot(frame->operand_stack);
     }
+    put_field_to_map(&class->static_fields, class->class_name, field_name_info.bytes, field_desc_info.bytes, field);
 //    class->static_fields[index].slot = pop_slot(frame->operand_stack);
 
 //    if (str_start_with(field_desc_info.bytes, "B") ||
@@ -628,26 +667,59 @@ void create_null_object(Thread *thread, SerialHeap *heap, Frame *frame)
     push_object(frame->operand_stack, malloc_null_object(heap));
 }
 
-void create_object_with_backpc(Thread *thread, SerialHeap *heap, Frame *frame, u2 index, int back)
+u1 *get_array_class_name_by_name_str(u1 *name)
 {
-    ClassFile *class = load_class_by_class_info_index(thread, heap, frame->constant_pool, index);
-    if (class_is_not_init(class)) {
-        back_pc(frame, back);
-        init_class(thread, heap, class);
-        return;
+    if (!str_start_with(name, "[")) {
+        return name;
     }
-    push_object(frame->operand_stack, malloc_object(heap, class));
+    switch (name[1]) {
+        case 'V': return "java/lang/Void";
+        case 'Z': return "java/lang/Boolean";
+        case 'B': return "java/lang/Byte";
+        case 'C': return "java/lang/Character";
+        case 'S': return "java/lang/Short";
+        case 'I': return "java/lang/Integer";
+        case 'J': return "java/lang/Long";
+        case 'F': return "java/lang/Float";
+        case 'D': return "java/lang/Double";
+    }
+    return name;
 }
 
-void create_object_with_class_name_and_backpc(Thread *thread, SerialHeap *heap, Frame *frame, char *class_name, int back)
+void create_object_with_backpc(Thread *thread, SerialHeap *heap, Frame *frame, u2 index, int back)
 {
+    CONSTANT_Class_info class_info = *(CONSTANT_Class_info*)frame->constant_pool[index].info;
+    u1 *class_name = get_utf8_bytes(frame->constant_pool, class_info.name_index);
+    int is_arr = class_name[0] == '[';
+    class_name = get_array_class_name_by_name_str(class_name);
     ClassFile *class = load_class(thread, heap, class_name);
     if (class_is_not_init(class)) {
         back_pc(frame, back);
         init_class(thread, heap, class);
         return;
     }
-    push_object(frame->operand_stack, malloc_object(heap, class));
+    if (is_arr) {
+        push_object(frame->operand_stack, malloc_array(heap, class, 0));
+    } else {
+        push_object(frame->operand_stack, malloc_object(heap, class));
+    }
+}
+
+void create_object_with_class_name_and_backpc(Thread *thread, SerialHeap *heap, Frame *frame, char *class_name, int back)
+{
+    int is_arr = class_name[0] == '[';
+    class_name = get_array_class_name_by_name_str(class_name);
+    ClassFile *class = load_class(thread, heap, class_name);
+    if (class_is_not_init(class)) {
+        back_pc(frame, back);
+        init_class(thread, heap, class);
+        return;
+    }
+    if (is_arr) {
+        push_object(frame->operand_stack, malloc_array(heap, class, 0));
+    } else {
+        push_object(frame->operand_stack, malloc_object(heap, class));
+    }
 }
 
 void create_object(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
@@ -696,21 +768,21 @@ void create_array_reference_by_type(Thread *thread, SerialHeap *heap, Frame *fra
 //    object->class = class;
 //    object->length = count;
     Array *array = malloc_array(heap, class, count);
-    for (int i = 0; i < count; i++) {
-        Slot *slot = create_slot_by_size(size);
-        Field *field = malloc(sizeof(Field));
-        for (int j = 0; j < class->fields_count; j++) {
-            if (strcmp(class->fields[j].name, "value") == 0) {
-                field->field_info = &class->fields[j];
-                break;
-            }
-        }
-        field->slot = slot;
-        u1 *desc = malloc(strlen(class->class_name) + 3);
-        sprintf(desc, "L%s;", class->class_name);
-        put_runtime_field_to_map(&class->static_fields, class->class_name, "value", desc, field);
-        free(desc);
-    }
+//    for (int i = 0; i < count; i++) {
+//        Slot *slot = create_slot_by_size(size);
+//        Field *field = malloc(sizeof(Field));
+//        for (int j = 0; j < class->fields_count; j++) {
+//            if (strcmp(class->fields[j].name, "value") == 0) {
+//                field->field_info = &class->fields[j];
+//                break;
+//            }
+//        }
+//        field->slot = slot;
+//        u1 *desc = malloc(strlen(class->class_name) + 3);
+//        sprintf(desc, "[L%s;", class->class_name);
+//        put_field_to_map(&class->static_fields, class->class_name, "value", desc, );
+//        free(desc);
+//    }
     push_object(frame->operand_stack, array);
 
 }
@@ -723,21 +795,23 @@ void create_string_object(Thread *thread, SerialHeap *heap, Frame *frame, char *
         init_class(thread, heap, class);
         return;
     }
-    Object *object = (Object*)malloc(sizeof(Object) + sizeof(Slot));
-    object->class = class;
-    object->length = 1;
-    object->slots[0] = NULL;
+    Object *object = malloc_object(heap, class);
+//    Object *object = (Object*)malloc(sizeof(Object) + sizeof(Slot));
+//    object->class = class;
+//    object->length = 1;
+//    object->slots[0] = NULL;
+
     Slot *slot = create_slot();
     slot->object_value = str;
-    Field *field = malloc(sizeof(Field));
-    for (int i = 0; i < class->fields_count; i++) {
-        if (strcmp(class->fields[i].name, "value") == 0) {
-            field->field_info = &class->fields[i];
-            break;
-        }
-    }
-    field->slot = slot;
-    put_runtime_field_to_map(&class->static_fields, class->class_name, "value", "Ljava/lang/String;", field);
+//    Field *field = malloc(sizeof(Field));
+//    for (int i = 0; i < class->fields_count; i++) {
+//        if (strcmp(class->fields[i].name, "value") == 0) {
+//            field->field_info = &class->fields[i];
+//            break;
+//        }
+//    }
+//    field->slot = slot;
+    put_field_to_map(&object->fields, class->class_name, "value", "Ljava/lang/String;", slot);
     push_object(frame->operand_stack, object);
 }
 
@@ -834,8 +908,9 @@ u1* get_class_bytes(char *path)
 //            str_start_with(path, "java/util/") == 1 ||
 //            str_start_with(path, "java/security/") == 1 ||
 //            str_start_with(path, "java/nio/") == 1) {
-    if (str_start_with(path, "java/") == 1 ||
-            str_start_with(path, "sun/") == 1) {
+    if (str_start_with(path, "java/") ||
+            str_start_with(path, "jdk/") ||
+            str_start_with(path, "sun/")) {
         return load_from_jmod("java.base.jmod", path);
     }
     FILE *fp = fopen(path, "rb");

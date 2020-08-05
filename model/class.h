@@ -5,25 +5,6 @@
 #include "constant_class.h"
 #include "hash_map.h"
 
-//魔数
-#define CLASS_MAGIC_NUMBER 0xCAFEBABE
-//public
-#define ACC_PUBLIC 0x0001
-//final
-#define ACC_FINAL 0x0010
-//当用到invokespecial指令时，需要对父类方法做特殊处理
-#define ACC_SUPER 0x0020
-//接口标识
-#define ACC_INTERFACE 0x0200
-//abstract
-#define ACC_ABSTRACT 0x0400
-//synthetic
-#define ACC_SYNTHETIC 0x1000
-//注解类型
-#define ACC_ANNOTATION 0x2000
-//枚举类型
-#define ACC_ENUM 0x4000
-
 typedef struct {
     /**
      *  CONSTANT_Class 7

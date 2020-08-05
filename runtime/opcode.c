@@ -227,6 +227,7 @@ void ldc(SerialHeap *heap, Thread *thread, Frame *frame) {
         case CONSTANT_InterfaceMethodref: {
             CONSTANT_InterfaceMethodref_info info = *(CONSTANT_InterfaceMethodref_info*)frame->constant_pool[index].info;
             create_object_with_backpc(thread, heap, frame, info.class_index, 2);
+            break;
         }
         case CONSTANT_MethodType: {
             create_object_with_class_name_and_backpc(thread, heap, frame, "java/lang/invoke/MethodType", 2);
@@ -245,7 +246,41 @@ void ldc(SerialHeap *heap, Thread *thread, Frame *frame) {
     step_pc_1(frame);
 }
 
-void ldc_w(SerialHeap *heap, Thread *thread, Frame *frame) {}
+void ldc_w(SerialHeap *heap, Thread *thread, Frame *frame) {
+    u1 byte1 = step_pc1_and_read_code(frame);
+    u1 byte2 = step_pc1_and_read_code(frame);
+    u4 index = (byte1 << 8) | byte2;
+    switch (frame->constant_pool[index].tag) {
+        case CONSTANT_String: {
+            char *str = get_str_from_string_index(frame->constant_pool, index);
+            create_string_object(thread, heap, frame, str);
+            break;
+        }
+        case CONSTANT_Class: {
+            create_object_with_backpc(thread, heap, frame, index, 3);
+            break;
+        }
+        case CONSTANT_InterfaceMethodref: {
+            CONSTANT_InterfaceMethodref_info info = *(CONSTANT_InterfaceMethodref_info*)frame->constant_pool[index].info;
+            create_object_with_backpc(thread, heap, frame, info.class_index, 3);
+            break;
+        }
+        case CONSTANT_MethodType: {
+            create_object_with_class_name_and_backpc(thread, heap, frame, "java/lang/invoke/MethodType", 3);
+            break;
+        }
+        case CONSTANT_MethodHandle:
+            create_object_with_class_name_and_backpc(thread, heap, frame, "java/lang/invoke/MethodHandle", 3);
+            break;
+        case CONSTANT_Integer:
+            push_int(frame->operand_stack, get_u4_value_from_index(frame->constant_pool, index));
+            break;
+        case CONSTANT_Float:
+            push_float(frame->operand_stack, get_u4_value_from_index(frame->constant_pool, index));
+            break;
+    }
+    step_pc_1(frame);
+}
 
 void ldc2_w(SerialHeap *heap, Thread *thread, Frame *frame) {
     u1 byte1 = step_pc1_and_read_code(frame);

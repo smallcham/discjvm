@@ -27,7 +27,7 @@ void init_lib(Thread *thread, SerialHeap *heap)
     int file_count = zip_get_num_files(z);
     for (int i = 0; i < file_count; i++) {
         zip_stat_index(z, i, 0, &st);
-        if (!str_start_with(st.name, "classes/java/") && !str_start_with(st.name, "classes/sun/")) {
+        if (!str_start_with(st.name, "classes/java/")) {
             continue;
         }
         //Alloc memory for its uncompressed contents

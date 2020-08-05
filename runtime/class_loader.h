@@ -82,11 +82,16 @@ MethodInfo *find_method_with_desc(Thread *thread, SerialHeap *heap, ClassFile *c
 
 MethodInfo *find_method(Thread *thread, SerialHeap *heap, ClassFile *class, char *name);
 
+u1 *get_array_class_name_by_name_str(u1 *name);
+
 u1 *get_class_name_by_index(ConstantPool *pool, u2 index);
 
-Field *get_runtime_field_from_map(HashMap **map, u1 *class_name, u1 *name, u1 *desc);
+Slot *get_field_from_map(HashMap **map, u1 *class_name, u1 *name, u1 *desc);
+//Field *get_runtime_field_from_map(HashMap **map, u1 *class_name, u1 *name, u1 *desc);
 
-void put_runtime_field_to_map(HashMap **map, u1 *class_name, u1 *name, u1 *desc, Field *field);
+//void put_runtime_field_to_map(HashMap **map, u1 *class_name, u1 *name, u1 *desc, Field *field);
+
+void put_field_to_map(HashMap **map, u1 *class_name, u1 *name, u1 *desc, Slot *value);
 
 u4 get_u4_value_from_index(ConstantPool *constant_pool, u2 index);
 
