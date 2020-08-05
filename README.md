@@ -1,1 +1,1 @@
-# 要检查 putfield putstatic getstatic getfield
+# 要检查 putfield putstatic getstatic getfield ldc

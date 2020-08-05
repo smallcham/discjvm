@@ -60,7 +60,7 @@ int push_stack(Stack *stack, void *value)
         stack->tail = next;
     }
     stack->size ++;
-    printf("\t\t\t\t\tpush ↓\n");
+    printf("\t\t\t\tpush ↓\n");
     return 0;
 }
 
@@ -153,7 +153,7 @@ void* pop_stack(Stack *stack)
     stack->tail->next = NULL;
     stack->size--;
     if (stack->size == 0) stack->head = NULL;
-    printf("\t\t\t\t\tpop ↑\n");
+    printf("\t\t\t\tpop ↑\n");
     return value;
 }
 

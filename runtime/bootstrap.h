@@ -9,6 +9,8 @@
 #include "class_loader.h"
 #include "opcode.h"
 
+void init_lib(Thread *thread, SerialHeap *heap);
+
 void start_vm(char *class_path);
 
 #endif //DISCJVM_BOOTSTRAP_H

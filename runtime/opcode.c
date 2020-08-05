@@ -491,7 +491,15 @@ void iastore(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void lastore(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void fastore(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void dastore(SerialHeap *heap, Thread *thread, Frame *frame) {}
-void aastore(SerialHeap *heap, Thread *thread, Frame *frame) {}
+
+void aastore(SerialHeap *heap, Thread *thread, Frame *frame) {
+    Object *value = pop_object(frame->operand_stack);
+    int index = pop_int(frame->operand_stack);
+    Object *ref = pop_object(frame->operand_stack);
+
+    frame->local_variables[index] = pop_slot(frame->operand_stack);
+    step_pc_1(frame);
+}
 
 void bastore(SerialHeap *heap, Thread *thread, Frame *frame) {
 //    Slot *value = pop_slot(frame->operand_stack);
@@ -846,9 +854,9 @@ void anewarray(SerialHeap *heap, Thread *thread, Frame *frame) {
 }
 
 void arraylength(SerialHeap *heap, Thread *thread, Frame *frame) {
-    Object *object = pop_stack(frame->operand_stack);
-    if (NULL == object) exit(-1);
-    push_int(frame->operand_stack, object->length);
+    Array *array = pop_object(frame->operand_stack);
+    if (NULL == array) exit(-1);
+    push_int(frame->operand_stack, array->length);
     step_pc_1(frame);
 }
 
@@ -873,18 +881,17 @@ void wide(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void multianewarray(SerialHeap *heap, Thread *thread, Frame *frame) {}
 
 void ifnull(SerialHeap *heap, Thread *thread, Frame *frame) {
-    void *value = pop_stack(frame->operand_stack);
+    Object *value = pop_object(frame->operand_stack);
     u1 branch1 = step_pc1_and_read_code_no_submit(frame);
     u1 branch2 = step_pc2_and_read_code_no_submit(frame);
-    frame->pc = (value == NULL) ? step_pc_and_read_pc(frame, (branch1 << 8) | branch2) : step_pc_and_read_pc(frame, 3);
+    frame->pc = (value == NULL || value->class == NULL) ? step_pc_and_read_pc(frame, (branch1 << 8) | branch2) : step_pc_and_read_pc(frame, 3);
 }
 
 void ifnonnull(SerialHeap *heap, Thread *thread, Frame *frame) {
-    Slot *slot = pop_slot(frame->operand_stack);
-    Object *object = slot->object_value;
+    Object *object = pop_object(frame->operand_stack);
     u1 branch1 = step_pc1_and_read_code_no_submit(frame);
     u1 branch2 = step_pc2_and_read_code_no_submit(frame);
-    frame->pc = (NULL != object && object->length != 0) ? step_pc_and_read_pc(frame, (branch1 << 8) | branch2) : step_pc_and_read_pc(frame, 3);
+    frame->pc = (NULL != object && object->class != NULL) ? step_pc_and_read_pc(frame, (branch1 << 8) | branch2) : step_pc_and_read_pc(frame, 3);
 }
 
 void goto_w(SerialHeap *heap, Thread *thread, Frame *frame) {}
@@ -1337,15 +1344,12 @@ void pop_frame(Stack *vm_stack)
     printf("\t\t\t\t[framestack]");
     Frame *frame = pop_stack(vm_stack);
     if (NULL != frame->pop_hook) frame->pop_hook(frame);
+    printf("[ESC] %s - %s.%s%s\n", instructions_desc[read_code(frame)], frame->class->class_name, frame->method->name, frame->method->desc);
 }
 
 void exec(Operator operator, SerialHeap *heap, Thread *thread, Frame *frame)
 {
-    CONSTANT_Class_info class_name_info = *(CONSTANT_Class_info*)frame->constant_pool[frame->class->this_class].info;
-    CONSTANT_Utf8_info class_name = *(CONSTANT_Utf8_info*)frame->constant_pool[class_name_info.name_index].info;
-    CONSTANT_Utf8_info method_name = *(CONSTANT_Utf8_info*)frame->constant_pool[frame->method->name_index].info;
-    CONSTANT_Utf8_info method_desc = *(CONSTANT_Utf8_info*)frame->constant_pool[frame->method->descriptor_index].info;
-    printf("%20s - %s.%s%s\n", instructions_desc[read_code(frame)], class_name.bytes, method_name.bytes, method_desc.bytes);
+    printf("\t\t\t%s:\n", instructions_desc[read_code(frame)]);
     operator(heap, thread, frame);
     printf("\t\t\t\t[opstack]");
     print_stack(frame->operand_stack);
@@ -1354,6 +1358,7 @@ void exec(Operator operator, SerialHeap *heap, Thread *thread, Frame *frame)
 }
 
 void run(Thread *thread, SerialHeap *heap) {
+    if (NULL == get_stack(thread->vm_stack)) return;
     do {
         Frame *frame = get_stack(thread->vm_stack);
         exec(instructions[read_code(frame)], heap, thread, frame);

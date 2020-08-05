@@ -25,8 +25,8 @@ Frame *create_vm_frame_by_method(Thread* thread, ClassFile *class, MethodInfo *m
     frame->pop_hook = NULL;
     frame->class = class;
     frame->pc = 0;
-    printf("\t\t\t\t[framestack]");
     push_stack(thread->vm_stack, frame);
+    printf("[INVOKE] %s - %s.%s\n", frame->class->class_name, frame->method->name, frame->method->desc);
     return frame;
 }
 
@@ -47,6 +47,7 @@ Frame *create_vm_frame_by_method_add_params_and_this(Thread* thread, ClassFile *
 Frame *create_vm_frame_by_method_add_hook(Thread* thread, ClassFile *class, MethodInfo *method, CodeAttribute *code, PopHook hook)
 {
     Frame *frame = create_vm_frame_by_method(thread, class, method, code);
+    if (NULL == frame) return NULL;
     frame->pop_hook = hook;
     return frame;
 }

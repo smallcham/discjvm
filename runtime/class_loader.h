@@ -14,6 +14,8 @@
 #include "../runtime/opcode.h"
 #include "../runtime/jmod.h"
 
+ClassFile *load_class_by_bytes(Thread *thread, SerialHeap *heap, u1 *bytes);
+
 ClassFile *load_class(Thread *thread, SerialHeap *heap, char *full_class_name);
 
 void put_static_field(Thread *thread, SerialHeap *heap, Frame *frame, CONSTANT_Fieldref_info field_ref_info);

@@ -67,6 +67,8 @@ typedef struct {
     u2 descriptor_index;
     u2 attributes_count;
     u4 params_count;
+    u1 *name;
+    u1 *desc;
     AttributeInfo *attributes;
 } MethodInfo;
 
@@ -186,14 +188,20 @@ typedef struct {
     MethodInfo *methods; // [methods_count]
     u2 attributes_count;
     AttributeInfo *attributes; // [attributes_count]
-    HashMap *runtime_fields;
+    HashMap *static_fields;
     u1 init_state;
 } ClassFile;
 
 typedef struct {
     ClassFile *class;
-    u4 length;
+    HashMap *fields;
 } Object;
+
+typedef struct {
+    ClassFile *class;
+    u4 length;
+    Object *objects[];
+} Array;
 
 //typedef struct{
 //    u2 *class_name;
