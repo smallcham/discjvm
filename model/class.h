@@ -170,6 +170,7 @@ typedef struct {
     u2 attributes_count;
     AttributeInfo *attributes; // [attributes_count]
     HashMap *static_fields;
+    void *class_object;
     u1 init_state;
 } ClassFile;
 

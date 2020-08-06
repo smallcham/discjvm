@@ -530,9 +530,8 @@ void dastore(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void aastore(SerialHeap *heap, Thread *thread, Frame *frame) {
     Object *value = pop_object(frame->operand_stack);
     int index = pop_int(frame->operand_stack);
-    Object *ref = pop_object(frame->operand_stack);
-
-    frame->local_variables[index] = pop_slot(frame->operand_stack);
+    Array *ref = pop_object(frame->operand_stack);
+    ref->objects[index] = value;
     step_pc_1(frame);
 }
 
@@ -775,37 +774,37 @@ void tableswitch(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void lookupswitch(SerialHeap *heap, Thread *thread, Frame *frame) {}
 
 void ireturn(SerialHeap *heap, Thread *thread, Frame *frame) {
-    pop_frame(thread->vm_stack);
+    pop_frame(thread, heap);
     Frame *next = get_stack(thread->vm_stack);
     if (NULL != next) push_slot_from(frame->operand_stack, next->operand_stack);
 }
 
 void lreturn(SerialHeap *heap, Thread *thread, Frame *frame) {
-    pop_frame(thread->vm_stack);
+    pop_frame(thread, heap);
     Frame *next = get_stack(thread->vm_stack);
     if (NULL != next) push_long_from(frame->operand_stack, next->operand_stack);
 }
 
 void freturn(SerialHeap *heap, Thread *thread, Frame *frame) {
-    pop_frame(thread->vm_stack);
+    pop_frame(thread, heap);
     Frame *next = get_stack(thread->vm_stack);
     if (NULL != next) push_float(next->operand_stack, pop_float(frame->operand_stack));
 }
 
 void dreturn(SerialHeap *heap, Thread *thread, Frame *frame) {
-    pop_frame(thread->vm_stack);
+    pop_frame(thread, heap);
     Frame *next = get_stack(thread->vm_stack);
     if (NULL != next) push_double_from(frame->operand_stack, next->operand_stack);
 }
 
 void areturn(SerialHeap *heap, Thread *thread, Frame *frame) {
-    pop_frame(thread->vm_stack);
+    pop_frame(thread, heap);
     Frame *next = get_stack(thread->vm_stack);
     if (NULL != next) push_slot_from(frame->operand_stack, next->operand_stack);
 }
 
 void j_return(SerialHeap *heap, Thread *thread, Frame *frame) {
-    pop_frame(thread->vm_stack);
+    pop_frame(thread, heap);
 }
 
 void getstatic(SerialHeap *heap, Thread *thread, Frame *frame) {
@@ -1374,12 +1373,14 @@ void init_instructions_desc()
     instructions_desc[0xff] = "impdep2";
 }
 
-void pop_frame(Stack *vm_stack)
+void pop_frame(Thread *thread, SerialHeap *heap)
 {
     printf("\t\t\t\t[framestack]");
-    Frame *frame = pop_stack(vm_stack);
-    if (NULL != frame->pop_hook) frame->pop_hook(frame);
+    Frame *frame = pop_stack(thread->vm_stack);
+    if (NULL != frame->pop_hook) frame->pop_hook(thread, heap, frame);
     printf("[ESC] %s - %s.%s%s\n", instructions_desc[read_code(frame)], frame->class->class_name, frame->method->name, frame->method->desc);
+    free(frame);
+    frame = NULL;
 }
 
 void exec(Operator operator, SerialHeap *heap, Thread *thread, Frame *frame)

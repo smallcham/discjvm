@@ -11,6 +11,7 @@
 #include "../util/endian.h"
 #include "../util/string_util.h"
 #include "../share/gc/serial/serial_heap.h"
+#include "../share/native/native_factory.h"
 #include "../runtime/opcode.h"
 #include "../runtime/jmod.h"
 
@@ -62,7 +63,7 @@ int class_is_in_init(ClassFile *class);
 
 int class_is_inited(ClassFile *class);
 
-void set_class_inited_by_frame(Frame *frame);
+void set_class_inited_by_frame(Thread *thread, SerialHeap *heap, Frame *frame);
 
 void init_class_and_exec(Thread *thread, SerialHeap *heap, ClassFile *class);
 

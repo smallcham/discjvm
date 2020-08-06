@@ -411,11 +411,12 @@ void do_invokestatic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2
     }
     printf("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class_name_info.bytes, name_and_type_info.name_index, method_name_info.bytes, name_and_type_info.descriptor_index, method_desc_info.bytes);
     MethodInfo *method = find_method_with_desc(thread, heap, class, method_name_info.bytes, method_desc_info.bytes);
-    if ((method->access_flags & ACC_NATIVE) != 0) {
-        printf("-----------%s\n", method->name);
-    }
     if (NULL == method) exit(-1);
-    create_vm_frame_by_method_add_params(thread, class, frame, method, get_method_code(class->constant_pool, *method));
+    if ((method->access_flags & ACC_NATIVE) != 0) {
+        create_c_frame_and_invoke(thread, frame, class->class_name, method->name, method->desc);
+    } else {
+        create_vm_frame_by_method_add_params(thread, class, frame, method, get_method_code(class->constant_pool, *method));
+    }
 }
 
 void do_invokeinterface_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index, u1 count)
@@ -436,11 +437,12 @@ void do_invokeinterface_by_index(Thread *thread, SerialHeap *heap, Frame *frame,
 //    }
     printf("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class_name, name_and_type_info.name_index, method_name, name_and_type_info.descriptor_index, method_desc);
     MethodInfo *method = find_method_iter_super_with_desc(thread, heap, &class, method_name, method_name);
-    if ((method->access_flags & ACC_NATIVE) != 0) {
-        printf("-----------%s\n", method->name);
-    }
     if (NULL == method) exit(-1);
-    create_vm_frame_by_method_add_params_and_this(thread, class, frame, method, get_method_code(class->constant_pool, *method));
+    if ((method->access_flags & ACC_NATIVE) != 0) {
+        create_c_frame_and_invoke(thread, frame, class->class_name, method->name, method->desc);
+    } else {
+        create_vm_frame_by_method_add_params_and_this(thread, class, frame, method, get_method_code(class->constant_pool, *method));
+    }
 }
 
 void do_invokespecial_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
@@ -454,11 +456,12 @@ void do_invokespecial_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
     ClassFile *class = load_class(thread, heap, class_name_info.bytes);
     printf("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class_name_info.bytes, name_and_type_info.name_index, method_name_info.bytes, name_and_type_info.descriptor_index, method_desc_info.bytes);
     MethodInfo *method = find_method_iter_super_with_desc(thread, heap, &class, method_name_info.bytes, method_desc_info.bytes);
-    if ((method->access_flags & ACC_NATIVE) != 0) {
-        printf("-----------%s\n", method->name);
-    }
     if (NULL == method) exit(-1);
-    create_vm_frame_by_method_add_params_and_this(thread, class, frame, method, get_method_code(class->constant_pool, *method));
+    if ((method->access_flags & ACC_NATIVE) != 0) {
+        create_c_frame_and_invoke(thread, frame, class->class_name, method->name, method->desc);
+    } else {
+        create_vm_frame_by_method_add_params_and_this(thread, class, frame, method, get_method_code(class->constant_pool, *method));
+    }
 }
 
 void do_invokevirtual_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
@@ -472,11 +475,12 @@ void do_invokevirtual_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
     ClassFile *class = load_class(thread, heap, class_name_info.bytes);
     printf("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class_name_info.bytes, name_and_type_info.name_index, method_name_info.bytes, name_and_type_info.descriptor_index, method_desc_info.bytes);
     MethodInfo *method = find_method_iter_super_with_desc(thread, heap, &class, method_name_info.bytes, method_desc_info.bytes);
-    if ((method->access_flags & ACC_NATIVE) != 0) {
-        printf("-----------%s\n", method->name);
-    }
     if (NULL == method) exit(-1);
-    create_vm_frame_by_method_add_params_and_this(thread, class, frame, method, get_method_code(class->constant_pool, *method));
+    if ((method->access_flags & ACC_NATIVE) != 0) {
+        create_c_frame_and_invoke(thread, frame, class->class_name, method->name, method->desc);
+    } else {
+        create_vm_frame_by_method_add_params_and_this(thread, class, frame, method, get_method_code(class->constant_pool, *method));
+    }
 }
 
 void get_field_to_opstack_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
@@ -864,8 +868,9 @@ int class_is_inited(ClassFile *class)
     return class->init_state == CLASS_INITED;
 }
 
-void set_class_inited_by_frame(Frame *frame)
+void set_class_inited_by_frame(Thread *thread, SerialHeap *heap, Frame *frame)
 {
+    frame->class->class_object = malloc_object(heap, load_class(thread, heap, "java/lang/Class"));
     frame->class->init_state = CLASS_INITED;
 }
 
@@ -885,6 +890,7 @@ void init_class(Thread *thread, SerialHeap *heap, ClassFile *class)
 //        create_vm_frame_by_method(thread, class, clinit, clinit_code);
         create_vm_frame_by_method_add_hook(thread, class, clinit, clinit_code, (PopHook) set_class_inited_by_frame);
     } else {
+        class->class_object = malloc_object(heap, load_class(thread, heap, "java/lang/Class"));
         class->init_state = CLASS_INITED;
     }
 

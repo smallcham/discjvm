@@ -6,10 +6,13 @@
 #define DISCJVM_BOOTSTRAP_H
 
 #include "../share/gc/serial/serial_heap.h"
+#include "../share/native/native_factory.h"
 #include "class_loader.h"
 #include "opcode.h"
 
 void init_lib(Thread *thread, SerialHeap *heap);
+
+void init_lib_by_names(Thread *thread, SerialHeap *heap, char *names[], int count);
 
 void start_vm(char *class_path);
 
