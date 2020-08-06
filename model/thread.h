@@ -38,6 +38,8 @@ Frame *create_vm_frame_by_method_add_hook(Thread* thread, ClassFile *class, Meth
 
 Thread create_thread(int vm_stack_size, int c_stack_size);
 
+void free_frame(Frame **frame);
+
 void print_local_variables(Frame *frame);
 
 #endif //DISCJVM_THREAD_H

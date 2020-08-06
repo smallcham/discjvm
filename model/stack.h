@@ -76,4 +76,6 @@ Slot **pop_slot_with_num(Stack *stack, int num);
 
 void print_stack(Stack *stack);
 
+void free_stack(Stack **stack);
+
 #endif //DISCJVM_STACK_H

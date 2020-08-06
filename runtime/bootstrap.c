@@ -55,14 +55,14 @@ void init_lib_by_names(Thread *thread, SerialHeap *heap, char *names[], int coun
 void start_vm(char *class_path)
 {
     JAVA_HOME = getenv("JAVA_HOME");
-    char *base_lib[] = { "java/lang/Object", "java/lang/Class" };
+    char *base_lib[] = { "java/lang/Object", "java/lang/Class", "java/io/PrintStream", "java/io/FilterOutputStream", "java/io/OutputStream" };
     SerialHeap *heap = init_gc();
     init_instructions();
     init_native_factory();
     init_instructions_desc();
     Thread thread = create_thread(100, 100);
 //    init_lib(&thread, heap);
-    init_lib_by_names(&thread, heap, base_lib, 2);
+    init_lib_by_names(&thread, heap, base_lib, 5);
     ClassFile *class = load_class(&thread, heap, class_path);
     init_class_and_exec(&thread, heap, class);
 

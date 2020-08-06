@@ -8,6 +8,22 @@ void add_params(Frame *frame, Frame *new_frame, MethodInfo *method);
 
 void add_params_and_this(Frame *frame, Frame *new_frame, MethodInfo *method);
 
+void free_frame(Frame **frame)
+{
+    free_stack(&(*frame)->operand_stack);
+    (*frame)->operand_stack = NULL;
+//    free((*frame)->code_info->code);
+//    free((*frame)->code_info->attributes->info);
+//    free((*frame)->code_info->attributes);
+//    free((*frame)->code_info);
+    (*frame)->code_info = NULL;
+    (*frame)->method = NULL;
+    (*frame)->class = NULL;
+    (*frame)->constant_pool = NULL;
+    free(*frame);
+    *frame = NULL;
+}
+
 Frame *create_vm_frame_by_method(Thread* thread, ClassFile *class, MethodInfo *method, CodeAttribute *code)
 {
     if (NULL == code) return NULL;
@@ -137,14 +153,14 @@ void add_params(Frame *frame, Frame *new_frame, MethodInfo *method)
 
 void print_local_variables(Frame *frame)
 {
-    printf("\t\t\t\t\t<");
+    printf("\t\t\t<");
     for (int i = 0; i < frame->code_info->max_locals; i++) {
         Slot *value = frame->local_variables[i];
         if (NULL != value) {
             if (NULL != value->object_value) {
                 Object *obj = value->object_value;
                 if (NULL != obj->class) printf("[%d-> %s],", i, obj->class->class_name);
-                else printf("[%d-> %p],", i, obj);
+                else printf("[%d-> NULL-OBJECT(%p)],", i, obj);
             } else {
                 printf("[%d-> %d],", i, value->value);
             }

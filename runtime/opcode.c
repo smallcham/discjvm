@@ -705,7 +705,7 @@ void if_icmpne(SerialHeap *heap, Thread *thread, Frame *frame) {
     u1 branch1 = step_pc1_and_read_code_no_submit(frame);
     u1 branch2 = step_pc2_and_read_code_no_submit(frame);
     // 如果条件成立，则将程序计数器pc前移分支1、2计算得出的offset偏移量， 否则将程pc前移3步（分别为 - 1：前移指令、2：分支一指令、3：分支二指令）
-    frame->pc = (value1 != value2) ? step_pc_and_read_pc(frame, (short)((branch1 << 8) | branch2)) : step_pc_and_read_pc(frame, 3);
+    frame->pc = (value1 != value2) ? step_pc_and_read_pc(frame, (branch1 << 8) | branch2) : step_pc_and_read_pc(frame, 3);
 }
 
 void if_icmplt(SerialHeap *heap, Thread *thread, Frame *frame) {
@@ -714,7 +714,7 @@ void if_icmplt(SerialHeap *heap, Thread *thread, Frame *frame) {
     u1 branch1 = step_pc1_and_read_code_no_submit(frame);
     u1 branch2 = step_pc2_and_read_code_no_submit(frame);
     // 如果条件成立，则将程序计数器pc前移分支1、2计算得出的offset偏移量， 否则将程pc前移3步（分别为 - 1：前移指令、2：分支一指令、3：分支二指令）
-    frame->pc = (value1 < value2) ? step_pc_and_read_pc(frame, (short)((branch1 << 8) | branch2)) : step_pc_and_read_pc(frame, 3);
+    frame->pc = (value1 < value2) ? step_pc_and_read_pc(frame, (branch1 << 8) | branch2) : step_pc_and_read_pc(frame, 3);
 }
 
 void if_icmpge(SerialHeap *heap, Thread *thread, Frame *frame) {
@@ -723,7 +723,7 @@ void if_icmpge(SerialHeap *heap, Thread *thread, Frame *frame) {
     u1 branch1 = step_pc1_and_read_code_no_submit(frame);
     u1 branch2 = step_pc2_and_read_code_no_submit(frame);
     // 如果条件成立，则将程序计数器pc前移分支1、2计算得出的offset偏移量， 否则将程pc前移3步（分别为 - 1：前移指令、2：分支一指令、3：分支二指令）
-    frame->pc = (value1 >= value2) ? step_pc_and_read_pc(frame, (short)((branch1 << 8) | branch2)) : step_pc_and_read_pc(frame, 3);
+    frame->pc = (value1 >= value2) ? step_pc_and_read_pc(frame, (branch1 << 8) | branch2) : step_pc_and_read_pc(frame, 3);
 }
 
 void if_icmpgt(SerialHeap *heap, Thread *thread, Frame *frame) {
@@ -732,7 +732,7 @@ void if_icmpgt(SerialHeap *heap, Thread *thread, Frame *frame) {
     u1 branch1 = step_pc1_and_read_code_no_submit(frame);
     u1 branch2 = step_pc2_and_read_code_no_submit(frame);
     // 如果条件成立，则将程序计数器pc前移分支1、2计算得出的offset偏移量， 否则将程pc前移3步（分别为 - 1：前移指令、2：分支一指令、3：分支二指令）
-    frame->pc = (value1 > value2) ? step_pc_and_read_pc(frame, (short)((branch1 << 8) | branch2)) : step_pc_and_read_pc(frame, 3);
+    frame->pc = (value1 > value2) ? step_pc_and_read_pc(frame, (branch1 << 8) | branch2) : step_pc_and_read_pc(frame, 3);
 }
 
 void if_icmple(SerialHeap *heap, Thread *thread, Frame *frame) {
@@ -741,31 +741,31 @@ void if_icmple(SerialHeap *heap, Thread *thread, Frame *frame) {
     u1 branch1 = step_pc1_and_read_code_no_submit(frame);
     u1 branch2 = step_pc2_and_read_code_no_submit(frame);
     // 如果条件成立，则将程序计数器pc前移分支1、2计算得出的offset偏移量， 否则将程pc前移3步（分别为 - 1：前移指令、2：分支一指令、3：分支二指令）
-    frame->pc = (value1 <= value2) ? step_pc_and_read_pc(frame, (short)((branch1 << 8) | branch2)) : step_pc_and_read_pc(frame, 3);
+    frame->pc = (value1 <= value2) ? step_pc_and_read_pc(frame, (branch1 << 8) | branch2) : step_pc_and_read_pc(frame, 3);
 }
 
 void if_acmpeq(SerialHeap *heap, Thread *thread, Frame *frame) {
-    Object *value2 = pop_stack(frame->operand_stack);
-    Object *value1 = pop_stack(frame->operand_stack);
+    Object *value2 = pop_object(frame->operand_stack);
+    Object *value1 = pop_object(frame->operand_stack);
     u1 branch1 = step_pc1_and_read_code_no_submit(frame);
     u1 branch2 = step_pc2_and_read_code_no_submit(frame);
     // 如果条件成立，则将程序计数器pc前移分支1、2计算得出的offset偏移量， 否则将程pc前移3步（分别为 - 1：前移指令、2：分支一指令、3：分支二指令）
-    frame->pc = (value1 == value2) ? step_pc_and_read_pc(frame, (short)((branch1 << 8) | branch2)) : step_pc_and_read_pc(frame, 3);
+    frame->pc = (value1 == value2) ? step_pc_and_read_pc(frame, (branch1 << 8) | branch2) : step_pc_and_read_pc(frame, 3);
 }
 
 void if_acmpne(SerialHeap *heap, Thread *thread, Frame *frame) {
-    Object *value2 = pop_stack(frame->operand_stack);
-    Object *value1 = pop_stack(frame->operand_stack);
+    Object *value2 = pop_object(frame->operand_stack);
+    Object *value1 = pop_object(frame->operand_stack);
     u1 branch1 = step_pc1_and_read_code_no_submit(frame);
     u1 branch2 = step_pc2_and_read_code_no_submit(frame);
     // 如果条件成立，则将程序计数器pc前移分支1、2计算得出的offset偏移量， 否则将程pc前移3步（分别为 - 1：前移指令、2：分支一指令、3：分支二指令）
-    frame->pc = (value1 > value2) ? step_pc_and_read_pc(frame, (short)((branch1 << 8) | branch2)) : step_pc_and_read_pc(frame, 3);
+    frame->pc = (value1 > value2) ? step_pc_and_read_pc(frame, (branch1 << 8) | branch2) : step_pc_and_read_pc(frame, 3);
 }
 
 void j_goto(SerialHeap *heap, Thread *thread, Frame *frame) {
     u1 branch1 = step_pc1_and_read_code_no_submit(frame);
     u1 branch2 = step_pc2_and_read_code_no_submit(frame);
-    frame->pc = step_pc_and_read_pc(frame, (short)((branch1 << 8) | branch2));
+    frame->pc = step_pc_and_read_pc(frame, (branch1 << 8) | branch2);
 }
 
 void jsr(SerialHeap *heap, Thread *thread, Frame *frame) {}
@@ -777,34 +777,40 @@ void ireturn(SerialHeap *heap, Thread *thread, Frame *frame) {
     pop_frame(thread, heap);
     Frame *next = get_stack(thread->vm_stack);
     if (NULL != next) push_slot_from(frame->operand_stack, next->operand_stack);
+    free_frame(&frame);
 }
 
 void lreturn(SerialHeap *heap, Thread *thread, Frame *frame) {
     pop_frame(thread, heap);
     Frame *next = get_stack(thread->vm_stack);
     if (NULL != next) push_long_from(frame->operand_stack, next->operand_stack);
+    free_frame(&frame);
 }
 
 void freturn(SerialHeap *heap, Thread *thread, Frame *frame) {
     pop_frame(thread, heap);
     Frame *next = get_stack(thread->vm_stack);
     if (NULL != next) push_float(next->operand_stack, pop_float(frame->operand_stack));
+    free_frame(&frame);
 }
 
 void dreturn(SerialHeap *heap, Thread *thread, Frame *frame) {
     pop_frame(thread, heap);
     Frame *next = get_stack(thread->vm_stack);
     if (NULL != next) push_double_from(frame->operand_stack, next->operand_stack);
+    free_frame(&frame);
 }
 
 void areturn(SerialHeap *heap, Thread *thread, Frame *frame) {
     pop_frame(thread, heap);
     Frame *next = get_stack(thread->vm_stack);
     if (NULL != next) push_slot_from(frame->operand_stack, next->operand_stack);
+    free_frame(&frame);
 }
 
 void j_return(SerialHeap *heap, Thread *thread, Frame *frame) {
     pop_frame(thread, heap);
+    free_frame(&frame);
 }
 
 void getstatic(SerialHeap *heap, Thread *thread, Frame *frame) {
@@ -1379,18 +1385,18 @@ void pop_frame(Thread *thread, SerialHeap *heap)
     Frame *frame = pop_stack(thread->vm_stack);
     if (NULL != frame->pop_hook) frame->pop_hook(thread, heap, frame);
     printf("[ESC] %s - %s.%s%s\n", instructions_desc[read_code(frame)], frame->class->class_name, frame->method->name, frame->method->desc);
-    free(frame);
-    frame = NULL;
 }
 
 void exec(Operator operator, SerialHeap *heap, Thread *thread, Frame *frame)
 {
-    printf("\t\t\t%s:\n", instructions_desc[read_code(frame)]);
+    printf("\t\t\t%s.%s\t\t\t%s:\n", frame->class->class_name, frame->method->name, instructions_desc[read_code(frame)]);
     operator(heap, thread, frame);
-    printf("\t\t\t\t[opstack]");
-    print_stack(frame->operand_stack);
-    printf("\t\t\t\t[localvars]");
-    print_local_variables(frame);
+    if (NULL != frame->class) {
+        printf("\t\t\t\t[opstack.%s.%s]", frame->class->class_name, frame->method->name);
+        print_stack(frame->operand_stack);
+        printf("\t\t\t\t[localvars.%s.%s]", frame->class->class_name, frame->method->name);
+        print_local_variables(frame);
+    }
 }
 
 void run(Thread *thread, SerialHeap *heap) {

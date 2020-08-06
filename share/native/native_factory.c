@@ -35,6 +35,7 @@ void invoke_native(Thread *thread)
 {
     if (NULL == get_stack(thread->c_stack)) return;
     do {
+        printf("\t\t\t\t[nativestack]");
         Frame *frame = pop_stack(thread->c_stack);
         NativeMethod method = frame->native_method;
         method(thread, frame);
@@ -48,4 +49,5 @@ void create_c_frame_and_invoke(Thread *thread, Frame *frame, char *class_name, c
     push_stack(thread->c_stack, frame);
     printf("[**INVOKENATIVE] %s.%s.%s\n", class_name, method_name, method_desc);
     invoke_native(thread);
+    printf("[**EXCNATIVE] %s.%s.%s\n", class_name, method_name, method_desc);
 }

@@ -207,10 +207,19 @@ double pop_double(Stack *stack)
     return (double) pop_long(stack);
 }
 
+void free_stack(Stack **stack)
+{
+    while (!is_empty_stack(*stack)) {
+        free(pop_stack(*stack));
+    }
+    free(*stack);
+    stack = NULL;
+}
+
 void print_stack(Stack *stack)
 {
     printf("[size: %d, max: %d]", stack->size, stack->max_size);
-    printf("\t\t\t\t");
+    printf("\t\t\t");
     if (NULL == stack || stack->size == 0 || NULL == stack->tail) {
         printf("-> ...\n\n");
         return;
@@ -234,7 +243,7 @@ void print_stack(Stack *stack)
         if (NULL != value->object_value) {
             Object *obj = value->object_value;
             if (NULL != obj->class) printf("%s", obj->class->class_name);
-            else printf("%p", obj);
+            else printf("NULL-OBJECT(%p)", obj);
         } else {
             printf("%d", value->value);
         }
