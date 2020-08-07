@@ -42,7 +42,7 @@ Frame *create_vm_frame_by_method(Thread* thread, ClassFile *class, MethodInfo *m
     frame->class = class;
     frame->pc = 0;
     push_stack(thread->vm_stack, frame);
-    printf("[INVOKE] %s - %s.%s\n", frame->class->class_name, frame->method->name, frame->method->desc);
+//    printf("[INVOKE] %s - %s.%s\n", frame->class->class_name, frame->method->name, frame->method->desc);
     return frame;
 }
 

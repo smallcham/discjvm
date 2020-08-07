@@ -14,6 +14,7 @@ void init_native_factory()
 
     //Class
     put_map(&native_pool, "java/lang/Class.registerNatives()V", java_lang_Class_registerNatives_90V);
+    put_map(&native_pool, "java/lang/Class.getPrimitiveClass(Ljava/lang/String;)Ljava/lang/Class;", java_lang_Class_getPrimitiveClass_9Ljava_lang_String10Ljava_lang_Class);
 
     //System
     put_map(&native_pool, "java/lang/System.registerNatives()V", java_lang_System_registerNatives_90V);
@@ -49,5 +50,9 @@ void create_c_frame_and_invoke(Thread *thread, Frame *frame, char *class_name, c
     push_stack(thread->c_stack, frame);
     printf("[**INVOKENATIVE] %s.%s.%s\n", class_name, method_name, method_desc);
     invoke_native(thread);
+    printf("\t\t\t\t[opstack.%s.%s]", frame->class->class_name, frame->method->name);
+    print_stack(frame->operand_stack);
+    printf("\t\t\t\t[localvars.%s.%s]", frame->class->class_name, frame->method->name);
+    print_local_variables(frame);
     printf("[**EXCNATIVE] %s.%s.%s\n", class_name, method_name, method_desc);
 }

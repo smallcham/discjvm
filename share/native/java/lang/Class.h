@@ -6,7 +6,10 @@
 #define DISCJVM_JCLASS_H
 
 #include "../../../../model/thread.h"
+#include "../../../../runtime/class_loader.h"
 
 void java_lang_Class_registerNatives_90V(Thread *thread, Frame *frame);
+
+void java_lang_Class_getPrimitiveClass_9Ljava_lang_String10Ljava_lang_Class(Thread *thread, Frame *frame);
 
 #endif //DISCJVM_CLASS_H

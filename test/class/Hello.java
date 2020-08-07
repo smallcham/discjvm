@@ -23,7 +23,11 @@ public class Hello {
 //         System.out.println(sum);
 // 	}
 
+//     public static void main(String[] args) {
+// 	    System.out.println(new Object().getClass() == new Object().getClass());
+// 	}
+
     public static void main(String[] args) {
-	    System.out.println(new Object().getClass() == new Object().getClass());
+        System.out.println(1);
 	}
 }

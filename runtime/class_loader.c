@@ -473,7 +473,7 @@ void do_invokevirtual_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
     CONSTANT_Utf8_info method_name_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.name_index].info;
     CONSTANT_Utf8_info method_desc_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info;
     ClassFile *class = load_class(thread, heap, class_name_info.bytes);
-    printf("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class_name_info.bytes, name_and_type_info.name_index, method_name_info.bytes, name_and_type_info.descriptor_index, method_desc_info.bytes);
+    printf("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class->class_name, name_and_type_info.name_index, method_name_info.bytes, name_and_type_info.descriptor_index, method_desc_info.bytes);
     MethodInfo *method = find_method_iter_super_with_desc(thread, heap, &class, method_name_info.bytes, method_desc_info.bytes);
     if (NULL == method) exit(-1);
     if ((method->access_flags & ACC_NATIVE) != 0) {
@@ -598,8 +598,9 @@ void put_static_field(Thread *thread, SerialHeap *heap, Frame *frame, CONSTANT_F
 //    }
 //    if (index == -1) exit(-1);
 //    class->static_fields[index].field_info = &class->fields[index];
-    Slot *field = get_field_from_map(&class->static_fields, class->class_name, field_name_info.bytes, field_desc_info.bytes);
-    free(field);
+//    Slot *field = get_field_from_map(&class->static_fields, class->class_name, field_name_info.bytes, field_desc_info.bytes);
+//    free(field);
+    Slot *field;
     if (str_start_with(field_desc_info.bytes, "D") ||
         str_start_with(field_desc_info.bytes, "J")) {
         field = malloc(sizeof(Slot) * 2);
@@ -668,7 +669,7 @@ void put_field_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index
 
 void create_null_object(Thread *thread, SerialHeap *heap, Frame *frame)
 {
-    push_object(frame->operand_stack, malloc_null_object(heap));
+    push_object(frame->operand_stack, NULL);
 }
 
 u1 *get_array_class_name_by_name_str(u1 *name)
@@ -815,7 +816,7 @@ void create_string_object(Thread *thread, SerialHeap *heap, Frame *frame, char *
 //        }
 //    }
 //    field->slot = slot;
-    put_field_to_map(&object->fields, class->class_name, "value", "Ljava/lang/String;", slot);
+    put_field_to_map(&object->fields, class->class_name, "value", "[B", slot);
     push_object(frame->operand_stack, object);
 }
 
