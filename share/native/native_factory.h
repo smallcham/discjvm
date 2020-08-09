@@ -12,7 +12,7 @@
 #include "java/lang/System.h"
 #include "java/lang/Thread.h"
 
-typedef void (*NativeMethod)(Thread *, Frame *);
+typedef void (*NativeMethod)(Thread *, SerialHeap *, Frame *);
 
 HashMap *native_pool;
 
@@ -20,8 +20,8 @@ void init_native_factory();
 
 NativeMethod find_native(char *class_name, char *method_name, char *method_desc);
 
-void invoke_native(Thread *thread);
+void invoke_native(Thread *thread, SerialHeap *heap);
 
-void create_c_frame_and_invoke(Thread *thread, Frame *frame, char *class_name, char *method_name, char *method_desc);
+void create_c_frame_and_invoke(Thread *thread, SerialHeap *heap, Frame *frame, char *class_name, char *method_name, char *method_desc);
 
 #endif //DISCJVM_NATIVE_FACTORY_H

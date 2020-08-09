@@ -6,6 +6,7 @@ ClassFile *load_class_by_bytes(Thread *thread, SerialHeap *heap, u1 *bytes)
 {
     ClassFile *class = (ClassFile*)malloc(sizeof(ClassFile));
     class->init_state = CLASS_NOT_INIT;
+    class->class_object = NULL;
     u1 *class_file = bytes;
     class->magic = l2b_4(*(u4 *) class_file);
     class_file += sizeof(u4);
@@ -321,7 +322,14 @@ ClassFile *load_class(Thread *thread, SerialHeap *heap, char *full_class_name)
     ClassFile *class = (ClassFile*)malloc(sizeof(ClassFile));
     class->init_state = CLASS_NOT_INIT;
     u1 *class_file = get_class_bytes(full_class_name);
-    return load_class_by_bytes(thread, heap, class_file);
+    class = load_class_by_bytes(thread, heap, class_file);
+    class->class_object = malloc_object(heap, load_class(thread, heap, "java/lang/Class"));
+    return class;
+}
+
+ClassFile *load_primitive_class(Thread *thread, SerialHeap *heap, char *primitive_name)
+{
+    return load_class(thread, heap, primitive_to_full_name(primitive_name));
 }
 
 //Field *get_runtime_field_from_map(HashMap **map, u1 *class_name, u1 *name, u1 *desc)
@@ -413,7 +421,7 @@ void do_invokestatic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2
     MethodInfo *method = find_method_with_desc(thread, heap, class, method_name_info.bytes, method_desc_info.bytes);
     if (NULL == method) exit(-1);
     if ((method->access_flags & ACC_NATIVE) != 0) {
-        create_c_frame_and_invoke(thread, frame, class->class_name, method->name, method->desc);
+        create_c_frame_and_invoke(thread, heap, frame, class->class_name, method->name, method->desc);
     } else {
         create_vm_frame_by_method_add_params(thread, class, frame, method, get_method_code(class->constant_pool, *method));
     }
@@ -439,7 +447,7 @@ void do_invokeinterface_by_index(Thread *thread, SerialHeap *heap, Frame *frame,
     MethodInfo *method = find_method_iter_super_with_desc(thread, heap, &class, method_name, method_name);
     if (NULL == method) exit(-1);
     if ((method->access_flags & ACC_NATIVE) != 0) {
-        create_c_frame_and_invoke(thread, frame, class->class_name, method->name, method->desc);
+        create_c_frame_and_invoke(thread, heap, frame, class->class_name, method->name, method->desc);
     } else {
         create_vm_frame_by_method_add_params_and_this(thread, class, frame, method, get_method_code(class->constant_pool, *method));
     }
@@ -458,7 +466,7 @@ void do_invokespecial_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
     MethodInfo *method = find_method_iter_super_with_desc(thread, heap, &class, method_name_info.bytes, method_desc_info.bytes);
     if (NULL == method) exit(-1);
     if ((method->access_flags & ACC_NATIVE) != 0) {
-        create_c_frame_and_invoke(thread, frame, class->class_name, method->name, method->desc);
+        create_c_frame_and_invoke(thread, heap, frame, class->class_name, method->name, method->desc);
     } else {
         create_vm_frame_by_method_add_params_and_this(thread, class, frame, method, get_method_code(class->constant_pool, *method));
     }
@@ -477,7 +485,7 @@ void do_invokevirtual_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
     MethodInfo *method = find_method_iter_super_with_desc(thread, heap, &class, method_name_info.bytes, method_desc_info.bytes);
     if (NULL == method) exit(-1);
     if ((method->access_flags & ACC_NATIVE) != 0) {
-        create_c_frame_and_invoke(thread, frame, class->class_name, method->name, method->desc);
+        create_c_frame_and_invoke(thread, heap, frame, class->class_name, method->name, method->desc);
     } else {
         create_vm_frame_by_method_add_params_and_this(thread, class, frame, method, get_method_code(class->constant_pool, *method));
     }
@@ -871,7 +879,6 @@ int class_is_inited(ClassFile *class)
 
 void set_class_inited_by_frame(Thread *thread, SerialHeap *heap, Frame *frame)
 {
-    frame->class->class_object = malloc_object(heap, load_class(thread, heap, "java/lang/Class"));
     frame->class->init_state = CLASS_INITED;
 }
 
@@ -891,7 +898,6 @@ void init_class(Thread *thread, SerialHeap *heap, ClassFile *class)
 //        create_vm_frame_by_method(thread, class, clinit, clinit_code);
         create_vm_frame_by_method_add_hook(thread, class, clinit, clinit_code, (PopHook) set_class_inited_by_frame);
     } else {
-        class->class_object = malloc_object(heap, load_class(thread, heap, "java/lang/Class"));
         class->init_state = CLASS_INITED;
     }
 

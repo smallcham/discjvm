@@ -17,6 +17,10 @@ SerialHeap *init_gc();
 
 HashMap *create_class_pool();
 
+ClassFile *get_primitive_class_from_cache(HashMap *pool, char *class_primitive_name);
+
+char *primitive_to_full_name(char *name);
+
 ClassFile *get_class_from_cache(HashMap *pool, char *class_full_name);
 
 void del_class_from_cache(HashMap *pool, char *class_full_name);

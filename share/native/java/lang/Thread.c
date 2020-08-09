@@ -4,6 +4,6 @@
 
 #include "Thread.h"
 
-void java_lang_Thread_registerNatives_90V(Thread *thread, Frame *frame)
+void java_lang_Thread_registerNatives_90V(Thread *thread, SerialHeap *heap, Frame *frame)
 {
 }

@@ -32,24 +32,24 @@ NativeMethod find_native(char *class_name, char *method_name, char *method_desc)
     return method;
 }
 
-void invoke_native(Thread *thread)
+void invoke_native(Thread *thread, SerialHeap *heap)
 {
     if (NULL == get_stack(thread->c_stack)) return;
     do {
         printf("\t\t\t\t[nativestack]");
         Frame *frame = pop_stack(thread->c_stack);
         NativeMethod method = frame->native_method;
-        method(thread, frame);
+        method(thread, heap, frame);
         frame->native_method = NULL;
     } while (!is_empty_stack(thread->c_stack));
 }
 
-void create_c_frame_and_invoke(Thread *thread, Frame *frame, char *class_name, char *method_name, char *method_desc)
+void create_c_frame_and_invoke(Thread *thread, SerialHeap *heap, Frame *frame, char *class_name, char *method_name, char *method_desc)
 {
     frame->native_method = find_native(class_name, method_name, method_desc);
     push_stack(thread->c_stack, frame);
     printf("[**INVOKENATIVE] %s.%s.%s\n", class_name, method_name, method_desc);
-    invoke_native(thread);
+    invoke_native(thread, heap);
     printf("\t\t\t\t[opstack.%s.%s]", frame->class->class_name, frame->method->name);
     print_stack(frame->operand_stack);
     printf("\t\t\t\t[localvars.%s.%s]", frame->class->class_name, frame->method->name);

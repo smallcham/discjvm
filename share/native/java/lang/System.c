@@ -4,6 +4,6 @@
 
 #include "System.h"
 
-void java_lang_System_registerNatives_90V(Thread *thread, Frame *frame)
+void java_lang_System_registerNatives_90V(Thread *thread, SerialHeap *heap, Frame *frame)
 {
 }

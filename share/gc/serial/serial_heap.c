@@ -4,6 +4,8 @@
 
 #include "serial_heap.h"
 
+char *primitive_to_full_name(char *name);
+
 SerialHeap *init_gc()
 {
     SerialHeap *heap = (SerialHeap*)malloc(sizeof(SerialHeap));
@@ -14,6 +16,11 @@ SerialHeap *init_gc()
 HashMap *create_class_pool()
 {
     return create_map();
+}
+
+ClassFile *get_primitive_class_from_cache(HashMap *pool, char *class_primitive_name)
+{
+    return get_map(&pool, primitive_to_full_name(class_primitive_name));
 }
 
 ClassFile *get_class_from_cache(HashMap *pool, char *class_full_name)
@@ -28,9 +35,9 @@ void del_class_from_cache(HashMap *pool, char *class_full_name)
 
 void put_class_to_cache(HashMap **pool, ClassFile *class)
 {
-    CONSTANT_Class_info class_info = *(CONSTANT_Class_info*)class->constant_pool[class->this_class].info;
-    CONSTANT_Utf8_info name_info = *(CONSTANT_Utf8_info*)class->constant_pool[class_info.name_index].info;
-    put_map(pool, name_info.bytes, class);
+//    CONSTANT_Class_info class_info = *(CONSTANT_Class_info*)class->constant_pool[class->this_class].info;
+//    CONSTANT_Utf8_info name_info = *(CONSTANT_Utf8_info*)class->constant_pool[class_info.name_index].info;
+    put_map(pool, class->class_name, class);
 }
 
 Object *malloc_object(SerialHeap *heap, ClassFile *class)
@@ -55,4 +62,18 @@ Array *malloc_array(SerialHeap *heap, ClassFile *class, int length)
     array->length = length;
     array->class = class;
     return array;
+}
+
+char *primitive_to_full_name(char *name)
+{
+    if (strcmp(name, "int") == 0) return "java/lang/Integer";
+    if (strcmp(name, "float") == 0) return "java/lang/Float";
+    if (strcmp(name, "long") == 0) return "java/lang/Long";
+    if (strcmp(name, "double") == 0) return "java/lang/Double";
+    if (strcmp(name, "short") == 0) return "java/lang/Short";
+    if (strcmp(name, "byte") == 0) return "java/lang/Byte";
+    if (strcmp(name, "boolean") == 0) return "java/lang/Boolean";
+    if (strcmp(name, "void") == 0) return "java/lang/Void";
+    if (strcmp(name, "char") == 0) return "java/lang/Character";
+    return name;
 }
