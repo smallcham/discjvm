@@ -405,7 +405,13 @@ u4 parse_method_param_count(CONSTANT_Utf8_info method_desc)
                 continue;
             case 'L': case '[': {
                 for (int k = j + 1; k < method_desc.length; k++) {
-                    if (method_desc.bytes[k] == ';') j = k;
+                    j = k;
+                    if (method_desc.bytes[k] == ';') {
+                        break;
+                    } else if (method_desc.bytes[k] == ')') {
+                        j = k - 1;
+                        break;
+                    }
                 }
                 count ++;
                 continue;

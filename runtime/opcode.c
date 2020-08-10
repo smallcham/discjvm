@@ -4,8 +4,10 @@
 
 #include "opcode.h"
 
-void _xastore(SerialHeap *heap, Thread *thread, Frame *frame, char *desc);
-void _ifx(SerialHeap *heap, Thread *thread, Frame *frame, int cond);
+void xastore_(SerialHeap *heap, Thread *thread, Frame *frame, char *desc);
+void ifx_(SerialHeap *heap, Thread *thread, Frame *frame, int cond);
+void if_icmpx_(SerialHeap *heap, Thread *thread, Frame *frame, int cond);
+void if_acmpx_(SerialHeap *heap, Thread *thread, Frame *frame, int cond);
 
 void step_pc(Frame *frame, int offset)
 {
@@ -203,9 +205,7 @@ void dconst_1(SerialHeap *heap, Thread *thread, Frame *frame) {
 }
 
 void bipush(SerialHeap *heap, Thread *thread, Frame *frame) {
-    int value = step_pc1_and_read_code(frame);
-
-    push_int(frame->operand_stack, value);
+    push_int(frame->operand_stack, (int)((signed char)step_pc1_and_read_code(frame)));
     step_pc_1(frame);
 }
 
@@ -530,7 +530,7 @@ void astore_3(SerialHeap *heap, Thread *thread, Frame *frame) {
     step_pc_1(frame);
 }
 
-void _xastore(SerialHeap *heap, Thread *thread, Frame *frame, char *desc) {
+void xastore_(SerialHeap *heap, Thread *thread, Frame *frame, char *desc) {
     Slot *value = pop_slot(frame->operand_stack);
     int index = pop_int(frame->operand_stack);
     Array *ref = pop_object(frame->operand_stack);
@@ -540,22 +540,22 @@ void _xastore(SerialHeap *heap, Thread *thread, Frame *frame, char *desc) {
 }
 
 void iastore(SerialHeap *heap, Thread *thread, Frame *frame) {
-    _xastore(heap, thread, frame, "I");
+    xastore_(heap, thread, frame, "I");
     step_pc_1(frame);
 }
 
 void lastore(SerialHeap *heap, Thread *thread, Frame *frame) {
-    _xastore(heap, thread, frame, "J");
+    xastore_(heap, thread, frame, "J");
     step_pc_1(frame);
 }
 
 void fastore(SerialHeap *heap, Thread *thread, Frame *frame) {
-    _xastore(heap, thread, frame, "F");
+    xastore_(heap, thread, frame, "F");
     step_pc_1(frame);
 }
 
 void dastore(SerialHeap *heap, Thread *thread, Frame *frame) {
-    _xastore(heap, thread, frame, "D");
+    xastore_(heap, thread, frame, "D");
     step_pc_1(frame);
 }
 
@@ -568,21 +568,25 @@ void aastore(SerialHeap *heap, Thread *thread, Frame *frame) {
 }
 
 void bastore(SerialHeap *heap, Thread *thread, Frame *frame) {
-    _xastore(heap, thread, frame, "B");
+    xastore_(heap, thread, frame, "B");
     step_pc_1(frame);
 }
 
 void castore(SerialHeap *heap, Thread *thread, Frame *frame) {
-    _xastore(heap, thread, frame, "C");
+    xastore_(heap, thread, frame, "C");
     step_pc_1(frame);
 }
 
 void sastore(SerialHeap *heap, Thread *thread, Frame *frame) {
-    _xastore(heap, thread, frame, "S");
+    xastore_(heap, thread, frame, "S");
     step_pc_1(frame);
 }
 
-void j_pop(SerialHeap *heap, Thread *thread, Frame *frame) {}
+void j_pop(SerialHeap *heap, Thread *thread, Frame *frame) {
+    pop_slot(frame->operand_stack);
+    step_pc_1(frame);
+}
+
 void pop2(SerialHeap *heap, Thread *thread, Frame *frame) {}
 
 void dup(SerialHeap *heap, Thread *thread, Frame *frame) {
@@ -628,7 +632,14 @@ void imul(SerialHeap *heap, Thread *thread, Frame *frame) {
 void lmul(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void fmul(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void dmul(SerialHeap *heap, Thread *thread, Frame *frame) {}
-void idiv(SerialHeap *heap, Thread *thread, Frame *frame) {}
+
+void idiv(SerialHeap *heap, Thread *thread, Frame *frame) {
+    int value2 = pop_int(frame->operand_stack);
+    int value1 = pop_int(frame->operand_stack);
+    push_int(frame->operand_stack, value1 / value2);
+    step_pc_1(frame);
+}
+
 void j_ldiv(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void fdiv(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void ddiv(SerialHeap *heap, Thread *thread, Frame *frame) {}
@@ -684,7 +695,12 @@ void f2d(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void d2i(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void d2l(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void d2f(SerialHeap *heap, Thread *thread, Frame *frame) {}
-void i2b(SerialHeap *heap, Thread *thread, Frame *frame) {}
+
+void i2b(SerialHeap *heap, Thread *thread, Frame *frame) {
+    push_int(frame->operand_stack, (signed int)((signed char)pop_int(frame->operand_stack)));
+    step_pc_1(frame);
+}
+
 void i2c(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void i2s(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void lcmp(SerialHeap *heap, Thread *thread, Frame *frame) {}
@@ -693,7 +709,7 @@ void fcmpg(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void dcmpl(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void dcmpg(SerialHeap *heap, Thread *thread, Frame *frame) {}
 
-void _ifx(SerialHeap *heap, Thread *thread, Frame *frame, int cond) {
+void ifx_(SerialHeap *heap, Thread *thread, Frame *frame, int cond) {
     u1 branch1 = step_pc1_and_read_code_no_submit(frame);
     u1 branch2 = step_pc2_and_read_code_no_submit(frame);
     frame->pc = (cond) ? step_pc_and_read_pc(frame, (short)(branch1 << 8) | branch2) : step_pc_and_read_pc(frame, 3);
@@ -701,102 +717,93 @@ void _ifx(SerialHeap *heap, Thread *thread, Frame *frame, int cond) {
 
 void ifeq(SerialHeap *heap, Thread *thread, Frame *frame) {
     int value = pop_int(frame->operand_stack);
-    _ifx(heap, thread, frame, value == 0);
+    ifx_(heap, thread, frame, value == 0);
 }
 
 void ifne(SerialHeap *heap, Thread *thread, Frame *frame) {
     int value = pop_int(frame->operand_stack);
-    _ifx(heap, thread, frame, value != 0);
+    ifx_(heap, thread, frame, value != 0);
 }
 
 void iflt(SerialHeap *heap, Thread *thread, Frame *frame) {
     int value = pop_int(frame->operand_stack);
-    _ifx(heap, thread, frame, value < 0);
+    ifx_(heap, thread, frame, value < 0);
 }
 
 void ifge(SerialHeap *heap, Thread *thread, Frame *frame) {
     int value = pop_int(frame->operand_stack);
-    _ifx(heap, thread, frame, value >= 0);
+    ifx_(heap, thread, frame, value >= 0);
 }
 
 void ifgt(SerialHeap *heap, Thread *thread, Frame *frame) {
     int value = pop_int(frame->operand_stack);
-    _ifx(heap, thread, frame, value > 0);
+    ifx_(heap, thread, frame, value > 0);
 }
 void ifle(SerialHeap *heap, Thread *thread, Frame *frame) {
     int value = pop_int(frame->operand_stack);
-    _ifx(heap, thread, frame, value <= 0);
+    ifx_(heap, thread, frame, value <= 0);
+}
+
+void if_icmpx_(SerialHeap *heap, Thread *thread, Frame *frame, int cond) {
+    u1 branch1 = step_pc1_and_read_code_no_submit(frame);
+    u1 branch2 = step_pc2_and_read_code_no_submit(frame);
+    // 如果条件成立，则将程序计数器pc前移分支1、2计算得出的offset偏移量， 否则将程pc前移3步（分别为 - 1：前移指令、2：分支一指令、3：分支二指令）
+    frame->pc = (cond) ? step_pc_and_read_pc(frame, (short)(branch1 << 8) | branch2) : step_pc_and_read_pc(frame, 3);
 }
 
 void if_icmpeq(SerialHeap *heap, Thread *thread, Frame *frame) {
     int value2 = pop_int(frame->operand_stack);
     int value1 = pop_int(frame->operand_stack);
-    u1 branch1 = step_pc1_and_read_code_no_submit(frame);
-    u1 branch2 = step_pc2_and_read_code_no_submit(frame);
-    frame->pc = (value1 == value2) ? step_pc_and_read_pc(frame, (short)(branch1 << 8) | branch2) : step_pc_and_read_pc(frame, 3);
+    if_icmpx_(heap, thread, frame, value1 == value2);
 }
 
 void if_icmpne(SerialHeap *heap, Thread *thread, Frame *frame) {
     int value2 = pop_int(frame->operand_stack);
     int value1 = pop_int(frame->operand_stack);
-    u1 branch1 = step_pc1_and_read_code_no_submit(frame);
-    u1 branch2 = step_pc2_and_read_code_no_submit(frame);
-    // 如果条件成立，则将程序计数器pc前移分支1、2计算得出的offset偏移量， 否则将程pc前移3步（分别为 - 1：前移指令、2：分支一指令、3：分支二指令）
-    frame->pc = (value1 != value2) ? step_pc_and_read_pc(frame, (short)(branch1 << 8) | branch2) : step_pc_and_read_pc(frame, 3);
+    if_icmpx_(heap, thread, frame, value1 != value2);
 }
 
 void if_icmplt(SerialHeap *heap, Thread *thread, Frame *frame) {
     int value2 = pop_int(frame->operand_stack);
     int value1 = pop_int(frame->operand_stack);
-    u1 branch1 = step_pc1_and_read_code_no_submit(frame);
-    u1 branch2 = step_pc2_and_read_code_no_submit(frame);
-    // 如果条件成立，则将程序计数器pc前移分支1、2计算得出的offset偏移量， 否则将程pc前移3步（分别为 - 1：前移指令、2：分支一指令、3：分支二指令）
-    frame->pc = (value1 < value2) ? step_pc_and_read_pc(frame, (short)(branch1 << 8) | branch2) : step_pc_and_read_pc(frame, 3);
+    if_icmpx_(heap, thread, frame, value1 < value2);
 }
 
 void if_icmpge(SerialHeap *heap, Thread *thread, Frame *frame) {
     int value2 = pop_int(frame->operand_stack);
     int value1 = pop_int(frame->operand_stack);
-    u1 branch1 = step_pc1_and_read_code_no_submit(frame);
-    u1 branch2 = step_pc2_and_read_code_no_submit(frame);
-    // 如果条件成立，则将程序计数器pc前移分支1、2计算得出的offset偏移量， 否则将程pc前移3步（分别为 - 1：前移指令、2：分支一指令、3：分支二指令）
-    frame->pc = (value1 >= value2) ? step_pc_and_read_pc(frame, (short)(branch1 << 8) | branch2) : step_pc_and_read_pc(frame, 3);
+    if_icmpx_(heap, thread, frame, value1 >= value2);
 }
 
 void if_icmpgt(SerialHeap *heap, Thread *thread, Frame *frame) {
     int value2 = pop_int(frame->operand_stack);
     int value1 = pop_int(frame->operand_stack);
-    u1 branch1 = step_pc1_and_read_code_no_submit(frame);
-    u1 branch2 = step_pc2_and_read_code_no_submit(frame);
-    // 如果条件成立，则将程序计数器pc前移分支1、2计算得出的offset偏移量， 否则将程pc前移3步（分别为 - 1：前移指令、2：分支一指令、3：分支二指令）
-    frame->pc = (value1 > value2) ? step_pc_and_read_pc(frame, (short)(branch1 << 8) | branch2) : step_pc_and_read_pc(frame, 3);
+    if_icmpx_(heap, thread, frame, value1 > value2);
 }
 
 void if_icmple(SerialHeap *heap, Thread *thread, Frame *frame) {
     int value2 = pop_int(frame->operand_stack);
     int value1 = pop_int(frame->operand_stack);
+    if_icmpx_(heap, thread, frame, value1 <= value2);
+}
+
+void if_acmpx_(SerialHeap *heap, Thread *thread, Frame *frame, int cond) {
     u1 branch1 = step_pc1_and_read_code_no_submit(frame);
     u1 branch2 = step_pc2_and_read_code_no_submit(frame);
     // 如果条件成立，则将程序计数器pc前移分支1、2计算得出的offset偏移量， 否则将程pc前移3步（分别为 - 1：前移指令、2：分支一指令、3：分支二指令）
-    frame->pc = (value1 <= value2) ? step_pc_and_read_pc(frame, (short)(branch1 << 8) | branch2) : step_pc_and_read_pc(frame, 3);
+    frame->pc = (cond) ? step_pc_and_read_pc(frame, (short)(branch1 << 8) | branch2) : step_pc_and_read_pc(frame, 3);
 }
 
 void if_acmpeq(SerialHeap *heap, Thread *thread, Frame *frame) {
     Object *value2 = pop_object(frame->operand_stack);
     Object *value1 = pop_object(frame->operand_stack);
-    u1 branch1 = step_pc1_and_read_code_no_submit(frame);
-    u1 branch2 = step_pc2_and_read_code_no_submit(frame);
-    // 如果条件成立，则将程序计数器pc前移分支1、2计算得出的offset偏移量， 否则将程pc前移3步（分别为 - 1：前移指令、2：分支一指令、3：分支二指令）
-    frame->pc = (value1 == value2) ? step_pc_and_read_pc(frame, (short)(branch1 << 8) | branch2) : step_pc_and_read_pc(frame, 3);
+    if_acmpx_(heap, thread, frame, value1 == value2);
 }
 
 void if_acmpne(SerialHeap *heap, Thread *thread, Frame *frame) {
     Object *value2 = pop_object(frame->operand_stack);
     Object *value1 = pop_object(frame->operand_stack);
-    u1 branch1 = step_pc1_and_read_code_no_submit(frame);
-    u1 branch2 = step_pc2_and_read_code_no_submit(frame);
-    // 如果条件成立，则将程序计数器pc前移分支1、2计算得出的offset偏移量， 否则将程pc前移3步（分别为 - 1：前移指令、2：分支一指令、3：分支二指令）
-    frame->pc = (value1 > value2) ? step_pc_and_read_pc(frame, (short)(branch1 << 8) | branch2) : step_pc_and_read_pc(frame, 3);
+    if_acmpx_(heap, thread, frame, value1 > value2);
 }
 
 void j_goto(SerialHeap *heap, Thread *thread, Frame *frame) {
@@ -1421,12 +1428,12 @@ void pop_frame(Thread *thread, SerialHeap *heap)
     printf("\t\t\t\t[framestack]");
     Frame *frame = pop_stack(thread->vm_stack);
     if (NULL != frame->pop_hook) frame->pop_hook(thread, heap, frame);
-    printf("[ESC] %s - %s.%s%s\n", instructions_desc[read_code(frame)], frame->class->class_name, frame->method->name, frame->method->desc);
+    printf("\n\t\t\t<-[ESC] %s - %s.%s%s\n\n", instructions_desc[read_code(frame)], frame->class->class_name, frame->method->name, frame->method->desc);
 }
 
 void exec(Operator operator, SerialHeap *heap, Thread *thread, Frame *frame)
 {
-    printf("\t\t\t%s.%s\t\t\t#%d %s:\n", frame->class->class_name, frame->method->name, frame->pc, instructions_desc[read_code(frame)]);
+    printf("\t\t\t%s.%s%s\t\t\t#%d %s:\n", frame->class->class_name, frame->method->name, frame->method->desc, frame->pc, instructions_desc[read_code(frame)]);
     operator(heap, thread, frame);
     if (NULL != frame->class) {
         printf("\t\t\t\t[opstack.%s.%s]", frame->class->class_name, frame->method->name);

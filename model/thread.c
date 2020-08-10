@@ -125,7 +125,7 @@ void add_params(Frame *frame, Frame *new_frame, MethodInfo *method)
 //    LocalVariableTableAttribute *local_variable_table = get_local_variable(new_frame->constant_pool, code);
 //    if (NULL == local_variable_table) return;
     if (method->params_count == 0) return;
-    printf("\t\t\t\t[addparams]");
+    printf("\t\t\t\t[addparams(%d)]\n", method->params_count);
     Slot **slots = pop_slot_with_num(frame->operand_stack, method->params_count);
     for (int i = 0; i < method->params_count; i++) {
         new_frame->local_variables[i] = slots[i];
