@@ -18,11 +18,6 @@ HashMap *create_class_pool()
     return create_map();
 }
 
-ClassFile *get_primitive_class_from_cache(HashMap *pool, char *class_primitive_name)
-{
-    return get_map(&pool, primitive_to_full_name(class_primitive_name));
-}
-
 ClassFile *get_class_from_cache(HashMap *pool, char *class_full_name)
 {
     return get_map(&pool, class_full_name);

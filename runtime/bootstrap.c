@@ -52,20 +52,38 @@ void init_lib_by_names(Thread *thread, SerialHeap *heap, char *names[], int coun
     }
 }
 
+void init_primitives(Thread *thread, SerialHeap *heap)
+{
+    load_primitive_class(thread, heap, "void");
+    load_primitive_class(thread, heap, "boolean");
+    load_primitive_class(thread, heap, "[Z");
+    load_primitive_class(thread, heap, "byte");
+    load_primitive_class(thread, heap, "[B");
+    load_primitive_class(thread, heap, "char");
+    load_primitive_class(thread, heap, "[C");
+    load_primitive_class(thread, heap, "short");
+    load_primitive_class(thread, heap, "[S");
+    load_primitive_class(thread, heap, "int");
+    load_primitive_class(thread, heap, "[I");
+    load_primitive_class(thread, heap, "long");
+    load_primitive_class(thread, heap, "[J");
+    load_primitive_class(thread, heap, "float");
+    load_primitive_class(thread, heap, "[F");
+    load_primitive_class(thread, heap, "double");
+    load_primitive_class(thread, heap, "[D");
+}
+
 void start_vm(char *class_path)
 {
     JAVA_HOME = getenv("JAVA_HOME");
     char *base_lib[] = {
             "java/lang/Object",
             "java/lang/Class",
+            "java/lang/System",
             "java/lang/String",
             "java/lang/Integer",
             "java/lang/Float",
-            "java/lang/Double",
-            "java/lang/Character"
-//            "java/io/PrintStream",
-//            "java/io/FilterOutputStream",
-//            "java/io/OutputStream"
+            "java/lang/Double"
     };
     SerialHeap *heap = init_gc();
     init_instructions();
@@ -73,6 +91,7 @@ void start_vm(char *class_path)
     init_instructions_desc();
     Thread thread = create_thread(100, 100);
 //    init_lib(&thread, heap);
+    init_primitives(&thread, heap);
     init_lib_by_names(&thread, heap, base_lib, 5);
     ClassFile *class = load_class(&thread, heap, class_path);
     init_class_and_exec(&thread, heap, class);

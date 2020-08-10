@@ -329,7 +329,20 @@ ClassFile *load_class(Thread *thread, SerialHeap *heap, char *full_class_name)
 
 ClassFile *load_primitive_class(Thread *thread, SerialHeap *heap, char *primitive_name)
 {
-    return load_class(thread, heap, primitive_to_full_name(primitive_name));
+    ClassFile *class_from_cache = get_class_from_cache(heap->class_pool, primitive_name);
+    if (NULL != class_from_cache) {
+        return class_from_cache;
+    }
+    unsigned long size = strlen(primitive_name);
+    char *name = malloc(size);
+    strcpy(name, primitive_name);
+    ClassFile *class = malloc(sizeof(ClassFile));
+    class->class_name = (u1*)name;
+    class->fields_count = 1;
+    class->class_object = malloc_object(heap, load_class(thread, heap, "java/lang/Class"));
+    class->init_state = CLASS_INITED;
+    put_class_to_cache(&heap->class_pool, class);
+    return class;
 }
 
 //Field *get_runtime_field_from_map(HashMap **map, u1 *class_name, u1 *name, u1 *desc)
@@ -740,42 +753,34 @@ void create_object(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
     create_object_with_backpc(thread, heap, frame, index, 3);
 }
 
-void create_array_reference_by_type(Thread *thread, SerialHeap *heap, Frame *frame, u1 type, int count)
+void create_array_by_type(Thread *thread, SerialHeap *heap, Frame *frame, u1 type, int count)
 {
     ClassFile *class;
-    int size = 1;
     switch (type) {
         case 4:
-            class = load_class(thread, heap, "java/lang/Boolean");
+            class = load_class(thread, heap, "[Z");
             break;
         case 5:
-            class = load_class(thread, heap, "java/lang/Character");
+            class = load_class(thread, heap, "[C");
             break;
         case 6:
-            class = load_class(thread, heap, "java/lang/Float");
+            class = load_class(thread, heap, "[F");
             break;
         case 7:
-            class = load_class(thread, heap, "java/lang/Double");
-            size = 2;
+            class = load_class(thread, heap, "[D");
             break;
         case 8:
-            class = load_class(thread, heap, "java/lang/Byte");
+            class = load_class(thread, heap, "[B");
             break;
         case 9:
-            class = load_class(thread, heap, "java/lang/Short");
+            class = load_class(thread, heap, "[S");
             break;
         case 10:
-            class = load_class(thread, heap, "java/lang/Integer");
+            class = load_class(thread, heap, "[I");
             break;
         case 11:
-            class = load_class(thread, heap, "java/lang/Long");
-            size = 2;
+            class = load_class(thread, heap, "[J");
             break;
-    }
-    if (class_is_not_init(class)) {
-        back_pc(frame, 2);
-        init_class(thread, heap, class);
-        return;
     }
 //    Object *object = (Object*)malloc(sizeof(Object) + sizeof(Slot) * count);
 //    object->class = class;
@@ -797,7 +802,6 @@ void create_array_reference_by_type(Thread *thread, SerialHeap *heap, Frame *fra
 //        free(desc);
 //    }
     push_object(frame->operand_stack, array);
-
 }
 
 void create_string_object(Thread *thread, SerialHeap *heap, Frame *frame, char *str)
