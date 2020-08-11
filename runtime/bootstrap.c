@@ -79,8 +79,8 @@ void start_vm(char *class_path)
     char *base_lib[] = {
             "java/lang/Object",
             "java/lang/Class",
-            "java/lang/System",
             "java/lang/String",
+            "java/lang/System",
             "java/lang/Integer",
             "java/lang/Float",
             "java/lang/Double"

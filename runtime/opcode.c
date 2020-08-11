@@ -535,7 +535,7 @@ void xastore_(SerialHeap *heap, Thread *thread, Frame *frame, char *desc) {
     int index = pop_int(frame->operand_stack);
     Array *ref = pop_object(frame->operand_stack);
     Object *object = malloc_object(heap, ref->class);
-    put_field_to_map(&object->fields, ref->class->class_name, "value", desc, value);
+    put_field_to_map(&object->fields, "value", desc, value);
     ref->objects[index] = object;
 }
 

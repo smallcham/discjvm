@@ -2,11 +2,15 @@
 
 u1 *load_from_jmod(char *jmod_name, char *name)
 {
-    char *full_name = malloc(strlen(name) + 15);
+    unsigned long size = strlen(name) + 16;
+    char *full_name = malloc(size);
+    memset(full_name, 0, size);
     sprintf(full_name, "classes/%s.class", name);
 
     zip_error_t err;
-    char *file_path = malloc(strlen(JAVA_HOME) + strlen(jmod_name) + 8);
+    size = strlen(JAVA_HOME) + strlen(jmod_name) + 9;
+    char *file_path = malloc(size);
+    memset(file_path, 0, size);
     sprintf(file_path, "%s/jmods/%s", JAVA_HOME, jmod_name);
     FILE *fp = fopen(file_path, "rb");
     if (NULL == fp) exit(-1);
