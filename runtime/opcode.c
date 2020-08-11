@@ -533,29 +533,32 @@ void astore_3(SerialHeap *heap, Thread *thread, Frame *frame) {
 void xastore_(SerialHeap *heap, Thread *thread, Frame *frame, char *desc) {
     Slot *value = pop_slot(frame->operand_stack);
     int index = pop_int(frame->operand_stack);
-    Array *ref = pop_object(frame->operand_stack);
-    Object *object = malloc_object(heap, ref->class);
+    Object *ref = pop_object(frame->operand_stack);
+    Field *field = get_field_from_map(&ref->fields, "value", desc);
+
+     = value->value;
+//    Object *object = malloc_object(heap, ref->class);
     put_field_to_map(&object->fields, "value", desc, value);
-    ref->objects[index] = object;
+//    ref->objects[index] = object;
 }
 
 void iastore(SerialHeap *heap, Thread *thread, Frame *frame) {
-    xastore_(heap, thread, frame, "I");
+    xastore_(heap, thread, frame, "[I");
     step_pc_1(frame);
 }
 
 void lastore(SerialHeap *heap, Thread *thread, Frame *frame) {
-    xastore_(heap, thread, frame, "J");
+    xastore_(heap, thread, frame, "[J");
     step_pc_1(frame);
 }
 
 void fastore(SerialHeap *heap, Thread *thread, Frame *frame) {
-    xastore_(heap, thread, frame, "F");
+    xastore_(heap, thread, frame, "[F");
     step_pc_1(frame);
 }
 
 void dastore(SerialHeap *heap, Thread *thread, Frame *frame) {
-    xastore_(heap, thread, frame, "D");
+    xastore_(heap, thread, frame, "[D");
     step_pc_1(frame);
 }
 
@@ -568,17 +571,17 @@ void aastore(SerialHeap *heap, Thread *thread, Frame *frame) {
 }
 
 void bastore(SerialHeap *heap, Thread *thread, Frame *frame) {
-    xastore_(heap, thread, frame, "B");
+    xastore_(heap, thread, frame, "[B");
     step_pc_1(frame);
 }
 
 void castore(SerialHeap *heap, Thread *thread, Frame *frame) {
-    xastore_(heap, thread, frame, "C");
+    xastore_(heap, thread, frame, "[C");
     step_pc_1(frame);
 }
 
 void sastore(SerialHeap *heap, Thread *thread, Frame *frame) {
-    xastore_(heap, thread, frame, "S");
+    xastore_(heap, thread, frame, "[S");
     step_pc_1(frame);
 }
 
@@ -1448,5 +1451,7 @@ void run(Thread *thread, SerialHeap *heap) {
     do {
         Frame *frame = get_stack(thread->vm_stack);
         exec(instructions[read_code(frame)], heap, thread, frame);
+        ClassFile *class = load_class(thread, heap, "java/lang/System");
+        printf("---------[%s]-----\n\n\n", class->static_fields->entries[4].key);
     } while (!is_empty_stack(thread->vm_stack));
 }

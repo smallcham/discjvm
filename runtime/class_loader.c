@@ -17,7 +17,7 @@ ClassFile *load_class_by_bytes(Thread *thread, SerialHeap *heap, u1 *bytes)
     class->constant_pool_count = l2b_2(*(u2 *) class_file);
     class_file += sizeof(u2);
 
-    class->constant_pool = (ConstantPool *) malloc(class->constant_pool_count * sizeof(ConstantPool));
+    class->constant_pool = (ConstantPool*) malloc(class->constant_pool_count * sizeof(ConstantPool));
 
     for (u2 i = 1; i < class->constant_pool_count; i++) {
         class->constant_pool[i].tag = *(u1 *) class_file;
@@ -357,7 +357,7 @@ ClassFile *load_primitive_class(Thread *thread, SerialHeap *heap, char *primitiv
 
 Slot *get_field_from_map(HashMap **map, u1 *name, u1 *desc)
 {
-    char *key = malloc(strlen(name) + strlen(desc) + 3);
+    char *key = malloc(strlen(name) + strlen(desc) + 2);
     sprintf(key, "%s.%s", name, desc);
     Slot *field = get_map(map, key);
     free(key);
@@ -373,7 +373,7 @@ Slot *get_field_from_map(HashMap **map, u1 *name, u1 *desc)
 
 void put_field_to_map(HashMap **map, u1 *name, u1 *desc, Slot *value)
 {
-    char *key = malloc(strlen(name) + strlen(desc) + 4);
+    char *key = malloc(strlen(name) + strlen(desc) + 2);
     sprintf(key, "%s.%s", name, desc);
     put_map(map, key, value);
 }
@@ -530,7 +530,7 @@ void get_static_field_to_opstack_by_index(Thread *thread, SerialHeap *heap, Fram
     CONSTANT_Class_info class_info = *(CONSTANT_Class_info*)frame->constant_pool[field_ref_info.class_index].info;
     CONSTANT_NameAndType_info name_and_type_info = *(CONSTANT_NameAndType_info*)frame->constant_pool[field_ref_info.name_and_type_index].info;
     CONSTANT_Utf8_info class_name_info = *(CONSTANT_Utf8_info*)frame->constant_pool[class_info.name_index].info;
-    CONSTANT_Utf8_info field_type_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.name_index].info;
+    CONSTANT_Utf8_info field_name_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.name_index].info;
     CONSTANT_Utf8_info field_desc_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info;
     ClassFile *class = load_class(thread, heap, class_name_info.bytes);
     if (class_is_not_init(class)) {
@@ -539,7 +539,7 @@ void get_static_field_to_opstack_by_index(Thread *thread, SerialHeap *heap, Fram
         return;
     }
 
-    Slot *field = get_field_from_map(&class->static_fields, field_type_info.bytes, field_desc_info.bytes);
+    Slot *field = get_field_from_map(&class->static_fields, field_name_info.bytes, field_desc_info.bytes);
     push_slot(frame->operand_stack, field);
 //    for (int i = 0; i < class->fields_count; i++) {
 //        if (NULL == class->static_fields[i].slot) continue;

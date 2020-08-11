@@ -10,7 +10,7 @@ void add_params_and_this(Frame *frame, Frame *new_frame, MethodInfo *method);
 
 void free_frame(Frame **frame)
 {
-    free_stack(&(*frame)->operand_stack);
+//    free_stack(&(*frame)->operand_stack);
     (*frame)->operand_stack = NULL;
 //    free((*frame)->code_info->code);
 //    free((*frame)->code_info->attributes->info);
