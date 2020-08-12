@@ -111,7 +111,7 @@ LocalVariableTableAttribute *get_local_variable(ConstantPool *pool, CodeAttribut
 
 void add_params_and_this(Frame *frame, Frame *new_frame, MethodInfo *method)
 {
-    printf("\t\t\t\t[addparams+this]");
+    printf("\t\t\t\t[addparams+this]\n");
     int count = method->params_count + 1;
     Slot **slots = pop_slot_with_num(frame->operand_stack, count);
     for (int i = 0; i < count; i++) {

@@ -158,10 +158,15 @@ void* pop_stack(Stack *stack)
     return value;
 }
 
-void* get_stack(Stack *stack)
+void *get_stack(Stack *stack)
 {
     if (is_empty_stack(stack)) return NULL;
     return (void *) stack->tail->value;
+}
+
+Slot *get_slot(Stack *stack)
+{
+    return get_stack(stack);
 }
 
 char* find_in_stack(Stack *stack, char* value)

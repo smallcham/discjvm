@@ -371,11 +371,34 @@ Slot *get_field_from_map(HashMap **map, u1 *name, u1 *desc)
 //    put_map(map, key, field);
 //}
 
+
 void put_field_to_map(HashMap **map, u1 *name, u1 *desc, Slot *value)
 {
     char *key = malloc(strlen(name) + strlen(desc) + 2);
     sprintf(key, "%s.%s", name, desc);
     put_map(map, key, value);
+}
+
+void put_int_field_to_map(HashMap **map, u1 *name, u1 *desc, int value)
+{
+    Slot *slot = create_slot();
+    slot->value = value;
+    put_field_to_map(map, name, desc, slot);
+}
+
+void put_long_field_to_map(HashMap **map, u1 *name, u1 *desc, int lower, int higher)
+{
+    Slot *slot = create_slot_by_size(2);
+    slot[0].value = higher;
+    slot[1].value = lower;
+    put_field_to_map(map, name, desc, slot);
+}
+
+void put_str_field_to_map(HashMap **map, u1 *name, u1 *desc, char *value)
+{
+    Slot *slot = create_slot();
+    slot->object_value = value;
+    put_field_to_map(map, name, desc, slot);
 }
 
 u1 *get_class_name_by_index(ConstantPool *pool, u2 index)
@@ -404,7 +427,10 @@ u4 parse_method_param_count(CONSTANT_Utf8_info method_desc)
             case 'D': case 'J':
                 count += 2;
                 continue;
-            case 'L': case '[': {
+            case '[': {
+                continue;
+            }
+            case 'L': {
                 for (int k = j + 1; k < method_desc.length; k++) {
                     j = k;
                     if (method_desc.bytes[k] == ';') {
@@ -610,17 +636,6 @@ void put_static_field(Thread *thread, SerialHeap *heap, Frame *frame, CONSTANT_F
         init_class(thread, heap, class);
         return;
     }
-//    int index = -1;
-//    for (int i = 0; i < class->fields_count; i++) {
-//        if (class->fields[i].name_index == name_and_type_info.name_index) {
-//            index = i;
-//            break;
-//        }
-//    }
-//    if (index == -1) exit(-1);
-//    class->static_fields[index].field_info = &class->fields[index];
-//    Slot *field = get_field_from_map(&class->static_fields, class->class_name, field_name_info.bytes, field_desc_info.bytes);
-//    free(field);
     Slot *field;
     if (str_start_with(field_desc_info.bytes, "D") ||
         str_start_with(field_desc_info.bytes, "J")) {
@@ -631,39 +646,6 @@ void put_static_field(Thread *thread, SerialHeap *heap, Frame *frame, CONSTANT_F
         field = pop_slot(frame->operand_stack);
     }
     put_field_to_map(&class->static_fields, field_name_info.bytes, field_desc_info.bytes, field);
-//    class->static_fields[index].slot = pop_slot(frame->operand_stack);
-
-//    if (str_start_with(field_desc_info.bytes, "B") ||
-//    str_start_with(field_desc_info.bytes, "C") ||
-//    str_start_with(field_desc_info.bytes, "I") ||
-//    str_start_with(field_desc_info.bytes, "S") ||
-//    str_start_with(field_desc_info.bytes, "Z")) {
-//        //Int
-//        int value = pop_int(frame->operand_stack);
-//        class->static_fields[index].slot = malloc(sizeof(Slot));
-//        class->static_fields[index].slot->value = value;
-//    }
-//    else if (str_start_with(field_desc_info.bytes, "F")) {
-//        //Float
-//        float value = pop_float(frame->operand_stack);
-//        class->static_fields[index].slot = malloc(sizeof(Slot));
-//        class->static_fields[index].slot->value = value;
-//    }
-//    else if (str_start_with(field_desc_info.bytes, "D") ||
-//            str_start_with(field_desc_info.bytes, "J")) {
-//        //Long
-//        int higher = pop_int(frame->operand_stack);
-//        int lower = pop_int(frame->operand_stack);
-//        class->static_fields[index].slot = malloc(sizeof(Slot) * 2);
-//        class->static_fields[index].slot[0].value = lower;
-//        class->static_fields[index].slot[1].value = higher;
-//    }
-//    else if (str_start_with(field_desc_info.bytes, "L") ||
-//            str_start_with(field_desc_info.bytes, "[")) {
-//        //Object | Array
-//        class->static_fields[index].slot = malloc(sizeof(Slot));
-//        class->static_fields[index].slot->object_value = pop_stack(frame->operand_stack);
-//    }
 }
 
 char *get_str_from_string_index(ConstantPool *constant_pool, u2 index)
@@ -828,21 +810,8 @@ void create_string_object(Thread *thread, SerialHeap *heap, Frame *frame, char *
         return;
     }
     Object *object = malloc_object(heap, class);
-//    Object *object = (Object*)malloc(sizeof(Object) + sizeof(Slot));
-//    object->class = class;
-//    object->length = 1;
-//    object->slots[0] = NULL;
-
     Slot *slot = create_slot();
     slot->object_value = str;
-//    Field *field = malloc(sizeof(Field));
-//    for (int i = 0; i < class->fields_count; i++) {
-//        if (strcmp(class->fields[i].name, "value") == 0) {
-//            field->field_info = &class->fields[i];
-//            break;
-//        }
-//    }
-//    field->slot = slot;
     put_field_to_map(&object->fields, "value", "[C", slot);
     push_object(frame->operand_stack, object);
 }
@@ -877,7 +846,7 @@ ClassFile *load_class_by_class_info_index(Thread *thread, SerialHeap *heap, Cons
 
 ClassFile *get_super_class(Thread *thread, SerialHeap *heap, ClassFile *class)
 {
-    if (class->super_class == 0) return NULL;
+    if (class->super_class == 0 || 0 != (class->access_flags & ACC_INTERFACE)) return NULL;
     return load_class_by_class_info(thread, heap, class->constant_pool, *(CONSTANT_Class_info*)class->constant_pool[class->super_class].info);
 }
 
@@ -901,6 +870,39 @@ void set_class_inited_by_frame(Thread *thread, SerialHeap *heap, Frame *frame)
     frame->class->init_state = CLASS_INITED;
 }
 
+void init_static_fields(ClassFile *class)
+{
+    for (int i = 0; i < class->fields_count; i++) {
+        if (0 == (class->fields[i].access_flags & ACC_FINAL) || 0 == (class->fields[i].access_flags & ACC_STATIC)) {
+            continue;
+        }
+        for (int j = 0; j < class->fields[i].attributes_count; j++) {
+            if (strcmp(get_utf8_bytes(class->constant_pool, class->fields[i].attributes[j].attribute_name_index), "ConstantValue") == 0) {
+                ConstantValue value = *(ConstantValue*)malloc(sizeof(ConstantValue));
+                value.attribute_name_index = class->fields[i].attributes[j].attribute_name_index;
+                value.attribute_length = class->fields[i].attributes[j].attribute_length;
+                value.constant_value_index = l2b_2(*(u2*)class->fields[i].attributes[j].info);
+                switch (class->fields[i].desc[0]) {
+                    case 'Z': case 'B': case 'C': case 'S': case 'I': case 'J': {
+                        CONSTANT_Integer_info info = *(CONSTANT_Integer_info*)class->constant_pool[value.constant_value_index].info;
+                        put_int_field_to_map(&class->static_fields, class->fields[i].name, class->fields[i].desc, info.bytes);
+                        break;
+                    }
+                    case 'F': case 'D':{
+                        CONSTANT_Double_info info = *(CONSTANT_Double_info*)class->constant_pool[value.constant_value_index].info;
+                        put_long_field_to_map(&class->static_fields, class->fields[i].name, class->fields[i].desc, info.low_bytes, info.high_bytes);
+                        break;
+                    }
+                    case 'L':{
+                        put_str_field_to_map(&class->static_fields, class->fields[i].name, class->fields[i].desc, get_str_from_string_index(class->constant_pool, value.constant_value_index));
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+
 void init_class(Thread *thread, SerialHeap *heap, ClassFile *class)
 {
     if (class_is_inited(class)) return;
@@ -910,6 +912,8 @@ void init_class(Thread *thread, SerialHeap *heap, ClassFile *class)
 //    MethodInfo *init = find_method_with_desc(thread, heap, class, "<init>", "()V");
 //    CodeAttribute *init_code = get_method_code(*init);
 //    create_vm_frame_by_method_add_hook(thread, class, init, init_code, (PopHook) set_class_inited_by_frame);
+
+    init_static_fields(class);
 
     MethodInfo *clinit = find_method_with_desc(thread, heap, class, "<clinit>", "()V");
     if (NULL != clinit) {
@@ -935,11 +939,6 @@ void init_class_and_exec(Thread *thread, SerialHeap *heap, ClassFile *class)
 
 u1* get_class_bytes(char *path)
 {
-//    if (str_start_with(path, "java/lang/") == 1 ||
-//            str_start_with(path, "java/io/") == 1 ||
-//            str_start_with(path, "java/util/") == 1 ||
-//            str_start_with(path, "java/security/") == 1 ||
-//            str_start_with(path, "java/nio/") == 1) {
     if (str_start_with(path, "java/") ||
             str_start_with(path, "jdk/") ||
             str_start_with(path, "sun/")) {

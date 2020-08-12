@@ -90,11 +90,16 @@ u1 *get_array_class_name_by_name_str(u1 *name);
 u1 *get_class_name_by_index(ConstantPool *pool, u2 index);
 
 Slot *get_field_from_map(HashMap **map, u1 *name, u1 *desc);
-//Field *get_runtime_field_from_map(HashMap **map, u1 *class_name, u1 *name, u1 *desc);
 
-//void put_runtime_field_to_map(HashMap **map, u1 *class_name, u1 *name, u1 *desc, Field *field);
+void init_static_fields(ClassFile *class);
 
 void put_field_to_map(HashMap **map, u1 *name, u1 *desc, Slot *value);
+
+void put_int_field_to_map(HashMap **map, u1 *name, u1 *desc, int value);
+
+void put_long_field_to_map(HashMap **map, u1 *name, u1 *desc, int lower, int higher);
+
+void put_str_field_to_map(HashMap **map, u1 *name, u1 *desc, char *value);
 
 u4 get_u4_value_from_index(ConstantPool *constant_pool, u2 index);
 

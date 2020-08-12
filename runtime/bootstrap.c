@@ -83,7 +83,10 @@ void start_vm(char *class_path)
             "java/lang/System",
             "java/lang/Integer",
             "java/lang/Float",
-            "java/lang/Double"
+            "java/lang/Double",
+            "java/lang/Thread",
+            "java/lang/ThreadGroup",
+            "java/io/PrintStream"
     };
     SerialHeap *heap = init_gc();
     init_instructions();
@@ -92,7 +95,7 @@ void start_vm(char *class_path)
     Thread thread = create_thread(100, 100);
 //    init_lib(&thread, heap);
     init_primitives(&thread, heap);
-    init_lib_by_names(&thread, heap, base_lib, 5);
+    init_lib_by_names(&thread, heap, base_lib, 10);
     ClassFile *class = load_class(&thread, heap, class_path);
     init_class_and_exec(&thread, heap, class);
 

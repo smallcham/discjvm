@@ -633,7 +633,7 @@ void j_pop(SerialHeap *heap, Thread *thread, Frame *frame) {
 void pop2(SerialHeap *heap, Thread *thread, Frame *frame) {}
 
 void dup(SerialHeap *heap, Thread *thread, Frame *frame) {
-    push_slot(frame->operand_stack, get_stack(frame->operand_stack));
+    push_slot(frame->operand_stack, get_slot(frame->operand_stack));
     step_pc_1(frame);
 }
 void dup_x1(SerialHeap *heap, Thread *thread, Frame *frame) {}

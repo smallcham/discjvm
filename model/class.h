@@ -33,6 +33,12 @@ typedef struct {
 } AttributeInfo;
 
 typedef struct {
+    u2 attribute_name_index;
+    u4 attribute_length;
+    u2 constant_value_index;
+} ConstantValue;
+
+typedef struct {
     u2 access_flags;
     u2 name_index;
     u2 descriptor_index;
