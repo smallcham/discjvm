@@ -1478,11 +1478,12 @@ void exec(Operator operator, SerialHeap *heap, Thread *thread, Frame *frame)
 {
     printf("\t\t\t%s.%s%s\t\t\t#%d %s:\n", frame->class->class_name, frame->method->name, frame->method->desc, frame->pc, instructions_desc[read_code(frame)]);
     operator(heap, thread, frame);
-    if (NULL != frame->class) {
-        printf("\t\t\t\t[opstack.%s.%s]", frame->class->class_name, frame->method->name);
-        print_stack(frame->operand_stack);
-        printf("\t\t\t\t[localvars.%s.%s]", frame->class->class_name, frame->method->name);
-        print_local_variables(frame);
+    Frame *_frame = get_stack(thread->vm_stack);
+    if (NULL != _frame && NULL != _frame->class) {
+        printf("\t\t\t\t[opstack.%s.%s]", _frame->class->class_name, _frame->method->name);
+        print_stack(_frame->operand_stack);
+        printf("\t\t\t\t[localvars.%s.%s]", _frame->class->class_name, _frame->method->name);
+        print_local_variables(_frame);
     }
 }
 
