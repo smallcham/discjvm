@@ -4,7 +4,7 @@
 
 #include "opcode.h"
 
-void xastore_(SerialHeap *heap, Thread *thread, Frame *frame, char *desc);
+void xastore_(SerialHeap *heap, Thread *thread, Frame *frame, char desc);
 void ifx_(SerialHeap *heap, Thread *thread, Frame *frame, int cond);
 void if_icmpx_(SerialHeap *heap, Thread *thread, Frame *frame, int cond);
 void if_acmpx_(SerialHeap *heap, Thread *thread, Frame *frame, int cond);
@@ -530,35 +530,75 @@ void astore_3(SerialHeap *heap, Thread *thread, Frame *frame) {
     step_pc_1(frame);
 }
 
-void xastore_(SerialHeap *heap, Thread *thread, Frame *frame, char *desc) {
+void xastore_(SerialHeap *heap, Thread *thread, Frame *frame, char desc) {
     Slot *value = pop_slot(frame->operand_stack);
     int index = pop_int(frame->operand_stack);
     Object *ref = pop_object(frame->operand_stack);
-    Field *field = get_field_from_map(&ref->fields, "value", desc);
-
-     = value->value;
-//    Object *object = malloc_object(heap, ref->class);
-    put_field_to_map(&object->fields, "value", desc, value);
-//    ref->objects[index] = object;
+    u1 *_desc = malloc(3);
+    sprintf(_desc, "[%c", desc);
+    Slot *field = get_field_from_map(&ref->fields, "value", _desc);
+    switch (desc) {
+        case 'Z': {
+            int *objects = field->object_value;
+            objects[index] = value->value;
+            break;
+        }
+        case 'C': {
+            char *objects = field->object_value;
+            objects[index] = value->value;
+            break;
+        }
+        case 'F': {
+            float *objects = field->object_value;
+            objects[index] = value->value;
+            break;
+        }
+        case 'D': {
+            double *objects = field->object_value;
+            objects[index] = value->value;
+            break;
+        }
+        case 'B': {
+            char *objects = field->object_value;
+            objects[index] = value->value;
+            break;
+        }
+        case 'S': {
+            short *objects = field->object_value;
+            objects[index] = value->value;
+            break;
+        }
+        case 'I': {
+            int *objects = field->object_value;
+            objects[index] = value->value;
+            break;
+        }
+        case 'J': {
+            long *objects = field->object_value;
+            objects[index] = value->value;
+            break;
+        }
+    }
+    free(_desc);
 }
 
 void iastore(SerialHeap *heap, Thread *thread, Frame *frame) {
-    xastore_(heap, thread, frame, "[I");
+    xastore_(heap, thread, frame, 'I');
     step_pc_1(frame);
 }
 
 void lastore(SerialHeap *heap, Thread *thread, Frame *frame) {
-    xastore_(heap, thread, frame, "[J");
+    xastore_(heap, thread, frame, 'J');
     step_pc_1(frame);
 }
 
 void fastore(SerialHeap *heap, Thread *thread, Frame *frame) {
-    xastore_(heap, thread, frame, "[F");
+    xastore_(heap, thread, frame, 'F');
     step_pc_1(frame);
 }
 
 void dastore(SerialHeap *heap, Thread *thread, Frame *frame) {
-    xastore_(heap, thread, frame, "[D");
+    xastore_(heap, thread, frame, 'D');
     step_pc_1(frame);
 }
 
@@ -571,17 +611,17 @@ void aastore(SerialHeap *heap, Thread *thread, Frame *frame) {
 }
 
 void bastore(SerialHeap *heap, Thread *thread, Frame *frame) {
-    xastore_(heap, thread, frame, "[B");
+    xastore_(heap, thread, frame, 'B');
     step_pc_1(frame);
 }
 
 void castore(SerialHeap *heap, Thread *thread, Frame *frame) {
-    xastore_(heap, thread, frame, "[C");
+    xastore_(heap, thread, frame, 'C');
     step_pc_1(frame);
 }
 
 void sastore(SerialHeap *heap, Thread *thread, Frame *frame) {
-    xastore_(heap, thread, frame, "[S");
+    xastore_(heap, thread, frame, 'S');
     step_pc_1(frame);
 }
 
@@ -1451,7 +1491,6 @@ void run(Thread *thread, SerialHeap *heap) {
     do {
         Frame *frame = get_stack(thread->vm_stack);
         exec(instructions[read_code(frame)], heap, thread, frame);
-        ClassFile *class = load_class(thread, heap, "java/lang/System");
-        printf("---------[%s]-----\n\n\n", class->static_fields->entries[4].key);
+//        ClassFile *class = load_class(thread, heap, "java/lang/System");
     } while (!is_empty_stack(thread->vm_stack));
 }

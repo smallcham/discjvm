@@ -780,11 +780,11 @@ void create_array_by_type(Thread *thread, SerialHeap *heap, Frame *frame, u1 typ
             break;
         case 9:
             name = "[S";
-            type_size = sizeof(int);
+            type_size = sizeof(short);
             break;
         case 10:
             name = "[I";
-            type_size = sizeof(long);
+            type_size = sizeof(int);
             break;
         case 11:
             name = "[J";
@@ -800,7 +800,7 @@ void create_array_by_type(Thread *thread, SerialHeap *heap, Frame *frame, u1 typ
     Slot *value = create_slot();
     value->object_value = malloc(size);
     memset(value->object_value, 0, size);
-    put_field_to_map(&object->fields, "value", class->class_name, value);
+    put_field_to_map(&object->fields, "value", name, value);
 //    for (int i = 0; i < count; i++) {
 //        Slot *slot = create_slot_by_size(size);
 //        Field *field = malloc(sizeof(Field));
