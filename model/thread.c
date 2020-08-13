@@ -53,7 +53,7 @@ Frame *create_vm_frame_by_method_add_params(Thread* thread, ClassFile *class, Fr
     return new_frame;
 }
 
-Frame *create_vm_frame_by_method_add_params_and_this(Thread* thread, ClassFile *class, Frame *frame, MethodInfo *method, CodeAttribute *code)
+Frame *create_vm_frame_by_method_add_params_plus1(Thread* thread, ClassFile *class, Frame *frame, MethodInfo *method, CodeAttribute *code)
 {
     Frame *new_frame = create_vm_frame_by_method(thread, class, method, code);
     if (NULL != new_frame) add_params_and_this(frame, new_frame, method);

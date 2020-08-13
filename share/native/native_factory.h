@@ -7,11 +7,13 @@
 
 #include "../../model/hash_map.h"
 #include "../../util/string_util.h"
+#include "../../util/ioutil.h"
 #include "java/lang/Object.h"
 #include "java/lang/Class.h"
 #include "java/lang/System.h"
 #include "java/lang/Thread.h"
 #include "jdk/internal/misc/Unsafe.h"
+#include "java/lang/ClassLoader.h"
 
 typedef void (*NativeMethod)(Thread *, SerialHeap *, Frame *);
 

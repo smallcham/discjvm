@@ -15,3 +15,8 @@ void java_lang_Class_getPrimitiveClass_9Ljava_lang_String10Ljava_lang_Class(Thre
     ClassFile *class = load_primitive_class(thread, heap, field->object_value);
     push_object(frame->operand_stack, class->class_object);
 }
+
+void java_lang_Class_desiredAssertionStatus0_9Ljava_lang_Class10Z(Thread *thread, SerialHeap *heap, Frame *frame)
+{
+    push_int(frame->operand_stack, 0);
+}

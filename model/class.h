@@ -166,7 +166,7 @@ typedef struct {
     u2 access_flags;
     u2 this_class;
     u1 *class_name;
-    u2 super_class;
+    u2 super_class_index;
     u2 interfaces_count;
     u2 *interfaces; // [interfaces_count]
     u2 fields_count;
@@ -177,6 +177,7 @@ typedef struct {
     AttributeInfo *attributes; // [attributes_count]
     HashMap *static_fields;
     void *class_object;
+    void *super_class;
     u1 init_state;
 } ClassFile;
 
@@ -194,7 +195,7 @@ typedef struct {
 //typedef struct{
 //    u2 *class_name;
 //    u2 access_flags;
-//    struct Class *super_class;
+//    struct Class *super_class_index;
 //    u2 interfaces_count;
 //    struct Class *interfaces;
 //    u2 fields_count;

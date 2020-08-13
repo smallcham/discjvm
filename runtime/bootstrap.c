@@ -54,6 +54,7 @@ void init_lib_by_names(Thread *thread, SerialHeap *heap, char *names[], int coun
 
 void init_primitives(Thread *thread, SerialHeap *heap)
 {
+    load_primitive_class(thread, heap, "[Ljava/lang/Object;");
     load_primitive_class(thread, heap, "void");
     load_primitive_class(thread, heap, "boolean");
     load_primitive_class(thread, heap, "[Z");

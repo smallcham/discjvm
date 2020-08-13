@@ -7,6 +7,7 @@ ClassFile *load_class_by_bytes(Thread *thread, SerialHeap *heap, u1 *bytes)
     ClassFile *class = (ClassFile*)malloc(sizeof(ClassFile));
     class->init_state = CLASS_NOT_INIT;
     class->class_object = NULL;
+    class->super_class = NULL;
     u1 *class_file = bytes;
     class->magic = l2b_4(*(u4 *) class_file);
     class_file += sizeof(u4);
@@ -209,7 +210,7 @@ ClassFile *load_class_by_bytes(Thread *thread, SerialHeap *heap, u1 *bytes)
     class->this_class = l2b_2(*(u2 *) class_file);
     class->class_name = get_class_name_by_index(class->constant_pool, class->this_class);
     class_file += sizeof(u2);
-    class->super_class = l2b_2(*(u2 *) class_file);
+    class->super_class_index = l2b_2(*(u2 *) class_file);
     class_file += sizeof(u2);
     class->interfaces_count = l2b_2(*(u2 *) class_file);
     class_file += sizeof(u2);
@@ -316,7 +317,9 @@ Object *get_bootstrap_class_loader(Thread *thread, SerialHeap *heap)
 {
     if (NULL == bootstrap_class_loader) {
         Object *object = malloc_object(heap, load_class(thread, heap, "java/lang/ClassLoader"));
-        put_field_to_map(&object->fields, "name", "Ljava/lang/String;", "BootstrapLoader");
+        Slot *name = create_slot();
+        name->object_value = "BootstrapLoader";
+        put_field_to_map(&object->fields, "name", "Ljava/lang/String;", name);
         put_field_to_map(&object->fields, "parent", "Ljava/lang/Classloader;", NULL);
         bootstrap_class_loader = object;
     }
@@ -337,7 +340,7 @@ ClassFile *load_class(Thread *thread, SerialHeap *heap, char *full_class_name)
     Object *class_object = malloc_object(heap, load_class(thread, heap, "java/lang/Class"));
 
     Slot *slot = create_slot();
-    slot->object_value = get_bootstrap_class_loader(thread, heap);
+//    slot->object_value = get_bootstrap_class_loader(thread, heap);
     put_field_to_map(&class_object->fields, "classLoader", "Ljava/lang/ClassLoader;", slot);
 
     class->class_object = class_object;
@@ -505,7 +508,7 @@ void do_invokeinterface_by_index(Thread *thread, SerialHeap *heap, Frame *frame,
     if ((method->access_flags & ACC_NATIVE) != 0) {
         create_c_frame_and_invoke(thread, heap, frame, class->class_name, method->name, method->desc);
     } else {
-        create_vm_frame_by_method_add_params_and_this(thread, class, frame, method, get_method_code(class->constant_pool, *method));
+        create_vm_frame_by_method_add_params_plus1(thread, class, frame, method, get_method_code(class->constant_pool, *method));
     }
 }
 
@@ -524,7 +527,7 @@ void do_invokespecial_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
     if ((method->access_flags & ACC_NATIVE) != 0) {
         create_c_frame_and_invoke(thread, heap, frame, class->class_name, method->name, method->desc);
     } else {
-        create_vm_frame_by_method_add_params_and_this(thread, class, frame, method, get_method_code(class->constant_pool, *method));
+        create_vm_frame_by_method_add_params_plus1(thread, class, frame, method, get_method_code(class->constant_pool, *method));
     }
 }
 
@@ -543,7 +546,7 @@ void do_invokevirtual_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
     if ((method->access_flags & ACC_NATIVE) != 0) {
         create_c_frame_and_invoke(thread, heap, frame, class->class_name, method->name, method->desc);
     } else {
-        create_vm_frame_by_method_add_params_and_this(thread, class, frame, method, get_method_code(class->constant_pool, *method));
+        create_vm_frame_by_method_add_params_plus1(thread, class, frame, method, get_method_code(class->constant_pool, *method));
     }
 }
 
@@ -663,11 +666,11 @@ void put_field_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index
 
 void create_null_object(Thread *thread, SerialHeap *heap, Frame *frame)
 {
-    Slot *slot = create_slot();
-    slot->value = -123;
-    slot->object_value = NULL;
-    push_slot(frame->operand_stack, slot);
-//    push_object(frame->operand_stack, NULL);
+//    Slot *slot = create_slot();
+//    slot->value = 0;
+//    slot->object_value = NULL;
+//    push_slot(frame->operand_stack, slot);
+    push_object(frame->operand_stack, NULL);
 }
 
 u1 *get_array_class_name_by_name_str(u1 *name)
@@ -841,8 +844,8 @@ ClassFile *load_class_by_class_info_index(Thread *thread, SerialHeap *heap, Cons
 
 ClassFile *get_super_class(Thread *thread, SerialHeap *heap, ClassFile *class)
 {
-    if (class->super_class == 0 || 0 != (class->access_flags & ACC_INTERFACE)) return NULL;
-    return load_class_by_class_info(thread, heap, class->constant_pool, *(CONSTANT_Class_info*)class->constant_pool[class->super_class].info);
+    if (class->super_class_index == 0 || 0 != (class->access_flags & ACC_INTERFACE)) return NULL;
+    return load_class_by_class_info(thread, heap, class->constant_pool, *(CONSTANT_Class_info*)class->constant_pool[class->super_class_index].info);
 }
 
 int class_is_not_init(ClassFile *class)
@@ -922,6 +925,7 @@ void init_class(Thread *thread, SerialHeap *heap, ClassFile *class)
     ClassFile *super = get_super_class(thread, heap, class);
     if (NULL != super && class_is_not_init(super)) {
         init_class(thread, heap, super);
+        class->super_class = super;
     }
 }
 
@@ -1008,15 +1012,15 @@ void print_class_info(ClassFile class)
     CONSTANT_Class_info constant_class_info = *(CONSTANT_Class_info*)class.constant_pool[class.this_class].info;
     CONSTANT_Utf8_info this_class = *(CONSTANT_Utf8_info*)class.constant_pool[constant_class_info.name_index].info;
 
-    CONSTANT_Class_info constant_super_class_info = *(CONSTANT_Class_info*)class.constant_pool[class.super_class].info;
+    CONSTANT_Class_info constant_super_class_info = *(CONSTANT_Class_info*)class.constant_pool[class.super_class_index].info;
     CONSTANT_Utf8_info super_class = *(CONSTANT_Utf8_info*)class.constant_pool[constant_super_class_info.name_index].info;
 
     printf("\tMagicNumber: %X\n\tVersion: %d.%d (%d)\n\tConstantPoolCount: %d"
            "\n\tAccessFlags: %#x\n\tThisClass: #%d <%s>\n\tSuperClass: #%d <%s>"
            "\n\tInterfaceCount: %d\n\tFieldCount: %d\n\tMethodCount: %d\n\tAttributeCount: %d"
            "\n", class.magic, class.major_version, class.minor_version, class.major_version - 44,
-           class.constant_pool_count,class.access_flags, class.this_class, this_class.bytes,
-           class.super_class, super_class.bytes, class.interfaces_count, class.fields_count, class.methods_count, class.attributes_count);
+           class.constant_pool_count, class.access_flags, class.this_class, this_class.bytes,
+           class.super_class_index, super_class.bytes, class.interfaces_count, class.fields_count, class.methods_count, class.attributes_count);
 
 
     printf("Constant Pool:\n");

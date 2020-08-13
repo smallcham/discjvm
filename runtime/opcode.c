@@ -226,7 +226,10 @@ void ldc(SerialHeap *heap, Thread *thread, Frame *frame) {
             break;
         }
         case CONSTANT_Class: {
-            create_object_with_backpc(thread, heap, frame, index, 2);
+            CONSTANT_Class_info class_info = *(CONSTANT_Class_info*)frame->constant_pool[index].info;
+            u1 *class_name = get_utf8_bytes(frame->constant_pool, class_info.name_index);
+            push_object(frame->operand_stack, load_class(thread, heap, class_name)->class_object);
+//            create_object_with_backpc(thread, heap, frame, index, 2);
             break;
         }
         case CONSTANT_InterfaceMethodref: {
@@ -262,7 +265,10 @@ void ldc_w(SerialHeap *heap, Thread *thread, Frame *frame) {
             break;
         }
         case CONSTANT_Class: {
-            create_object_with_backpc(thread, heap, frame, index, 3);
+            CONSTANT_Class_info class_info = *(CONSTANT_Class_info*)frame->constant_pool[index].info;
+            u1 *class_name = get_utf8_bytes(frame->constant_pool, class_info.name_index);
+            push_object(frame->operand_stack, load_class(thread, heap, class_name)->class_object);
+//            create_object_with_backpc(thread, heap, frame, index, 3);
             break;
         }
         case CONSTANT_InterfaceMethodref: {
@@ -516,7 +522,7 @@ void astore_0(SerialHeap *heap, Thread *thread, Frame *frame) {
 void astore_1(SerialHeap *heap, Thread *thread, Frame *frame) {
     frame->local_variables[1] = pop_slot(frame->operand_stack);
     Slot slot = *(Slot*)frame->local_variables[1];
-    printf("%s\n", (*(Object*)slot.object_value).class->class_name);
+//    printf("%s\n", (*(Object*)slot.object_value).class->class_name);
     step_pc_1(frame);
 }
 
@@ -632,13 +638,13 @@ void j_pop(SerialHeap *heap, Thread *thread, Frame *frame) {
 
 void pop2(SerialHeap *heap, Thread *thread, Frame *frame) {}
 
-void dup(SerialHeap *heap, Thread *thread, Frame *frame) {
+void j_dup(SerialHeap *heap, Thread *thread, Frame *frame) {
     push_slot(frame->operand_stack, get_slot(frame->operand_stack));
     step_pc_1(frame);
 }
 void dup_x1(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void dup_x2(SerialHeap *heap, Thread *thread, Frame *frame) {}
-void dup2(SerialHeap *heap, Thread *thread, Frame *frame) {}
+void j_dup2(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void dup2_x1(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void dup2_x2(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void swap(SerialHeap *heap, Thread *thread, Frame *frame) {}
@@ -861,42 +867,42 @@ void tableswitch(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void lookupswitch(SerialHeap *heap, Thread *thread, Frame *frame) {}
 
 void ireturn(SerialHeap *heap, Thread *thread, Frame *frame) {
-    pop_frame(thread, heap);
+    frame = pop_frame(thread, heap);
     Frame *next = get_stack(thread->vm_stack);
     if (NULL != next) push_slot_from(frame->operand_stack, next->operand_stack);
     free_frame(&frame);
 }
 
 void lreturn(SerialHeap *heap, Thread *thread, Frame *frame) {
-    pop_frame(thread, heap);
+    frame = pop_frame(thread, heap);
     Frame *next = get_stack(thread->vm_stack);
     if (NULL != next) push_long_from(frame->operand_stack, next->operand_stack);
     free_frame(&frame);
 }
 
 void freturn(SerialHeap *heap, Thread *thread, Frame *frame) {
-    pop_frame(thread, heap);
+    frame = pop_frame(thread, heap);
     Frame *next = get_stack(thread->vm_stack);
     if (NULL != next) push_float(next->operand_stack, pop_float(frame->operand_stack));
     free_frame(&frame);
 }
 
 void dreturn(SerialHeap *heap, Thread *thread, Frame *frame) {
-    pop_frame(thread, heap);
+    frame = pop_frame(thread, heap);
     Frame *next = get_stack(thread->vm_stack);
     if (NULL != next) push_double_from(frame->operand_stack, next->operand_stack);
     free_frame(&frame);
 }
 
 void areturn(SerialHeap *heap, Thread *thread, Frame *frame) {
-    pop_frame(thread, heap);
+    frame = pop_frame(thread, heap);
     Frame *next = get_stack(thread->vm_stack);
     if (NULL != next) push_slot_from(frame->operand_stack, next->operand_stack);
     free_frame(&frame);
 }
 
 void j_return(SerialHeap *heap, Thread *thread, Frame *frame) {
-    pop_frame(thread, heap);
+    frame = pop_frame(thread, heap);
     free_frame(&frame);
 }
 
@@ -1125,10 +1131,10 @@ void init_instructions()
     //Stack
     instructions[0x57] = j_pop;
     instructions[0x58] = pop2;
-    instructions[0x59] = dup;
+    instructions[0x59] = j_dup;
     instructions[0x5a] = dup_x1;
     instructions[0x5b] = dup_x2;
-    instructions[0x5c] = dup2;
+    instructions[0x5c] = j_dup2;
     instructions[0x5d] = dup2_x1;
     instructions[0x5e] = dup2_x2;
     instructions[0x5f] = swap;
@@ -1348,10 +1354,10 @@ void init_instructions_desc()
     instructions_desc[0x56] = "sastore";
     instructions_desc[0x57] = "j_pop";
     instructions_desc[0x58] = "pop2";
-    instructions_desc[0x59] = "dup";
+    instructions_desc[0x59] = "j_dup";
     instructions_desc[0x5a] = "dup_x1";
     instructions_desc[0x5b] = "dup_x2";
-    instructions_desc[0x5c] = "dup2";
+    instructions_desc[0x5c] = "j_dup2";
     instructions_desc[0x5d] = "dup2_x1";
     instructions_desc[0x5e] = "dup2_x2";
     instructions_desc[0x5f] = "swap";
@@ -1466,12 +1472,13 @@ void init_instructions_desc()
     instructions_desc[0xff] = "impdep2";
 }
 
-void pop_frame(Thread *thread, SerialHeap *heap)
+Frame *pop_frame(Thread *thread, SerialHeap *heap)
 {
     printf("\t\t\t\t[framestack]");
     Frame *frame = pop_stack(thread->vm_stack);
     if (NULL != frame->pop_hook) frame->pop_hook(thread, heap, frame);
     printf("\n\t\t\t<-[ESC] %s - %s.%s%s\n\n", instructions_desc[read_code(frame)], frame->class->class_name, frame->method->name, frame->method->desc);
+    return frame;
 }
 
 void exec(Operator operator, SerialHeap *heap, Thread *thread, Frame *frame)

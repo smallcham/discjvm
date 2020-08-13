@@ -15,6 +15,7 @@ void init_native_factory()
     //Class
     put_map(&native_pool, "java/lang/Class.registerNatives()V", java_lang_Class_registerNatives_90V);
     put_map(&native_pool, "java/lang/Class.getPrimitiveClass(Ljava/lang/String;)Ljava/lang/Class;", java_lang_Class_getPrimitiveClass_9Ljava_lang_String10Ljava_lang_Class);
+    put_map(&native_pool, "java/lang/Class.desiredAssertionStatus0(Ljava/lang/Class;)Z", java_lang_Class_desiredAssertionStatus0_9Ljava_lang_Class10Z);
 
     //System
     put_map(&native_pool, "java/lang/System.registerNatives()V", java_lang_System_registerNatives_90V);
@@ -25,6 +26,13 @@ void init_native_factory()
     //Unsafe
     put_map(&native_pool, "jdk/internal/misc/Unsafe.registerNatives()V", jdk_internal_misc_Unsafe_registerNatives_90V);
     put_map(&native_pool, "jdk/internal/misc/Unsafe.arrayBaseOffset0(Ljava/lang/Class;)I", jdk_internal_misc_Unsafe_arrayBaseOffset0_9java_lang_Class10I);
+    put_map(&native_pool, "jdk/internal/misc/Unsafe.arrayIndexScale0(Ljava/lang/Class;)I", jdk_internal_misc_Unsafe_arrayIndexScale0_9Ljava_lang_Class10I);
+    put_map(&native_pool, "jdk/internal/misc/Unsafe.addressSize0()I", jdk_internal_misc_Unsafe_addressSize0_90I);
+    put_map(&native_pool, "jdk/internal/misc/Unsafe.isBigEndian0()Z", jdk_internal_misc_Unsafe_isBigEndian0_90Z);
+    put_map(&native_pool, "jdk/internal/misc/Unsafe.unalignedAccess0()Z", jdk_internal_misc_Unsafe_unalignedAccess0_90Z);
+
+    //ClassLoader
+    put_map(&native_pool, "java/lang/ClassLoader.registerNatives()V", java_lang_ClassLoader_registerNatives_90V);
 }
 
 NativeMethod find_native(char *class_name, char *method_name, char *method_desc)
@@ -34,7 +42,7 @@ NativeMethod find_native(char *class_name, char *method_name, char *method_desc)
     NativeMethod method = get_map(&native_pool, key);
     free(key);
     if (NULL == method) {
-        printf("native method \"%s.%s%s\" not exists!\n", class_name, method_name, method_desc, stderr);
+        printf_err("native method \"%s.%s%s\" not exists!\n", class_name, method_name, method_desc);
         exit(-1);
     }
     return method;
