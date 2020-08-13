@@ -21,6 +21,10 @@ void init_native_factory()
 
     //Thread
     put_map(&native_pool, "java/lang/Thread.registerNatives()V", java_lang_Thread_registerNatives_90V);
+
+    //Unsafe
+    put_map(&native_pool, "jdk/internal/misc/Unsafe.registerNatives()V", jdk_internal_misc_Unsafe_registerNatives_90V);
+    put_map(&native_pool, "jdk/internal/misc/Unsafe.arrayBaseOffset0(Ljava/lang/Class;)I", jdk_internal_misc_Unsafe_arrayBaseOffset0_9java_lang_Class10I);
 }
 
 NativeMethod find_native(char *class_name, char *method_name, char *method_desc)
@@ -29,6 +33,10 @@ NativeMethod find_native(char *class_name, char *method_name, char *method_desc)
     sprintf(key, "%s.%s%s", class_name, method_name, method_desc);
     NativeMethod method = get_map(&native_pool, key);
     free(key);
+    if (NULL == method) {
+        printf("native method \"%s.%s%s\" not exists!\n", class_name, method_name, method_desc, stderr);
+        exit(-1);
+    }
     return method;
 }
 

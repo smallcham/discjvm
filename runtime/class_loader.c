@@ -312,6 +312,17 @@ ClassFile *load_class_by_bytes(Thread *thread, SerialHeap *heap, u1 *bytes)
     return class;
 }
 
+Object *get_bootstrap_class_loader(Thread *thread, SerialHeap *heap)
+{
+    if (NULL == bootstrap_class_loader) {
+        Object *object = malloc_object(heap, load_class(thread, heap, "java/lang/ClassLoader"));
+        put_field_to_map(&object->fields, "name", "Ljava/lang/String;", "BootstrapLoader");
+        put_field_to_map(&object->fields, "parent", "Ljava/lang/Classloader;", NULL);
+        bootstrap_class_loader = object;
+    }
+    return bootstrap_class_loader;
+}
+
 ClassFile *load_class(Thread *thread, SerialHeap *heap, char *full_class_name)
 {
     ClassFile *class_from_cache = get_class_from_cache(heap->class_pool, full_class_name);
@@ -323,7 +334,13 @@ ClassFile *load_class(Thread *thread, SerialHeap *heap, char *full_class_name)
     class->init_state = CLASS_NOT_INIT;
     u1 *class_file = get_class_bytes(full_class_name);
     class = load_class_by_bytes(thread, heap, class_file);
-    class->class_object = malloc_object(heap, load_class(thread, heap, "java/lang/Class"));
+    Object *class_object = malloc_object(heap, load_class(thread, heap, "java/lang/Class"));
+
+    Slot *slot = create_slot();
+    slot->object_value = get_bootstrap_class_loader(thread, heap);
+    put_field_to_map(&class_object->fields, "classLoader", "Ljava/lang/ClassLoader;", slot);
+
+    class->class_object = class_object;
     return class;
 }
 
@@ -536,16 +553,17 @@ void get_field_to_opstack_by_index(Thread *thread, SerialHeap *heap, Frame *fram
     CONSTANT_Class_info class_info = *(CONSTANT_Class_info*)frame->constant_pool[field_ref_info.class_index].info;
     CONSTANT_NameAndType_info name_and_type_info = *(CONSTANT_NameAndType_info*)frame->constant_pool[field_ref_info.name_and_type_index].info;
     CONSTANT_Utf8_info class_name_info = *(CONSTANT_Utf8_info*)frame->constant_pool[class_info.name_index].info;
-    CONSTANT_Utf8_info field_type_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.name_index].info;
+    CONSTANT_Utf8_info field_name_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.name_index].info;
     CONSTANT_Utf8_info field_desc_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info;
     ClassFile *class = load_class(thread, heap, class_name_info.bytes);
+    printf("\t\t\t\t:%s.%s->%s\n", class_name_info.bytes, field_name_info.bytes, field_desc_info.bytes);
     if (class_is_not_init(class)) {
         back_pc(frame, 3);
         init_class(thread, heap, class);
         return;
     }
     Object *object = pop_object(frame->operand_stack);
-    Slot *field = get_field_from_map(&object->fields, field_type_info.bytes, field_desc_info.bytes);
+    Slot *field = get_field_from_map(&object->fields, field_name_info.bytes, field_desc_info.bytes);
 
     push_slot(frame->operand_stack, field);
 }
@@ -559,6 +577,7 @@ void get_static_field_to_opstack_by_index(Thread *thread, SerialHeap *heap, Fram
     CONSTANT_Utf8_info field_name_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.name_index].info;
     CONSTANT_Utf8_info field_desc_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info;
     ClassFile *class = load_class(thread, heap, class_name_info.bytes);
+    printf("\t\t\t\t:%s.%s->%s\n", class_name_info.bytes, field_name_info.bytes, field_desc_info.bytes);
     if (class_is_not_init(class)) {
         back_pc(frame, 3);
         init_class(thread, heap, class);
@@ -567,34 +586,6 @@ void get_static_field_to_opstack_by_index(Thread *thread, SerialHeap *heap, Fram
 
     Slot *field = get_field_from_map(&class->static_fields, field_name_info.bytes, field_desc_info.bytes);
     push_slot(frame->operand_stack, field);
-//    for (int i = 0; i < class->fields_count; i++) {
-//        if (NULL == class->static_fields[i].slot) continue;
-//        if (class->static_fields[i].field_info->name_index == name_and_type_info.name_index &&
-//                class->static_fields[i].field_info->descriptor_index == name_and_type_info.descriptor_index) {
-//            push_slot(frame->operand_stack, class->static_fields[i].slot);
-//            if (str_start_with(field_desc_info.bytes, "B") ||
-//                str_start_with(field_desc_info.bytes, "C") ||
-//                str_start_with(field_desc_info.bytes, "I") ||
-//                str_start_with(field_desc_info.bytes, "S") ||
-//                str_start_with(field_desc_info.bytes, "Z") ||
-//                str_start_with(field_desc_info.bytes, "F")) {
-//                //Int
-//                push_slot(frame->operand_stack, class->static_fields[i].slot);
-//            }
-//            else if (str_start_with(field_desc_info.bytes, "D") ||
-//                     str_start_with(field_desc_info.bytes, "J")) {
-//                //Long
-//                push_int(frame->operand_stack, class->static_fields[i].slot[0].value);
-//                push_int(frame->operand_stack, class->static_fields[i].slot[1].value);
-//            }
-//            else if (str_start_with(field_desc_info.bytes, "L") ||
-//                     str_start_with(field_desc_info.bytes, "[")) {
-//                //Object | Array
-//                push_stack(frame->operand_stack, class->static_fields[i].slot->object_value);
-//            }
-//            return;
-//        }
-//    }
 }
 
 void put_field(Thread *thread, SerialHeap *heap, Frame *frame, CONSTANT_Fieldref_info field_ref_info)
@@ -672,7 +663,11 @@ void put_field_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index
 
 void create_null_object(Thread *thread, SerialHeap *heap, Frame *frame)
 {
-    push_object(frame->operand_stack, NULL);
+    Slot *slot = create_slot();
+    slot->value = -123;
+    slot->object_value = NULL;
+    push_slot(frame->operand_stack, slot);
+//    push_object(frame->operand_stack, NULL);
 }
 
 u1 *get_array_class_name_by_name_str(u1 *name)
@@ -930,9 +925,9 @@ void init_class(Thread *thread, SerialHeap *heap, ClassFile *class)
     }
 }
 
-void init_class_and_exec(Thread *thread, SerialHeap *heap, ClassFile *class)
+void clinit_class_and_exec(Thread *thread, SerialHeap *heap, ClassFile *class)
 {
-    printf("[init_lib] - %s\n", class->class_name);
+    printf("[clinit] - %s\n", class->class_name);
     init_class(thread, heap, class);
     run(thread, heap);
 }

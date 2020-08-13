@@ -38,7 +38,7 @@ char *JAVA_HOME = NULL;
 //        zip_fclose(f);
 //
 //        ClassFile *class = load_class_by_bytes(thread, heap, contents);
-//        init_class_and_exec(thread, heap, class);
+//        clinit_class_and_exec(thread, heap, class);
 //    }
 //    zip_close(z);
 //    free(file_path);
@@ -48,7 +48,7 @@ void init_lib_by_names(Thread *thread, SerialHeap *heap, char *names[], int coun
 {
     for (int i = 0; i < count; i++) {
         ClassFile *class = load_class(thread, heap, names[i]);
-        init_class_and_exec(thread, heap, class);
+        clinit_class_and_exec(thread, heap, class);
     }
 }
 
@@ -84,9 +84,10 @@ void start_vm(char *class_path)
             "java/lang/Integer",
             "java/lang/Float",
             "java/lang/Double",
-            "java/lang/Thread",
-            "java/lang/ThreadGroup",
-            "java/io/PrintStream"
+            "java/lang/ClassLoader",
+//            "java/lang/Thread",
+//            "java/lang/ThreadGroup",
+//            "java/io/PrintStream"
     };
     SerialHeap *heap = init_gc();
     init_instructions();
@@ -95,9 +96,49 @@ void start_vm(char *class_path)
     Thread thread = create_thread(100, 100);
 //    init_lib(&thread, heap);
     init_primitives(&thread, heap);
-    init_lib_by_names(&thread, heap, base_lib, 10);
+    init_lib_by_names(&thread, heap, base_lib, 8);
+
+    ClassFile *system = load_class(&thread, heap, "java/lang/System");
+    MethodInfo *init_phase1 = find_method_with_desc(&thread, heap, system, "initPhase1", "()V");
+    MethodInfo *init_phase2 = find_method_with_desc(&thread, heap, system, "initPhase2", "(ZZ)I");
+    MethodInfo *init_phase3 = find_method_with_desc(&thread, heap, system, "initPhase3", "()V");
+    create_vm_frame_by_method(&thread, system, init_phase3, get_method_code(system->constant_pool, *init_phase3));
+    create_vm_frame_by_method(&thread, system, init_phase2, get_method_code(system->constant_pool, *init_phase2));
+    create_vm_frame_by_method(&thread, system, init_phase1, get_method_code(system->constant_pool, *init_phase1));
+    run(&thread, heap);
+//    ClassFile *jthread = load_class(&thread, heap, "java/lang/Thread");
+//    MethodInfo *jthread_init = find_method_with_desc(&thread, heap, jthread, "<init>", "()V");
+//    clinit_class_and_exec(&thread, heap, jthread);
+//    Frame *frame = create_vm_frame_by_method(&thread, jthread, jthread_init, get_method_code(jthread->constant_pool, *jthread_init));
+//    Slot *slot = create_slot();
+//    slot->object_value = jthread->class_object;
+//    push_slot(frame->operand_stack, slot);
+//    run(&thread, heap);
+
+//    ClassFile *jthread_group = load_class(&thread, heap, "java/lang/ThreadGroup");
+//    MethodInfo *jthread_group_init = find_method_with_desc(&thread, heap, jthread_group, "<init>", "()V");
+//    clinit_class_and_exec(&thread, heap, jthread_group);
+//    Object *jthread_group_obj = malloc_object(heap, jthread_group);
+//    Frame *jthread_group_frame = create_vm_frame_by_method(&thread, jthread_group, jthread_group_init, get_method_code(jthread_group->constant_pool, *jthread_group_init));
+//    Slot *jthread_group_slot = create_slot();
+//    jthread_group_slot->object_value = jthread_group_obj;
+//    Slot *jthread_group_slot_this = create_slot();
+//    jthread_group_slot_this->object_value = jthread_group->class_object;
+//    push_slot(jthread_group_frame->operand_stack, jthread_group_slot);
+//    push_slot(jthread_group_frame->operand_stack, jthread_group_slot);
+//    run(&thread, heap);
+//
+//    ClassFile *jthread = load_class(&thread, heap, "java/lang/Thread");
+//    MethodInfo *jthread_init = find_method_with_desc(&thread, heap, jthread, "<init>", "(Ljava/lang/ThreadGroup;Ljava/lang/String;)V");
+//    clinit_class_and_exec(&thread, heap, jthread);
+//    Frame *frame = create_vm_frame_by_method(&thread, jthread, jthread_init, get_method_code(jthread->constant_pool, *jthread_init));
+//    Slot *slot = create_slot();
+//    slot->object_value = malloc_object(heap, jthread);
+//    push_slot(frame->operand_stack, slot);
+//    run(&thread, heap);
+
     ClassFile *class = load_class(&thread, heap, class_path);
-    init_class_and_exec(&thread, heap, class);
+    clinit_class_and_exec(&thread, heap, class);
 
     MethodInfo *main = find_method(&thread, heap, class, "main");
     CodeAttribute *main_code = get_method_code(class->constant_pool, *main);

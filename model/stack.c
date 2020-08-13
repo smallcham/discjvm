@@ -184,6 +184,12 @@ int get_int(Stack *stack)
     return *(int*) get_stack(stack);
 }
 
+Object *get_object(Stack *stack)
+{
+    Slot *slot = get_slot(stack);
+    return slot->object_value;
+}
+
 int pop_int(Stack *stack)
 {
     Slot *slot = pop_stack(stack);

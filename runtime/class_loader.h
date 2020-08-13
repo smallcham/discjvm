@@ -15,6 +15,8 @@
 #include "../runtime/opcode.h"
 #include "../runtime/jmod.h"
 
+Object *bootstrap_class_loader;
+
 ClassFile *load_class_by_bytes(Thread *thread, SerialHeap *heap, u1 *bytes);
 
 ClassFile *load_class(Thread *thread, SerialHeap *heap, char *full_class_name);
@@ -67,7 +69,7 @@ int class_is_inited(ClassFile *class);
 
 void set_class_inited_by_frame(Thread *thread, SerialHeap *heap, Frame *frame);
 
-void init_class_and_exec(Thread *thread, SerialHeap *heap, ClassFile *class);
+void clinit_class_and_exec(Thread *thread, SerialHeap *heap, ClassFile *class);
 
 void print_class_info(ClassFile class);
 
@@ -90,6 +92,8 @@ u1 *get_array_class_name_by_name_str(u1 *name);
 u1 *get_class_name_by_index(ConstantPool *pool, u2 index);
 
 Slot *get_field_from_map(HashMap **map, u1 *name, u1 *desc);
+
+Object *get_bootstrap_class_loader(Thread *thread, SerialHeap *heap);
 
 void init_static_fields(ClassFile *class);
 

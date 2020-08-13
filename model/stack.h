@@ -58,6 +58,8 @@ char* find_in_stack(Stack *stack, char* value);
 
 int get_int(Stack *stack);
 
+Object *get_object(Stack *stack);
+
 Slot *get_slot(Stack *stack);
 
 int pop_int(Stack *stack);
