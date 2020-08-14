@@ -30,9 +30,14 @@ void init_native_factory()
     put_map(&native_pool, "jdk/internal/misc/Unsafe.addressSize0()I", jdk_internal_misc_Unsafe_addressSize0_90I);
     put_map(&native_pool, "jdk/internal/misc/Unsafe.isBigEndian0()Z", jdk_internal_misc_Unsafe_isBigEndian0_90Z);
     put_map(&native_pool, "jdk/internal/misc/Unsafe.unalignedAccess0()Z", jdk_internal_misc_Unsafe_unalignedAccess0_90Z);
+    put_map(&native_pool, "jdk/internal/misc/Unsafe.objectFieldOffset1(Ljava/lang/Class;Ljava/lang/String;)J", jdk_internal_misc_Unsafe_objectFieldOffset1_9Ljava_lang_Class1Ljava_lang_String10J);
 
     //ClassLoader
     put_map(&native_pool, "java/lang/ClassLoader.registerNatives()V", java_lang_ClassLoader_registerNatives_90V);
+
+    //Runtime
+    put_map(&native_pool, "java/lang/Runtime.registerNatives()V", java_lang_Runtime_registerNatives_90V);
+    put_map(&native_pool, "java/lang/Runtime.availableProcessors()I", java_lang_Runtime_availableProcessors_90I);
 }
 
 NativeMethod find_native(char *class_name, char *method_name, char *method_desc)

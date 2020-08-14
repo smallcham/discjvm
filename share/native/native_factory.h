@@ -14,6 +14,7 @@
 #include "java/lang/Thread.h"
 #include "jdk/internal/misc/Unsafe.h"
 #include "java/lang/ClassLoader.h"
+#include "java/lang/Runtime.h"
 
 typedef void (*NativeMethod)(Thread *, SerialHeap *, Frame *);
 

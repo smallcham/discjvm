@@ -328,6 +328,9 @@ Object *get_bootstrap_class_loader(Thread *thread, SerialHeap *heap)
 
 ClassFile *load_class(Thread *thread, SerialHeap *heap, char *full_class_name)
 {
+    if (full_class_name[0] == '[') {
+        return load_primitive_class(thread, heap, full_class_name);
+    }
     ClassFile *class_from_cache = get_class_from_cache(heap->class_pool, full_class_name);
     if (NULL != class_from_cache) {
         return class_from_cache;
@@ -1129,6 +1132,20 @@ MethodInfo *find_method_with_desc(Thread *thread, SerialHeap *heap, ClassFile *c
         if (strcmp(method_info.bytes, name) == 0 && strcmp(method_desc.bytes, desc) == 0) return &class->methods[i];
     }
     return NULL;
+}
+
+//TODO 逻辑未完成, 需要测试调整
+int is_instance_of(ClassFile *source, ClassFile *target)
+{
+    if (source == target) return 1;
+    if (source->class_name[0] != '[') {
+        while (1) {
+            ClassFile *super = source->super_class;
+            if (NULL == super) break;
+            if (super->class_name == target->class_name) return 1;
+        }
+    }
+    return 0;
 }
 
 MethodInfo *find_method(Thread *thread, SerialHeap *heap, ClassFile *class, char *name) {

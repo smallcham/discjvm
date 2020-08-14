@@ -995,7 +995,37 @@ void arraylength(SerialHeap *heap, Thread *thread, Frame *frame) {
 
 void athrow(SerialHeap *heap, Thread *thread, Frame *frame) {}
 
-void checkcast(SerialHeap *heap, Thread *thread, Frame *frame) {}
+void checkcast(SerialHeap *heap, Thread *thread, Frame *frame) {
+    u1 byte1 = step_pc1_and_read_code(frame);
+    u1 byte2 = step_pc1_and_read_code(frame);
+    ConstantPool constant = frame->constant_pool[(byte1 << 8) | byte2];
+    Object *ref = get_object(frame->operand_stack);
+    if (NULL != ref) {
+        ClassFile *class;
+        switch (constant.tag) {
+            case CONSTANT_Class: {
+                CONSTANT_Class_info info = *(CONSTANT_Class_info*)constant.info;
+                class = load_class_by_class_info_name_index(thread, heap, frame->constant_pool, info.name_index);
+                break;
+            }
+            case CONSTANT_InterfaceMethodref: {
+                CONSTANT_InterfaceMethodref_info info = *(CONSTANT_InterfaceMethodref_info*)constant.info;
+                class = load_class_by_class_info(thread, heap, frame->constant_pool, *(CONSTANT_Class_info*)frame->constant_pool[info.class_index].info);
+                break;
+            }
+            case CONSTANT_String: {
+                CONSTANT_String_info info = *(CONSTANT_String_info*)constant.info;
+                class = load_class(thread, heap, get_str_from_string_index(frame->constant_pool, info.string_index));
+                break;
+            }
+        }
+        if (!is_instance_of(ref->class, class)) {
+            printf_err("throws ClassCastException!");
+            exit(-1);
+        }
+    }
+    step_pc_1(frame);
+}
 
 void instanceof(SerialHeap *heap, Thread *thread, Frame *frame) {}
 

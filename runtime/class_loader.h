@@ -111,4 +111,6 @@ void create_object_with_backpc(Thread *thread, SerialHeap *heap, Frame *frame, u
 
 void create_object_with_class_name_and_backpc(Thread *thread, SerialHeap *heap, Frame *frame, char *class_name, int back);
 
+int is_instance_of(ClassFile *source, ClassFile *target);
+
 #endif //DISCJVM_CLASS_LOADER_H

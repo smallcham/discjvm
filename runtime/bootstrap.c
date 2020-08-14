@@ -54,40 +54,31 @@ void init_lib_by_names(Thread *thread, SerialHeap *heap, char *names[], int coun
 
 void init_primitives(Thread *thread, SerialHeap *heap)
 {
-    load_primitive_class(thread, heap, "[Ljava/lang/Object;");
     load_primitive_class(thread, heap, "void");
     load_primitive_class(thread, heap, "boolean");
-    load_primitive_class(thread, heap, "[Z");
     load_primitive_class(thread, heap, "byte");
-    load_primitive_class(thread, heap, "[B");
     load_primitive_class(thread, heap, "char");
-    load_primitive_class(thread, heap, "[C");
     load_primitive_class(thread, heap, "short");
-    load_primitive_class(thread, heap, "[S");
     load_primitive_class(thread, heap, "int");
-    load_primitive_class(thread, heap, "[I");
     load_primitive_class(thread, heap, "long");
-    load_primitive_class(thread, heap, "[J");
     load_primitive_class(thread, heap, "float");
-    load_primitive_class(thread, heap, "[F");
     load_primitive_class(thread, heap, "double");
-    load_primitive_class(thread, heap, "[D");
 }
 
 void start_vm(char *class_path)
 {
     JAVA_HOME = getenv("JAVA_HOME");
     char *base_lib[] = {
-            "java/lang/Object",
-            "java/lang/Class",
+//            "java/lang/Object",
             "java/lang/String",
             "java/lang/System",
-            "java/lang/Integer",
-            "java/lang/Float",
-            "java/lang/Double",
-            "java/lang/ClassLoader",
-//            "java/lang/Thread",
-//            "java/lang/ThreadGroup",
+            "java/lang/Class",
+//            "java/lang/Integer",
+//            "java/lang/Float",
+//            "java/lang/Double",
+//            "java/lang/ClassLoader",
+            "java/lang/ThreadGroup",
+            "java/lang/Thread",
 //            "java/io/PrintStream"
     };
     SerialHeap *heap = init_gc();
@@ -97,7 +88,29 @@ void start_vm(char *class_path)
     Thread thread = create_thread(100, 100);
 //    init_lib(&thread, heap);
     init_primitives(&thread, heap);
-    init_lib_by_names(&thread, heap, base_lib, 8);
+    init_lib_by_names(&thread, heap, base_lib, 5);
+
+    ClassFile *jthread_group = load_class(&thread, heap, "java/lang/ThreadGroup");
+    MethodInfo *jthread_group_init = find_method_with_desc(&thread, heap, jthread_group, "<init>", "()V");
+    clinit_class_and_exec(&thread, heap, jthread_group);
+    Object *jthread_group_obj = malloc_object(heap, jthread_group);
+    Frame *jthread_group_frame = create_vm_frame_by_method(&thread, jthread_group, jthread_group_init, get_method_code(jthread_group->constant_pool, *jthread_group_init));
+    Slot *jthread_group_slot = create_slot();
+    jthread_group_slot->object_value = jthread_group_obj;
+    Slot *jthread_group_slot_this = create_slot();
+    jthread_group_slot_this->object_value = jthread_group->class_object;
+    push_slot(jthread_group_frame->operand_stack, jthread_group_slot);
+    push_slot(jthread_group_frame->operand_stack, jthread_group_slot);
+    run(&thread, heap);
+
+    ClassFile *jthread = load_class(&thread, heap, "java/lang/Thread");
+    MethodInfo *jthread_init = find_method_with_desc(&thread, heap, jthread, "<init>", "()V");
+    clinit_class_and_exec(&thread, heap, jthread);
+    Frame *frame = create_vm_frame_by_method(&thread, jthread, jthread_init, get_method_code(jthread->constant_pool, *jthread_init));
+    Slot *slot = create_slot();
+    slot->object_value = jthread->class_object;
+    push_slot(frame->operand_stack, slot);
+    run(&thread, heap);
 
     ClassFile *system = load_class(&thread, heap, "java/lang/System");
     MethodInfo *init_phase1 = find_method_with_desc(&thread, heap, system, "initPhase1", "()V");
@@ -107,27 +120,7 @@ void start_vm(char *class_path)
     create_vm_frame_by_method(&thread, system, init_phase2, get_method_code(system->constant_pool, *init_phase2));
     create_vm_frame_by_method(&thread, system, init_phase1, get_method_code(system->constant_pool, *init_phase1));
     run(&thread, heap);
-//    ClassFile *jthread = load_class(&thread, heap, "java/lang/Thread");
-//    MethodInfo *jthread_init = find_method_with_desc(&thread, heap, jthread, "<init>", "()V");
-//    clinit_class_and_exec(&thread, heap, jthread);
-//    Frame *frame = create_vm_frame_by_method(&thread, jthread, jthread_init, get_method_code(jthread->constant_pool, *jthread_init));
-//    Slot *slot = create_slot();
-//    slot->object_value = jthread->class_object;
-//    push_slot(frame->operand_stack, slot);
-//    run(&thread, heap);
 
-//    ClassFile *jthread_group = load_class(&thread, heap, "java/lang/ThreadGroup");
-//    MethodInfo *jthread_group_init = find_method_with_desc(&thread, heap, jthread_group, "<init>", "()V");
-//    clinit_class_and_exec(&thread, heap, jthread_group);
-//    Object *jthread_group_obj = malloc_object(heap, jthread_group);
-//    Frame *jthread_group_frame = create_vm_frame_by_method(&thread, jthread_group, jthread_group_init, get_method_code(jthread_group->constant_pool, *jthread_group_init));
-//    Slot *jthread_group_slot = create_slot();
-//    jthread_group_slot->object_value = jthread_group_obj;
-//    Slot *jthread_group_slot_this = create_slot();
-//    jthread_group_slot_this->object_value = jthread_group->class_object;
-//    push_slot(jthread_group_frame->operand_stack, jthread_group_slot);
-//    push_slot(jthread_group_frame->operand_stack, jthread_group_slot);
-//    run(&thread, heap);
 //
 //    ClassFile *jthread = load_class(&thread, heap, "java/lang/Thread");
 //    MethodInfo *jthread_init = find_method_with_desc(&thread, heap, jthread, "<init>", "(Ljava/lang/ThreadGroup;Ljava/lang/String;)V");

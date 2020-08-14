@@ -32,3 +32,11 @@ void jdk_internal_misc_Unsafe_unalignedAccess0_90Z(Thread *thread, SerialHeap *h
 {
     push_int(frame->operand_stack, 1);
 }
+
+void jdk_internal_misc_Unsafe_objectFieldOffset1_9Ljava_lang_Class1Ljava_lang_String10J(Thread *thread, SerialHeap *heap, Frame *frame)
+{
+
+    Object *object = frame->local_variables[1]->object_value;
+    Slot *value = get_field_from_map(&object->fields, "slot", "I");
+    push_long(frame->operand_stack, value->value);
+}
