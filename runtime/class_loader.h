@@ -77,6 +77,8 @@ CodeAttribute *get_method_code(ConstantPool *pool, MethodInfo method);
 
 void create_string_object(Thread *thread, SerialHeap *heap, Frame *frame, char *str);
 
+void create_string_object_without_back(Thread *thread, SerialHeap *heap, Frame *frame, char *str);
+
 void create_array_by_type(Thread *thread, SerialHeap *heap, Frame *frame, u1 type, int count);
 
 void create_array_reference(Thread *thread, SerialHeap *heap, Frame *frame, u2 index);
@@ -112,5 +114,7 @@ void create_object_with_backpc(Thread *thread, SerialHeap *heap, Frame *frame, u
 void create_object_with_class_name_and_backpc(Thread *thread, SerialHeap *heap, Frame *frame, char *class_name, int back);
 
 int is_instance_of(ClassFile *source, ClassFile *target);
+
+Slot *create_object_slot(SerialHeap *heap, ClassFile *class);
 
 #endif //DISCJVM_CLASS_LOADER_H

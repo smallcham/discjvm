@@ -22,4 +22,6 @@ void jdk_internal_misc_Unsafe_unalignedAccess0_90Z(Thread *thread, SerialHeap *h
 
 void jdk_internal_misc_Unsafe_objectFieldOffset1_9Ljava_lang_Class1Ljava_lang_String10J(Thread *thread, SerialHeap *heap, Frame *frame);
 
+void jdk_internal_misc_Unsafe_storeFence_90V(Thread *thread, SerialHeap *heap, Frame *frame);
+
 #endif //DISCJVM_UNSAFE_H

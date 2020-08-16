@@ -26,6 +26,7 @@ typedef struct {
 typedef struct {
     Stack *vm_stack;
     Stack *c_stack;
+    Object *jthread;
 } Thread;
 
 Frame *create_vm_frame_by_method(Thread* thread, ClassFile *class, MethodInfo *method, CodeAttribute *code);
@@ -41,5 +42,9 @@ Thread create_thread(int vm_stack_size, int c_stack_size);
 void free_frame(Frame **frame);
 
 void print_local_variables(Frame *frame);
+
+void add_params(Frame *frame, Frame *new_frame, MethodInfo *method);
+
+void add_params_and_plus1(Frame *frame, Frame *new_frame, MethodInfo *method);
 
 #endif //DISCJVM_THREAD_H

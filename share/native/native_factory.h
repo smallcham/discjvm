@@ -15,6 +15,8 @@
 #include "jdk/internal/misc/Unsafe.h"
 #include "java/lang/ClassLoader.h"
 #include "java/lang/Runtime.h"
+#include "java/security/AccessController.h"
+#include "java/lang/Throwable.h"
 
 typedef void (*NativeMethod)(Thread *, SerialHeap *, Frame *);
 

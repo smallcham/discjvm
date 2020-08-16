@@ -40,3 +40,8 @@ void jdk_internal_misc_Unsafe_objectFieldOffset1_9Ljava_lang_Class1Ljava_lang_St
     Slot *value = get_field_from_map(&object->fields, "slot", "I");
     push_long(frame->operand_stack, value->value);
 }
+
+void jdk_internal_misc_Unsafe_storeFence_90V(Thread *thread, SerialHeap *heap, Frame *frame)
+{
+    //TODO src/hotspot/share/prims/unsafe.cpp call OrderAccess::release();
+}

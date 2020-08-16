@@ -68,6 +68,8 @@ void init_primitives(Thread *thread, SerialHeap *heap)
 void start_vm(char *class_path)
 {
     JAVA_HOME = getenv("JAVA_HOME");
+    NULL_SLOT = create_slot_by_size(2);
+
     char *base_lib[] = {
 //            "java/lang/Object",
             "java/lang/String",
@@ -90,35 +92,62 @@ void start_vm(char *class_path)
     init_primitives(&thread, heap);
     init_lib_by_names(&thread, heap, base_lib, 5);
 
+    //new ThreadGroup
+    //clinit
     ClassFile *jthread_group = load_class(&thread, heap, "java/lang/ThreadGroup");
-    MethodInfo *jthread_group_init = find_method_with_desc(&thread, heap, jthread_group, "<init>", "()V");
     clinit_class_and_exec(&thread, heap, jthread_group);
-    Object *jthread_group_obj = malloc_object(heap, jthread_group);
+
+    //choose constructor
+    Slot *jthread_group_object = create_object_slot(heap, jthread_group);
+    MethodInfo *jthread_group_init = find_method_with_desc(&thread, heap, jthread_group, "<init>", "()V");
+
+    //call
     Frame *jthread_group_frame = create_vm_frame_by_method(&thread, jthread_group, jthread_group_init, get_method_code(jthread_group->constant_pool, *jthread_group_init));
-    Slot *jthread_group_slot = create_slot();
-    jthread_group_slot->object_value = jthread_group_obj;
-    Slot *jthread_group_slot_this = create_slot();
-    jthread_group_slot_this->object_value = jthread_group->class_object;
-    push_slot(jthread_group_frame->operand_stack, jthread_group_slot);
-    push_slot(jthread_group_frame->operand_stack, jthread_group_slot);
+    push_slot(jthread_group_frame->operand_stack, jthread_group_object);
+    add_params_and_plus1(jthread_group_frame, jthread_group_frame, jthread_group_init);
     run(&thread, heap);
 
+    //new Thread
+    //clinit
     ClassFile *jthread = load_class(&thread, heap, "java/lang/Thread");
-    MethodInfo *jthread_init = find_method_with_desc(&thread, heap, jthread, "<init>", "()V");
     clinit_class_and_exec(&thread, heap, jthread);
-    Frame *frame = create_vm_frame_by_method(&thread, jthread, jthread_init, get_method_code(jthread->constant_pool, *jthread_init));
-    Slot *slot = create_slot();
-    slot->object_value = jthread->class_object;
-    push_slot(frame->operand_stack, slot);
+
+    //choose constructor
+    Slot *jthread_object = create_object_slot(heap, jthread);
+    //此处必须初始化设置priority， 否则会抛出IllegalArgumentException异常， 详情请查看Java代码Thread.setPriority 中校验的最大值和最小值
+    put_field_to_map(&((Object*)jthread_object->object_value)->fields, "priority", "I", create_slot_set_value(1));
+    MethodInfo *jthread_init = find_method_with_desc(&thread, heap, jthread, "<init>", "(Ljava/lang/ThreadGroup;Ljava/lang/String;)V");
+
+    //call
+    Frame *jthread_frame = create_vm_frame_by_method(&thread, jthread, jthread_init, get_method_code(jthread->constant_pool, *jthread_init));
+    push_slot(jthread_frame->operand_stack, jthread_object);
+    push_slot(jthread_frame->operand_stack, jthread_group_object);
+    create_string_object_without_back(&thread, heap, jthread_frame, "main");
+    add_params_and_plus1(jthread_frame, jthread_frame, jthread_init);
+    thread.jthread = jthread_object->object_value;
     run(&thread, heap);
 
+    //new System
     ClassFile *system = load_class(&thread, heap, "java/lang/System");
-    MethodInfo *init_phase1 = find_method_with_desc(&thread, heap, system, "initPhase1", "()V");
-    MethodInfo *init_phase2 = find_method_with_desc(&thread, heap, system, "initPhase2", "(ZZ)I");
+    Slot *system_object = create_object_slot(heap, system);
+
     MethodInfo *init_phase3 = find_method_with_desc(&thread, heap, system, "initPhase3", "()V");
-    create_vm_frame_by_method(&thread, system, init_phase3, get_method_code(system->constant_pool, *init_phase3));
-    create_vm_frame_by_method(&thread, system, init_phase2, get_method_code(system->constant_pool, *init_phase2));
-    create_vm_frame_by_method(&thread, system, init_phase1, get_method_code(system->constant_pool, *init_phase1));
+    Frame *phase3_frame = create_vm_frame_by_method(&thread, system, init_phase3, get_method_code(system->constant_pool, *init_phase3));
+    push_slot(phase3_frame->operand_stack, system_object);
+    add_params_and_plus1(phase3_frame, phase3_frame, init_phase3);
+
+    MethodInfo *init_phase2 = find_method_with_desc(&thread, heap, system, "initPhase2", "(ZZ)I");
+    Frame *phase2_frame = create_vm_frame_by_method(&thread, system, init_phase2, get_method_code(system->constant_pool, *init_phase2));
+    push_slot(phase2_frame->operand_stack, system_object);
+    push_slot(phase2_frame->operand_stack, create_slot_set_value(1));
+    push_slot(phase2_frame->operand_stack, create_slot_set_value(1));
+    add_params_and_plus1(phase2_frame, phase2_frame, init_phase2);
+
+    MethodInfo *init_phase1 = find_method_with_desc(&thread, heap, system, "initPhase1", "()V");
+    Frame *phase1_frame = create_vm_frame_by_method(&thread, system, init_phase1, get_method_code(system->constant_pool, *init_phase1));
+    push_slot(phase1_frame->operand_stack, system_object);
+    add_params_and_plus1(phase1_frame, phase1_frame, init_phase1);
+
     run(&thread, heap);
 
 //

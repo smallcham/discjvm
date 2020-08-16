@@ -18,6 +18,13 @@ Slot *create_slot()
     return slot;
 }
 
+Slot *create_slot_set_value(u4 value)
+{
+    Slot *slot = create_slot();
+    slot->value = value;
+    return slot;
+}
+
 Slot *create_slot_by_size(int size)
 {
     Slot *slot = malloc(sizeof(Slot) * size);

@@ -4,10 +4,6 @@
 
 #include "thread.h"
 
-void add_params(Frame *frame, Frame *new_frame, MethodInfo *method);
-
-void add_params_and_this(Frame *frame, Frame *new_frame, MethodInfo *method);
-
 void free_frame(Frame **frame)
 {
 //    free_stack(&(*frame)->operand_stack);
@@ -56,7 +52,7 @@ Frame *create_vm_frame_by_method_add_params(Thread* thread, ClassFile *class, Fr
 Frame *create_vm_frame_by_method_add_params_plus1(Thread* thread, ClassFile *class, Frame *frame, MethodInfo *method, CodeAttribute *code)
 {
     Frame *new_frame = create_vm_frame_by_method(thread, class, method, code);
-    if (NULL != new_frame) add_params_and_this(frame, new_frame, method);
+    if (NULL != new_frame) add_params_and_plus1(frame, new_frame, method);
     return new_frame;
 }
 
@@ -109,7 +105,7 @@ LocalVariableTableAttribute *get_local_variable(ConstantPool *pool, CodeAttribut
     return NULL;
 }
 
-void add_params_and_this(Frame *frame, Frame *new_frame, MethodInfo *method)
+void add_params_and_plus1(Frame *frame, Frame *new_frame, MethodInfo *method)
 {
     printf("\t\t\t\t[addparams+this]\n");
     int count = method->params_count + 1;

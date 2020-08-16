@@ -193,6 +193,7 @@ Object *get_object(Stack *stack)
 int pop_int(Stack *stack)
 {
     Slot *slot = pop_stack(stack);
+    if (NULL == slot) return NULL;
     return slot->value;
 }
 
