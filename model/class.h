@@ -210,6 +210,8 @@ typedef struct {
 //    u1 init_state;
 //} Class;
 
+char *JAVA_HOME;
+HashMap *VM_OPTS;
 Slot *NULL_SLOT;
 
 u1 *get_utf8_bytes(ConstantPool *pool, u2 index);

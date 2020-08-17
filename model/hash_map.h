@@ -50,4 +50,6 @@ void clean_entry(HashEntry *entry);
 
 void del_map(HashMap **map, char *key);
 
+char **keys(HashMap **map);
+
 #endif //DISCJVM_HASH_MAP_H

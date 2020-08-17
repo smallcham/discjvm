@@ -163,3 +163,18 @@ void del_map(HashMap **map, char *key)
         entry = entry->next;
     }
 }
+
+char **keys(HashMap **map)
+{
+    char **_keys = malloc((*map)->size * sizeof(char**));
+    int idx = 0;
+    for (int i = 0; i < (*map)->capacity; i++) {
+        HashEntry next = (*map)->entries[i];
+        while (NULL != next.key) {
+            _keys[idx++] = next.key;
+            if (NULL == next.next) break;
+            next = *next.next;
+        }
+    }
+    return _keys;
+}

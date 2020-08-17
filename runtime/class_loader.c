@@ -340,7 +340,7 @@ ClassFile *load_class(Thread *thread, SerialHeap *heap, char *full_class_name)
     class->init_state = CLASS_NOT_INIT;
     u1 *class_file = get_class_bytes(full_class_name);
     class = load_class_by_bytes(thread, heap, class_file);
-    Object *class_object = malloc_object(heap, load_class(thread, heap, "java/lang/Class"));
+    Object *class_object = malloc_object(heap, class);
 
     Slot *slot = create_slot();
 //    slot->object_value = get_bootstrap_class_loader(thread, heap);
@@ -386,6 +386,12 @@ Slot *get_field_from_map(HashMap **map, u1 *name, u1 *desc)
     free(key);
     if (NULL == field) return NULL_SLOT;
     return field;
+}
+
+char *get_str_field_from_map(HashMap **map)
+{
+    Slot *field = get_field_from_map(map, "value", "[C");
+    return NULL_SLOT != field ? field->object_value : "";
 }
 
 //void put_runtime_field_to_map(HashMap **map, u1 *class_name, u1 *name, u1 *desc, Field *field)
@@ -491,7 +497,7 @@ void do_invokestatic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2
     MethodInfo *method = find_method_with_desc(thread, heap, class, method_name_info.bytes, method_desc_info.bytes);
     if (NULL == method) exit(-1);
     if ((method->access_flags & ACC_NATIVE) != 0) {
-        create_c_frame_and_invoke(thread, heap, frame, class->class_name, method->name, method->desc);
+        create_c_frame_and_invoke_add_params(thread, heap, frame, method, class->class_name, method->name, method->desc);
     } else {
         create_vm_frame_by_method_add_params(thread, class, frame, method, get_method_code(class->constant_pool, *method));
     }
@@ -510,7 +516,7 @@ void do_invokeinterface_by_index(Thread *thread, SerialHeap *heap, Frame *frame,
     MethodInfo *method = find_method_iter_super_with_desc(thread, heap, &class, method_name, method_name);
     if (NULL == method) exit(-1);
     if ((method->access_flags & ACC_NATIVE) != 0) {
-        create_c_frame_and_invoke(thread, heap, frame, class->class_name, method->name, method->desc);
+        create_c_frame_and_invoke_add_params_plus1(thread, heap, frame, method, class->class_name, method->name, method->desc);
     } else {
         create_vm_frame_by_method_add_params_plus1(thread, class, frame, method, get_method_code(class->constant_pool, *method));
     }
@@ -529,7 +535,7 @@ void do_invokespecial_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
     MethodInfo *method = find_method_iter_super_with_desc(thread, heap, &class, method_name_info.bytes, method_desc_info.bytes);
     if (NULL == method) exit(-1);
     if ((method->access_flags & ACC_NATIVE) != 0) {
-        create_c_frame_and_invoke(thread, heap, frame, class->class_name, method->name, method->desc);
+        create_c_frame_and_invoke_add_params_plus1(thread, heap, frame, method, class->class_name, method->name, method->desc);
     } else {
         create_vm_frame_by_method_add_params_plus1(thread, class, frame, method, get_method_code(class->constant_pool, *method));
     }
@@ -548,7 +554,7 @@ void do_invokevirtual_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
     MethodInfo *method = find_method_iter_super_with_desc(thread, heap, &class, method_name_info.bytes, method_desc_info.bytes);
     if (NULL == method) exit(-1);
     if ((method->access_flags & ACC_NATIVE) != 0) {
-        create_c_frame_and_invoke(thread, heap, frame, class->class_name, method->name, method->desc);
+        create_c_frame_and_invoke_add_params_plus1(thread, heap, frame, method, class->class_name, method->name, method->desc);
     } else {
         create_vm_frame_by_method_add_params_plus1(thread, class, frame, method, get_method_code(class->constant_pool, *method));
     }
@@ -915,12 +921,12 @@ void init_static_fields(ClassFile *class)
                 value.attribute_length = class->fields[i].attributes[j].attribute_length;
                 value.constant_value_index = l2b_2(*(u2*)class->fields[i].attributes[j].info);
                 switch (class->fields[i].desc[0]) {
-                    case 'Z': case 'B': case 'C': case 'S': case 'I': case 'J': {
+                    case 'Z': case 'B': case 'C': case 'S': case 'I': case 'F': {
                         CONSTANT_Integer_info info = *(CONSTANT_Integer_info*)class->constant_pool[value.constant_value_index].info;
                         put_int_field_to_map(&class->static_fields, class->fields[i].name, class->fields[i].desc, info.bytes);
                         break;
                     }
-                    case 'F': case 'D':{
+                    case 'J': case 'D':{
                         CONSTANT_Double_info info = *(CONSTANT_Double_info*)class->constant_pool[value.constant_value_index].info;
                         put_long_field_to_map(&class->static_fields, class->fields[i].name, class->fields[i].desc, info.low_bytes, info.high_bytes);
                         break;

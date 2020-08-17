@@ -663,7 +663,12 @@ void j_pop(SerialHeap *heap, Thread *thread, Frame *frame) {
     step_pc_1(frame);
 }
 
-void pop2(SerialHeap *heap, Thread *thread, Frame *frame) {}
+void pop2(SerialHeap *heap, Thread *thread, Frame *frame) {
+    //TODO the logic is not complete here is form1
+    pop_slot(frame->operand_stack);
+    pop_slot(frame->operand_stack);
+    step_pc_1(frame);
+}
 
 void j_dup(SerialHeap *heap, Thread *thread, Frame *frame) {
     push_slot(frame->operand_stack, get_slot(frame->operand_stack));
@@ -873,11 +878,40 @@ void iand(SerialHeap *heap, Thread *thread, Frame *frame) {
     step_pc_1(frame);
 }
 
-void land(SerialHeap *heap, Thread *thread, Frame *frame) {}
-void ior(SerialHeap *heap, Thread *thread, Frame *frame) {}
-void lor(SerialHeap *heap, Thread *thread, Frame *frame) {}
-void ixor(SerialHeap *heap, Thread *thread, Frame *frame) {}
-void lxor(SerialHeap *heap, Thread *thread, Frame *frame) {}
+void land(SerialHeap *heap, Thread *thread, Frame *frame) {
+    long value2 = pop_long(frame->operand_stack);
+    long value1 = pop_long(frame->operand_stack);
+    push_long(frame->operand_stack, value1 & value2);
+    step_pc_1(frame);
+}
+
+void ior(SerialHeap *heap, Thread *thread, Frame *frame) {
+    int value2 = pop_int(frame->operand_stack);
+    int value1 = pop_int(frame->operand_stack);
+    push_int(frame->operand_stack, value1 | value2);
+    step_pc_1(frame);
+}
+
+void lor(SerialHeap *heap, Thread *thread, Frame *frame) {
+    long value2 = pop_long(frame->operand_stack);
+    long value1 = pop_long(frame->operand_stack);
+    push_long(frame->operand_stack, value1 | value2);
+    step_pc_1(frame);
+}
+
+void ixor(SerialHeap *heap, Thread *thread, Frame *frame) {
+    int value2 = pop_int(frame->operand_stack);
+    int value1 = pop_int(frame->operand_stack);
+    push_int(frame->operand_stack, value1 ^ value2);
+    step_pc_1(frame);
+}
+
+void lxor(SerialHeap *heap, Thread *thread, Frame *frame) {
+    long value2 = pop_long(frame->operand_stack);
+    long value1 = pop_long(frame->operand_stack);
+    push_long(frame->operand_stack, value1 ^ value2);
+    step_pc_1(frame);
+}
 
 void iinc(SerialHeap *heap, Thread *thread, Frame *frame) {
     u4 index = step_pc1_and_read_code(frame);

@@ -113,6 +113,8 @@ void create_object_with_backpc(Thread *thread, SerialHeap *heap, Frame *frame, u
 
 void create_object_with_class_name_and_backpc(Thread *thread, SerialHeap *heap, Frame *frame, char *class_name, int back);
 
+char *get_str_field_from_map(HashMap **map);
+
 int is_instance_of(ClassFile *source, ClassFile *target);
 
 Slot *create_object_slot(SerialHeap *heap, ClassFile *class);

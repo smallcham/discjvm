@@ -6,11 +6,12 @@
 
 void init_native_factory()
 {
-    //函数名 '左括号' 替换为 '9', '右括号' 替换为 '0', '/' 替换为 '_'
+    //函数名 '左括号' 替换为 '9', '右括号' 替换为 '0', '/' 替换为 '_', ';' 替换为 '1'
     native_pool = create_map();
     //Object
     put_map(&native_pool, "java/lang/Object.registerNatives()V", java_lang_Object_registerNatives_90V);
     put_map(&native_pool, "java/lang/Object.getClass()Ljava/lang/Class;", java_lang_Object_getClass_90Ljava_lang_Class);
+    put_map(&native_pool, "java/lang/Object.hashCode()I", java_lang_Object_hashCode_90I);
 
     //Class
     put_map(&native_pool, "java/lang/Class.registerNatives()V", java_lang_Class_registerNatives_90V);
@@ -35,6 +36,7 @@ void init_native_factory()
     put_map(&native_pool, "jdk/internal/misc/Unsafe.unalignedAccess0()Z", jdk_internal_misc_Unsafe_unalignedAccess0_90Z);
     put_map(&native_pool, "jdk/internal/misc/Unsafe.objectFieldOffset1(Ljava/lang/Class;Ljava/lang/String;)J", jdk_internal_misc_Unsafe_objectFieldOffset1_9Ljava_lang_Class1Ljava_lang_String10J);
     put_map(&native_pool, "jdk/internal/misc/Unsafe.storeFence()V", jdk_internal_misc_Unsafe_storeFence_90V);
+    put_map(&native_pool, "jdk/internal/misc/Unsafe.compareAndSetInt(Ljava/lang/Object;JII)Z", jdk_internal_misc_Unsafe_compareAndSetInt_9Ljava_lang_Object1JII0Z);
 
     //ClassLoader
     put_map(&native_pool, "java/lang/ClassLoader.registerNatives()V", java_lang_ClassLoader_registerNatives_90V);
@@ -86,4 +88,16 @@ void create_c_frame_and_invoke(Thread *thread, SerialHeap *heap, Frame *frame, c
     printf("\t\t\t\t[localvars.%s.%s]", frame->class->class_name, frame->method->name);
     print_local_variables(frame);
     printf("[**EXCNATIVE] %s.%s.%s\n", class_name, method_name, method_desc);
+}
+
+void create_c_frame_and_invoke_add_params_plus1(Thread *thread, SerialHeap *heap, Frame *frame, MethodInfo *method, char *class_name, char *method_name, char *method_desc)
+{
+    add_params_and_plus1(frame, frame, method);
+    create_c_frame_and_invoke(thread, heap, frame, class_name, method_name, method_desc);
+}
+
+void create_c_frame_and_invoke_add_params(Thread *thread, SerialHeap *heap, Frame *frame, MethodInfo *method, char *class_name, char *method_name, char *method_desc)
+{
+    add_params(frame, frame, method);
+    create_c_frame_and_invoke(thread, heap, frame, class_name, method_name, method_desc);
 }
