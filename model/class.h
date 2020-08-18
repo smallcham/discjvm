@@ -46,6 +46,7 @@ typedef struct {
     AttributeInfo *attributes;
     u1 *name;
     u1 *desc;
+    u2 offset;
 } FieldInfo;
 
 typedef struct {
@@ -148,7 +149,7 @@ typedef struct {
 } InnerClassesAttribute;
 
 typedef struct {
-    u4 value;
+    u8 value;
     void *object_value;
 } Slot;
 
@@ -171,11 +172,14 @@ typedef struct {
     u2 *interfaces; // [interfaces_count]
     u2 fields_count;
     FieldInfo *fields; // [fields_count]
+    u2 object_fields_count;
+    u2 static_fields_count;
     u2 methods_count;
     MethodInfo *methods; // [methods_count]
     u2 attributes_count;
     AttributeInfo *attributes; // [attributes_count]
-    HashMap *static_fields;
+//    HashMap *static_fields;
+    Slot *static_fields;
     void *class_object;
     void *super_class;
     u1 init_state;

@@ -8,6 +8,8 @@ ClassFile *load_class_by_bytes(Thread *thread, SerialHeap *heap, u1 *bytes)
     class->init_state = CLASS_NOT_INIT;
     class->class_object = NULL;
     class->super_class = NULL;
+    class->object_fields_count = 0;
+    class->static_fields_count = 0;
     u1 *class_file = bytes;
     class->magic = l2b_4(*(u4 *) class_file);
     class_file += sizeof(u4);
@@ -908,7 +910,7 @@ void set_class_inited_by_frame(Thread *thread, SerialHeap *heap, Frame *frame)
     frame->class->init_state = CLASS_INITED;
 }
 
-void init_static_fields(ClassFile *class)
+void set_static_fields(ClassFile *class)
 {
     for (int i = 0; i < class->fields_count; i++) {
         if (0 == (class->fields[i].access_flags & ACC_FINAL) || 0 == (class->fields[i].access_flags & ACC_STATIC)) {
@@ -923,12 +925,14 @@ void init_static_fields(ClassFile *class)
                 switch (class->fields[i].desc[0]) {
                     case 'Z': case 'B': case 'C': case 'S': case 'I': case 'F': {
                         CONSTANT_Integer_info info = *(CONSTANT_Integer_info*)class->constant_pool[value.constant_value_index].info;
-                        put_int_field_to_map(&class->static_fields, class->fields[i].name, class->fields[i].desc, info.bytes);
+//                        put_int_field_to_map(&class->static_fields, class->fields[i].name, class->fields[i].desc, info.bytes);
+                        class->static_fields[class->fields[i].offset].value = info.bytes;
                         break;
                     }
                     case 'J': case 'D':{
                         CONSTANT_Double_info info = *(CONSTANT_Double_info*)class->constant_pool[value.constant_value_index].info;
                         put_long_field_to_map(&class->static_fields, class->fields[i].name, class->fields[i].desc, info.low_bytes, info.high_bytes);
+                        class->static_fields[class->fields[i].offset].value = info.bytes;
                         break;
                     }
                     case 'L':{
@@ -941,6 +945,25 @@ void init_static_fields(ClassFile *class)
     }
 }
 
+void init_fields(ClassFile *class)
+{
+    ClassFile *super = class->super_class;
+    int object_fields_offset = NULL != super ? super->object_fields_count : 0;
+    int static_fields_offset = 0;
+    for (int i = 0; i < class->fields_count; i++) {
+        if (0 == (class->fields[i].access_flags & ACC_STATIC)) {
+            class->fields[i].offset = object_fields_offset;
+            object_fields_offset++;
+        } else {
+            class->fields[i].offset = static_fields_offset;
+            static_fields_offset++;
+        }
+    }
+    class->object_fields_count = object_fields_offset;
+    class->static_fields_count = static_fields_offset;
+    class->static_fields = create_slot_by_size(class->static_fields_count);
+}
+
 void init_class(Thread *thread, SerialHeap *heap, ClassFile *class)
 {
     if (class_is_inited(class)) return;
@@ -951,7 +974,13 @@ void init_class(Thread *thread, SerialHeap *heap, ClassFile *class)
 //    CodeAttribute *init_code = get_method_code(*init);
 //    create_vm_frame_by_method_add_hook(thread, class, init, init_code, (PopHook) set_class_inited_by_frame);
 
-    init_static_fields(class);
+    ClassFile *super = get_super_class(thread, heap, class);
+    if (NULL != super && class_is_not_init(super)) {
+        init_class(thread, heap, super);
+        class->super_class = super;
+    }
+
+    init_fields(class);
 
     MethodInfo *clinit = find_method_with_desc(thread, heap, class, "<clinit>", "()V");
     if (NULL != clinit) {
@@ -960,12 +989,6 @@ void init_class(Thread *thread, SerialHeap *heap, ClassFile *class)
         create_vm_frame_by_method_add_hook(thread, class, clinit, clinit_code, (PopHook) set_class_inited_by_frame);
     } else {
         class->init_state = CLASS_INITED;
-    }
-
-    ClassFile *super = get_super_class(thread, heap, class);
-    if (NULL != super && class_is_not_init(super)) {
-        init_class(thread, heap, super);
-        class->super_class = super;
     }
 }
 

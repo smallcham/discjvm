@@ -62,7 +62,7 @@ void jdk_internal_misc_Unsafe_storeFence_90V(Thread *thread, SerialHeap *heap, F
 
 void jdk_internal_misc_Unsafe_compareAndSetInt_9Ljava_lang_Object1JII0Z(Thread *thread, SerialHeap *heap, Frame *frame)
 {
-//    Object *ref = frame->local_variables[1]->object_value;
+    Object *ref = frame->local_variables[1]->object_value;
     int higher = frame->local_variables[2]->value;
     int lower = frame->local_variables[3]->value;
     Slot *slot = (Slot*)(((int)higher & 0xffff0000) | (long)lower & 0x0000ffff);

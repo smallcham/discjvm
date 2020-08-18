@@ -97,7 +97,7 @@ Slot *get_field_from_map(HashMap **map, u1 *name, u1 *desc);
 
 Object *get_bootstrap_class_loader(Thread *thread, SerialHeap *heap);
 
-void init_static_fields(ClassFile *class);
+void init_fields(ClassFile *class);
 
 void put_field_to_map(HashMap **map, u1 *name, u1 *desc, Slot *value);
 
