@@ -569,45 +569,47 @@ void xastore_(SerialHeap *heap, Thread *thread, Frame *frame, char desc) {
     Object *ref = pop_object(frame->operand_stack);
     u1 *_desc = malloc(3);
     sprintf(_desc, "[%c", desc);
-    Slot *field = get_field_from_map(&ref->fields, "value", _desc);
+    FieldInfo *field = get_field_by_name_and_desc(ref->class, "value", _desc);
+//    Slot *field = get_field_from_map(&ref->fields, "value", _desc);
     switch (desc) {
         case 'Z': {
-            int *objects = field->object_value;
+//            field->object_value;
+            int *objects = ref->fields[field->offset].object_value;
             objects[index] = value->value;
             break;
         }
         case 'C': {
-            char *objects = field->object_value;
+            char *objects = ref->fields[field->offset].object_value;
             objects[index] = value->value;
             break;
         }
         case 'F': {
-            float *objects = field->object_value;
+            float *objects = ref->fields[field->offset].object_value;
             objects[index] = value->value;
             break;
         }
         case 'D': {
-            double *objects = field->object_value;
+            double *objects = ref->fields[field->offset].object_value;
             objects[index] = value->value;
             break;
         }
         case 'B': {
-            char *objects = field->object_value;
+            char *objects = ref->fields[field->offset].object_value;
             objects[index] = value->value;
             break;
         }
         case 'S': {
-            short *objects = field->object_value;
+            short *objects = ref->fields[field->offset].object_value;
             objects[index] = value->value;
             break;
         }
         case 'I': {
-            int *objects = field->object_value;
+            int *objects = ref->fields[field->offset].object_value;
             objects[index] = value->value;
             break;
         }
         case 'J': {
-            long *objects = field->object_value;
+            long *objects = ref->fields[field->offset].object_value;
             objects[index] = value->value;
             break;
         }

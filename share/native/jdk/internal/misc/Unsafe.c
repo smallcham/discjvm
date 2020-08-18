@@ -38,15 +38,15 @@ void jdk_internal_misc_Unsafe_objectFieldOffset1_9Ljava_lang_Class1Ljava_lang_St
 
     Object *object = frame->local_variables[1]->object_value;
     Object *string = frame->local_variables[2]->object_value;
-    char *value = get_str_field_from_map(&string->fields);
+//    char *value = get_str_field_from_map(&string->fields);
     //TODO computer field offset, being complete.
     long offset = -1;
     for (int i = 0; i < object->class->fields_count; i++) {
         if (0 != (object->class->fields[i].access_flags & ACC_STATIC)) continue;
-        if (strcmp(object->class->fields[i].name, value) == 0) {
-            offset = (long)get_field_from_map(&object->fields, value, object->class->fields[i].desc);
-            break;
-        }
+//        if (strcmp(object->class->fields[i].name, value) == 0) {
+//            offset = (long)get_field_from_map(&object->fields, value, object->class->fields[i].desc);
+//            break;
+//        }
     }
     if (offset < 0) {
         printf_err("offset calc err!");

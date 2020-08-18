@@ -93,19 +93,31 @@ u1 *get_array_class_name_by_name_str(u1 *name);
 
 u1 *get_class_name_by_index(ConstantPool *pool, u2 index);
 
-Slot *get_field_from_map(HashMap **map, u1 *name, u1 *desc);
+void put_field_by_name_and_desc(Object *object, char *name, char *desc, Slot *value);
+
+void put_value_field_by_name_and_desc(Object *object, char *name, char *desc, int value);
+
+void put_object_value_field_by_name_and_desc(Object *object, char *name, char *desc, void *value);
+
+//Slot *get_field_from_map(HashMap **map, u1 *name, u1 *desc);
 
 Object *get_bootstrap_class_loader(Thread *thread, SerialHeap *heap);
 
 void init_fields(ClassFile *class);
 
-void put_field_to_map(HashMap **map, u1 *name, u1 *desc, Slot *value);
+void init_static_fields(ClassFile *class);
 
-void put_int_field_to_map(HashMap **map, u1 *name, u1 *desc, int value);
+FieldInfo *get_field_by_name_and_desc(ClassFile *class, char *name, char *desc);
 
-void put_long_field_to_map(HashMap **map, u1 *name, u1 *desc, int lower, int higher);
+FieldInfo *get_static_field_by_name_and_desc(ClassFile *class, char *name, char *desc);
 
-void put_str_field_to_map(HashMap **map, u1 *name, u1 *desc, char *value);
+//void put_field_to_map(HashMap **map, u1 *name, u1 *desc, Slot *value);
+//
+//void put_int_field_to_map(HashMap **map, u1 *name, u1 *desc, int value);
+//
+//void put_long_field_to_map(HashMap **map, u1 *name, u1 *desc, int lower, int higher);
+//
+//void put_str_field_to_map(HashMap **map, u1 *name, u1 *desc, char *value);
 
 u4 get_u4_value_from_index(ConstantPool *constant_pool, u2 index);
 
@@ -113,7 +125,7 @@ void create_object_with_backpc(Thread *thread, SerialHeap *heap, Frame *frame, u
 
 void create_object_with_class_name_and_backpc(Thread *thread, SerialHeap *heap, Frame *frame, char *class_name, int back);
 
-char *get_str_field_from_map(HashMap **map);
+//char *get_str_field_from_map(HashMap **map);
 
 int is_instance_of(ClassFile *source, ClassFile *target);
 

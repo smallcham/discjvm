@@ -187,7 +187,8 @@ typedef struct {
 
 typedef struct {
     ClassFile *class;
-    HashMap *fields;
+    Slot *fields;
+//    HashMap *fields;
 } Object;
 
 typedef struct {
