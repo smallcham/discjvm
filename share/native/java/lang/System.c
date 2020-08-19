@@ -10,6 +10,7 @@ void java_lang_System_registerNatives_90V(Thread *thread, SerialHeap *heap, Fram
 
 void java_lang_System_initProperties_9Ljava_util_Properties10Ljava_util_Properties1(Thread *thread, SerialHeap *heap, Frame *frame)
 {
+    //TODO 这里逻辑有问题
     Object *object = frame->local_variables[0]->object_value;
 //    push_object(frame->operand_stack, object);
 

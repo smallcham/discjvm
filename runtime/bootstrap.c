@@ -143,7 +143,7 @@ void start_vm(char *class_path)
     ClassFile *jthread = load_class(&thread, heap, "java/lang/Thread");
     Slot *jthread_object = create_object_slot(heap, jthread);
     //此处必须初始化设置priority， 否则会抛出IllegalArgumentException异常， 详情请查看Java代码Thread.setPriority 中校验的最大值和最小值
-    put_value_field_by_name_and_desc(jthread_group_object->object_value, "maxPriority", "I", 1);
+    put_value_field_by_name_and_desc(jthread_object->object_value, "priority", "I", 1);
 //    put_field_to_map(&((Object*)jthread_object->object_value)->fields, "priority", "I", create_slot_set_value(1));
     MethodInfo *jthread_init = find_method_with_desc(&thread, heap, jthread, "<init>", "(Ljava/lang/ThreadGroup;Ljava/lang/String;)V");
 

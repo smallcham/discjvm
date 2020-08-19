@@ -256,12 +256,6 @@ ClassFile *load_class_by_bytes(Thread *thread, SerialHeap *heap, u1 *bytes)
                     }
                 }
             }
-//            Field *field = malloc(sizeof(Field));
-//            field->field_info = &class->fields[i];
-//            field->slot = NULL;
-//            put_runtime_field_to_map(&class->static_fields, class->class_name, class->fields[i].name, class->fields[i].desc, field);
-//            class->static_fields[i].field_info = &class->fields[i];
-//            class->static_fields[i].slot = NULL;
         }
     }
     class->methods_count = l2b_2(*(u2 *) class_file);
@@ -325,8 +319,6 @@ Object *get_bootstrap_class_loader(Thread *thread, SerialHeap *heap)
         name->object_value = "BootstrapLoader";
         put_object_value_field_by_name_and_desc(object, "name", "Ljava/lang/String;", name);
         put_object_value_field_by_name_and_desc(object, "parent", "Ljava/lang/Classloader;", NULL);
-//        put_field_to_map(&object->fields, "name", "Ljava/lang/String;", name);
-//        put_field_to_map(&object->fields, "parent", "Ljava/lang/Classloader;", NULL);
         bootstrap_class_loader = object;
     }
     return bootstrap_class_loader;
@@ -373,68 +365,6 @@ ClassFile *load_primitive_class(Thread *thread, SerialHeap *heap, char *primitiv
     put_class_to_cache(&heap->class_pool, class);
     return class;
 }
-
-//Field *get_runtime_field_from_map(HashMap **map, u1 *class_name, u1 *name, u1 *desc)
-//{
-//    char *key = malloc(strlen(class_name) + strlen(name) + strlen(desc) + 4);
-//    sprintf(key, "%s.%s.%s", class_name, name, desc);
-//    Field *field = get_map(map, key);
-//    free(key);
-//    return field;
-//}
-
-//Slot *get_field_from_map(HashMap **map, u1 *name, u1 *desc)
-//{
-//    char *key = malloc(strlen(name) + strlen(desc) + 2);
-//    sprintf(key, "%s.%s", name, desc);
-//    Slot *field = get_map(map, key);
-//    free(key);
-//    if (NULL == field) return NULL_SLOT;
-//    return field;
-//}
-
-//char *get_str_field_from_map(HashMap **map)
-//{
-//    Slot *field = get_field_from_map(map, "value", "[C");
-//    return NULL_SLOT != field ? field->object_value : "";
-//}
-
-//void put_runtime_field_to_map(HashMap **map, u1 *class_name, u1 *name, u1 *desc, Field *field)
-//{
-//    char *key = malloc(strlen(class_name) + strlen(name) + strlen(desc) + 4);
-//    sprintf(key, "%s.%s.%s", class_name, name, desc);
-//    put_map(map, key, field);
-//}
-
-
-//void put_field_to_map(HashMap **map, u1 *name, u1 *desc, Slot *value)
-//{
-//    char *key = malloc(strlen(name) + strlen(desc) + 2);
-//    sprintf(key, "%s.%s", name, desc);
-//    put_map(map, key, value);
-//}
-//
-//void put_int_field_to_map(HashMap **map, u1 *name, u1 *desc, int value)
-//{
-//    Slot *slot = create_slot();
-//    slot->value = value;
-//    put_field_to_map(map, name, desc, slot);
-//}
-//
-//void put_long_field_to_map(HashMap **map, u1 *name, u1 *desc, int lower, int higher)
-//{
-//    Slot *slot = create_slot_by_size(2);
-//    slot[0].value = higher;
-//    slot[1].value = lower;
-//    put_field_to_map(map, name, desc, slot);
-//}
-//
-//void put_str_field_to_map(HashMap **map, u1 *name, u1 *desc, char *value)
-//{
-//    Slot *slot = create_slot();
-//    slot->object_value = value;
-//    put_field_to_map(map, name, desc, slot);
-//}
 
 u1 *get_class_name_by_index(ConstantPool *pool, u2 index)
 {
@@ -580,16 +510,6 @@ void get_field_to_opstack_by_index(Thread *thread, SerialHeap *heap, Frame *fram
         init_class(thread, heap, class);
         return;
     }
-//    Object *object = pop_object(frame->operand_stack);
-//    Slot *field = get_field_from_map(&object->fields, field_name_info.bytes, field_desc_info.bytes);
-//    if (str_start_with(field_desc_info.bytes, "D") ||
-//        str_start_with(field_desc_info.bytes, "J")) {
-//        push_slot(frame->operand_stack, &field[1]);
-//        push_slot(frame->operand_stack, &field[0]);
-//    } else {
-//        push_slot(frame->operand_stack, field);
-//    }
-
     Object *object = pop_object(frame->operand_stack);
     FieldInfo *field = get_field_by_name_and_desc(class, field_name_info.bytes, field_desc_info.bytes);
     if (str_start_with(field_desc_info.bytes, "D") ||
@@ -615,15 +535,7 @@ void get_static_field_to_opstack_by_index(Thread *thread, SerialHeap *heap, Fram
         init_class(thread, heap, class);
         return;
     }
-//    Slot *field = get_field_from_map(&class->static_fields, field_name_info.bytes, field_desc_info.bytes);
-//    if (str_start_with(field_desc_info.bytes, "D") ||
-//        str_start_with(field_desc_info.bytes, "J")) {
-//        push_slot(frame->operand_stack, &field[1]);
-//        push_slot(frame->operand_stack, &field[0]);
-//    } else {
-//        push_slot(frame->operand_stack, field);
-//    }
-    FieldInfo *field = get_field_by_name_and_desc(class, field_name_info.bytes, field_desc_info.bytes);
+    FieldInfo *field = get_static_field_by_name_and_desc(class, field_name_info.bytes, field_desc_info.bytes);
     if (str_start_with(field_desc_info.bytes, "D") ||
         str_start_with(field_desc_info.bytes, "J")) {
         push_long(frame->operand_stack, class->static_fields[field->offset].value);
@@ -657,6 +569,20 @@ FieldInfo *get_field_by_name_and_desc_(ClassFile *class, char *name, char *desc,
 FieldInfo *get_field_by_name_and_desc(ClassFile *class, char *name, char *desc)
 {
     return get_field_by_name_and_desc_(class, name, desc, 0);
+}
+
+FieldInfo *get_field_by_name(ClassFile *class, char *name)
+{
+    for (int i = 0; i < class->fields_count; i++) {
+        if (strcmp(class->fields[i].name, name) == 0) return &class->fields[i];
+    }
+    return NULL;
+}
+
+char *get_str_field_value_by_name_and_desc(Object *object)
+{
+    FieldInfo *field = get_field_by_name_and_desc(object->class, "value", "[B");
+    return object->fields[field->offset].object_value;
 }
 
 FieldInfo *get_static_field_by_name_and_desc(ClassFile *class, char *name, char *desc)
@@ -696,25 +622,16 @@ void put_field(Thread *thread, SerialHeap *heap, Frame *frame, CONSTANT_Fieldref
         init_class(thread, heap, class);
         return;
     }
-//    Slot *field;
-//    if (str_start_with(field_desc_info.bytes, "D") ||
-//        str_start_with(field_desc_info.bytes, "J")) {
-//        field = create_slot_by_size(2);
-//        field[1] = *pop_slot(frame->operand_stack);
-//        field[0] = *pop_slot(frame->operand_stack);
-//    } else {
-//        field = pop_slot(frame->operand_stack);
-//    }
-//    Object *object = pop_object(frame->operand_stack);
-//    put_field_to_map(&object->fields, field_name_info.bytes, field_desc_info.bytes, field);
-
-    Object *object = pop_object(frame->operand_stack);
-    FieldInfo *field = get_field_by_name_and_desc(object->class, field_name_info.bytes, field_desc_info.bytes);
+    FieldInfo *field = get_field_by_name_and_desc(class, field_name_info.bytes, field_desc_info.bytes);
     if (str_start_with(field_desc_info.bytes, "D") ||
         str_start_with(field_desc_info.bytes, "J")) {
-        object->fields[field->offset].value = pop_long(frame->operand_stack);
+        u8 value = pop_long(frame->operand_stack);
+        Object *object = pop_object(frame->operand_stack);
+        object->fields[field->offset].value = value;
     } else {
-        object->fields[field->offset] = *pop_slot(frame->operand_stack);
+        Slot *slot = pop_slot(frame->operand_stack);
+        Object *object = pop_object(frame->operand_stack);
+        object->fields[field->offset] = *slot;
     }
 }
 
@@ -892,7 +809,8 @@ void create_array_by_type(Thread *thread, SerialHeap *heap, Frame *frame, u1 typ
 //    memset(value->object_value, 0, size);
     void *value = malloc(size);
     memset(value, 0, size);
-    put_object_value_field_by_name_and_desc(object, "value", desc, value);
+    object->fields[0].object_value = value;
+//    put_object_value_field_by_name_and_desc(object, "value", desc, value);
 //    FieldInfo *field = get_field_by_name_and_desc(class, "value", desc);
 //    object->fields[field->offset].object_value = malloc(size);
 //    memset(object->fields[field->offset].object_value, 0, size);
@@ -925,10 +843,7 @@ void create_string_object(Thread *thread, SerialHeap *heap, Frame *frame, char *
         return;
     }
     Object *object = malloc_object(heap, class);
-//    Slot *slot = create_slot();
-//    slot->object_value = str;
-//    put_field_to_map(&object->fields, "value", "[C", slot);
-    put_object_value_field_by_name_and_desc(object->fields, "value", "[B", str);
+    put_object_value_field_by_name_and_desc(object, "value", "[B", str);
     push_object(frame->operand_stack, object);
 }
 
@@ -936,9 +851,6 @@ void create_string_object_without_back(Thread *thread, SerialHeap *heap, Frame *
 {
     ClassFile *class = load_class(thread, heap, "java/lang/String");
     Object *object = malloc_object(heap, class);
-//    Slot *slot = create_slot();
-//    slot->object_value = str;
-//    put_field_to_map(&object->fields, "value", "[C", slot);
     put_object_value_field_by_name_and_desc(object, "value", "[B", str);
     push_object(frame->operand_stack, object);
 }

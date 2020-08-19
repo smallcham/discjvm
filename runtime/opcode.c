@@ -567,54 +567,54 @@ void xastore_(SerialHeap *heap, Thread *thread, Frame *frame, char desc) {
     Slot *value = pop_slot(frame->operand_stack);
     int index = pop_int(frame->operand_stack);
     Object *ref = pop_object(frame->operand_stack);
-    u1 *_desc = malloc(3);
-    sprintf(_desc, "[%c", desc);
-    FieldInfo *field = get_field_by_name_and_desc(ref->class, "value", _desc);
+//    u1 *_desc = malloc(3);
+//    sprintf(_desc, "[%c", desc);
+//    FieldInfo *field = get_field_by_name_and_desc(ref->class, "value", _desc);
 //    Slot *field = get_field_from_map(&ref->fields, "value", _desc);
     switch (desc) {
         case 'Z': {
 //            field->object_value;
-            int *objects = ref->fields[field->offset].object_value;
+            int *objects = ref->fields[0].object_value;
             objects[index] = value->value;
             break;
         }
         case 'C': {
-            char *objects = ref->fields[field->offset].object_value;
+            char *objects = ref->fields[0].object_value;
             objects[index] = value->value;
             break;
         }
         case 'F': {
-            float *objects = ref->fields[field->offset].object_value;
+            float *objects = ref->fields[0].object_value;
             objects[index] = value->value;
             break;
         }
         case 'D': {
-            double *objects = ref->fields[field->offset].object_value;
+            double *objects = ref->fields[0].object_value;
             objects[index] = value->value;
             break;
         }
         case 'B': {
-            char *objects = ref->fields[field->offset].object_value;
+            char *objects = ref->fields[0].object_value;
             objects[index] = value->value;
             break;
         }
         case 'S': {
-            short *objects = ref->fields[field->offset].object_value;
+            short *objects = ref->fields[0].object_value;
             objects[index] = value->value;
             break;
         }
         case 'I': {
-            int *objects = ref->fields[field->offset].object_value;
+            int *objects = ref->fields[0].object_value;
             objects[index] = value->value;
             break;
         }
         case 'J': {
-            long *objects = ref->fields[field->offset].object_value;
+            long *objects = ref->fields[0].object_value;
             objects[index] = value->value;
             break;
         }
     }
-    free(_desc);
+//    free(_desc);
 }
 
 void iastore(SerialHeap *heap, Thread *thread, Frame *frame) {
@@ -1806,6 +1806,5 @@ void run(Thread *thread, SerialHeap *heap) {
     do {
         Frame *frame = get_stack(thread->vm_stack);
         exec(instructions[read_code(frame)], heap, thread, frame);
-//        ClassFile *class = load_class(thread, heap, "java/lang/System");
     } while (!is_empty_stack(thread->vm_stack));
 }
