@@ -81,13 +81,13 @@ void create_c_frame_and_invoke(Thread *thread, SerialHeap *heap, Frame *frame, c
 {
     frame->native_method = find_native(class_name, method_name, method_desc);
     push_stack(thread->c_stack, frame);
-    printf("[**INVOKENATIVE] %s.%s.%s\n", class_name, method_name, method_desc);
+    printf("[**INVOKE-NATIVE] %s.%s.%s\n", class_name, method_name, method_desc);
     invoke_native(thread, heap);
     printf("\t\t\t\t[opstack.%s.%s]", frame->class->class_name, frame->method->name);
     print_stack(frame->operand_stack);
     printf("\t\t\t\t[localvars.%s.%s]", frame->class->class_name, frame->method->name);
     print_local_variables(frame);
-    printf("[**EXCNATIVE] %s.%s.%s\n", class_name, method_name, method_desc);
+    printf("[**ESC-NATIVE] %s.%s.%s\n", class_name, method_name, method_desc);
 }
 
 void create_c_frame_and_invoke_add_params_plus1(Thread *thread, SerialHeap *heap, Frame *frame, MethodInfo *method, char *class_name, char *method_name, char *method_desc)

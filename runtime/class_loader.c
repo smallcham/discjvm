@@ -228,7 +228,6 @@ ClassFile *load_class_by_bytes(Thread *thread, SerialHeap *heap, u1 *bytes)
     class_file += sizeof(u2);
     if (class->fields_count > 0) {
         class->fields = (FieldInfo *) malloc(class->fields_count * sizeof(FieldInfo));
-        class->static_fields = create_map_by_size((int)((class->fields_count + 2) * 1.3));
         for (int i = 0; i < class->fields_count; i++) {
             class->fields[i].access_flags = l2b_2(*(u2 *) class_file);
             class_file += sizeof(u2);
@@ -579,7 +578,7 @@ FieldInfo *get_field_by_name(ClassFile *class, char *name)
     return NULL;
 }
 
-char *get_str_field_value_by_name_and_desc(Object *object)
+char *get_str_field_value_by_object(Object *object)
 {
     FieldInfo *field = get_field_by_name_and_desc(object->class, "value", "[B");
     return object->fields[field->offset].object_value;

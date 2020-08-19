@@ -12,7 +12,7 @@ void java_lang_System_initProperties_9Ljava_util_Properties10Ljava_util_Properti
 {
     //TODO 这里逻辑有问题
     Object *object = frame->local_variables[0]->object_value;
-//    push_object(frame->operand_stack, object);
+    push_object(frame->operand_stack, object);
 
     MethodInfo *method = find_method_with_desc(thread, heap, object->class, "setProperty", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Object;");
     char **_keys = keys(&VM_OPTS);

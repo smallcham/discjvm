@@ -333,7 +333,7 @@ void dload(SerialHeap *heap, Thread *thread, Frame *frame) {
 }
 
 void aload(SerialHeap *heap, Thread *thread, Frame *frame) {
-    push_stack(frame->operand_stack, frame->local_variables[step_pc1_and_read_code(frame)]);
+    push_slot(frame->operand_stack, frame->local_variables[step_pc1_and_read_code(frame)]);
     step_pc_1(frame);
 }
 

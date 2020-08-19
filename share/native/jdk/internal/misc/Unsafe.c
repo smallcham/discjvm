@@ -37,7 +37,7 @@ void jdk_internal_misc_Unsafe_objectFieldOffset1_9Ljava_lang_Class1Ljava_lang_St
 {
     Object *object = frame->local_variables[1]->object_value;
     Object *string = frame->local_variables[2]->object_value;
-    char *name = get_str_field_value_by_name_and_desc(string);
+    char *name = get_str_field_value_by_object(string);
     FieldInfo *field = get_field_by_name(object->class, name);
     push_long(frame->operand_stack, field->offset);
 }

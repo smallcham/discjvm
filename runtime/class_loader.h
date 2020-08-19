@@ -111,7 +111,7 @@ FieldInfo *get_field_by_name_and_desc(ClassFile *class, char *name, char *desc);
 
 FieldInfo *get_static_field_by_name_and_desc(ClassFile *class, char *name, char *desc);
 
-char *get_str_field_value_by_name_and_desc(Object *object);
+char *get_str_field_value_by_object(Object *object);
 
 FieldInfo *get_field_by_name(ClassFile *class, char *name);
 
