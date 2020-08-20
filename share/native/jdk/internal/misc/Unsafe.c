@@ -50,15 +50,25 @@ void jdk_internal_misc_Unsafe_storeFence_90V(Thread *thread, SerialHeap *heap, F
 void jdk_internal_misc_Unsafe_compareAndSetInt_9Ljava_lang_Object1JII0Z(Thread *thread, SerialHeap *heap, Frame *frame)
 {
     Object *ref = frame->local_variables[1]->object_value;
-    int higher = frame->local_variables[2]->value;
-    int lower = frame->local_variables[3]->value;
-    Slot *slot = (Slot*)(((int)higher & 0xffff0000) | (long)lower & 0x0000ffff);
-    int expect = frame->local_variables[4]->value;
-    int value = frame->local_variables[5]->value;
+    u8 higher = frame->local_variables[2]->value;
+    u8 lower = frame->local_variables[3]->value;
+    Slot *slot = &ref->fields[higher | lower];
+    u8 expect = frame->local_variables[4]->value;
+    u8 value = frame->local_variables[5]->value;
     if (expect == slot->value) {
         slot->value = value;
         push_int(frame->operand_stack, 1);
     } else {
         push_int(frame->operand_stack, 0);
     }
+}
+
+void jdk_internal_misc_Unsafe_getObjectVolatile_9Ljava_lang_Object1J0Ljava_lang_Object1(Thread *thread, SerialHeap *heap, Frame *frame)
+{
+    Object *ref = frame->local_variables[1]->object_value;
+    long higher = frame->local_variables[2]->value;
+    long lower = frame->local_variables[3]->value;
+    push_object(frame->operand_stack, ref->fields[higher | lower].object_value);
+//    printf_err("err");
+//    exit(-1);
 }

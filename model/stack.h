@@ -36,7 +36,7 @@ int push_int(Stack *stack, int value);
 
 int push_float(Stack *stack, float value);
 
-int push_long(Stack *stack, long value);
+int push_long(Stack *stack, u8 value);
 
 void push_long_from(Stack *source, Stack *target);
 
@@ -66,7 +66,7 @@ int pop_int(Stack *stack);
 
 float pop_float(Stack *stack);
 
-long pop_long(Stack *stack);
+u8 pop_long(Stack *stack);
 
 double pop_double(Stack *stack);
 

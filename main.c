@@ -9,5 +9,8 @@ int main(int argc, char *argv[]) {
     sprintf(path, "%s/../test/class/Hello.class", buf);
     start_vm(path);
 
+//    u8 a = 0xaaaaaaaaaaaaaaad;
+//    u4 b = (int)a;
+//    u4 c = (int)(a>>32);
     return 0;
 }

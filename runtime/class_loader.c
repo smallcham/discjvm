@@ -431,7 +431,7 @@ void do_invokestatic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2
     MethodInfo *method = find_method_with_desc(thread, heap, class, method_name_info.bytes, method_desc_info.bytes);
     if (NULL == method) exit(-1);
     if ((method->access_flags & ACC_NATIVE) != 0) {
-        create_c_frame_and_invoke_add_params(thread, heap, frame, method, class->class_name, method->name, method->desc);
+        create_c_frame_and_invoke_add_params(thread, heap, frame, class->class_name, method);
     } else {
         create_vm_frame_by_method_add_params(thread, class, frame, method, get_method_code(class->constant_pool, *method));
     }
@@ -450,7 +450,7 @@ void do_invokeinterface_by_index(Thread *thread, SerialHeap *heap, Frame *frame,
     MethodInfo *method = find_method_iter_super_with_desc(thread, heap, &class, method_name, method_name);
     if (NULL == method) exit(-1);
     if ((method->access_flags & ACC_NATIVE) != 0) {
-        create_c_frame_and_invoke_add_params_plus1(thread, heap, frame, method, class->class_name, method->name, method->desc);
+        create_c_frame_and_invoke_add_params_plus1(thread, heap, frame, class->class_name, method);
     } else {
         create_vm_frame_by_method_add_params_plus1(thread, class, frame, method, get_method_code(class->constant_pool, *method));
     }
@@ -469,7 +469,7 @@ void do_invokespecial_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
     MethodInfo *method = find_method_iter_super_with_desc(thread, heap, &class, method_name_info.bytes, method_desc_info.bytes);
     if (NULL == method) exit(-1);
     if ((method->access_flags & ACC_NATIVE) != 0) {
-        create_c_frame_and_invoke_add_params_plus1(thread, heap, frame, method, class->class_name, method->name, method->desc);
+        create_c_frame_and_invoke_add_params_plus1(thread, heap, frame, class->class_name, method);
     } else {
         create_vm_frame_by_method_add_params_plus1(thread, class, frame, method, get_method_code(class->constant_pool, *method));
     }
@@ -488,7 +488,7 @@ void do_invokevirtual_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
     MethodInfo *method = find_method_iter_super_with_desc(thread, heap, &class, method_name_info.bytes, method_desc_info.bytes);
     if (NULL == method) exit(-1);
     if ((method->access_flags & ACC_NATIVE) != 0) {
-        create_c_frame_and_invoke_add_params_plus1(thread, heap, frame, method, class->class_name, method->name, method->desc);
+        create_c_frame_and_invoke_add_params_plus1(thread, heap, frame, class->class_name, method);
     } else {
         create_vm_frame_by_method_add_params_plus1(thread, class, frame, method, get_method_code(class->constant_pool, *method));
     }

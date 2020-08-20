@@ -842,34 +842,46 @@ void ineg(SerialHeap *heap, Thread *thread, Frame *frame) {
 void lneg(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void fneg(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void dneg(SerialHeap *heap, Thread *thread, Frame *frame) {}
-void ishl(SerialHeap *heap, Thread *thread, Frame *frame) {}
-void lshl(SerialHeap *heap, Thread *thread, Frame *frame) {}
 
-void ishr(SerialHeap *heap, Thread *thread, Frame *frame) {
+void ishl(SerialHeap *heap, Thread *thread, Frame *frame) {
     int value2 = pop_int(frame->operand_stack);
     int value1 = pop_int(frame->operand_stack);
     push_int(frame->operand_stack, value1 << (value2 & 0x1f));
     step_pc_1(frame);
 }
 
-void lshr(SerialHeap *heap, Thread *thread, Frame *frame) {
+void lshl(SerialHeap *heap, Thread *thread, Frame *frame) {
     long value2 = pop_long(frame->operand_stack);
     long value1 = pop_long(frame->operand_stack);
-    push_long(frame->operand_stack, value1 << (value2 & 0x1f));
+    push_long(frame->operand_stack, value1 << (value2 & 0x3f));
     step_pc_1(frame);
 }
 
-void iushr(SerialHeap *heap, Thread *thread, Frame *frame) {
+void ishr(SerialHeap *heap, Thread *thread, Frame *frame) {
     int value2 = pop_int(frame->operand_stack);
     int value1 = pop_int(frame->operand_stack);
     push_int(frame->operand_stack, value1 >> (value2 & 0x1f));
     step_pc_1(frame);
 }
 
+void lshr(SerialHeap *heap, Thread *thread, Frame *frame) {
+    long value2 = pop_long(frame->operand_stack);
+    long value1 = pop_long(frame->operand_stack);
+    push_long(frame->operand_stack, value1 >> (value2 & 0x3f));
+    step_pc_1(frame);
+}
+
+void iushr(SerialHeap *heap, Thread *thread, Frame *frame) {
+    int value2 = pop_int(frame->operand_stack);
+    int value1 = pop_int(frame->operand_stack);
+    push_int(frame->operand_stack, (int)(value1 >> ((unsigned int)value2 & 0x1f)));
+    step_pc_1(frame);
+}
+
 void lushr(SerialHeap *heap, Thread *thread, Frame *frame) {
     long value2 = pop_long(frame->operand_stack);
     long value1 = pop_long(frame->operand_stack);
-    push_long(frame->operand_stack, value1 >> (value2 & 0x1f));
+    push_long(frame->operand_stack, (long)((unsigned long)value1 >> (value2 & 0x3f)));
     step_pc_1(frame);
 }
 

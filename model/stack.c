@@ -113,10 +113,10 @@ int push_float(Stack *stack, float value)
     return push_int(stack, (int) value);
 }
 
-int push_long(Stack *stack, long value)
+int push_long(Stack *stack, u8 value)
 {
-    int c = push_int(stack, (int) value);
-    return c + push_int(stack, (int) (value >> 32)) == 2;
+    int c = push_int(stack, (u4) value);
+    return c + push_int(stack, (u4) (value >> 32)) == 2;
 }
 
 void push_long_from(Stack *source, Stack *target)
@@ -129,7 +129,7 @@ void push_long_from(Stack *source, Stack *target)
 
 int push_double(Stack *stack, double value)
 {
-    return push_long(stack, (long) value);
+    return push_long(stack, (u8) value);
 }
 
 void push_double_from(Stack *source, Stack *target)
@@ -208,10 +208,10 @@ float pop_float(Stack *stack)
     return (float) pop_int(stack);
 }
 
-long pop_long(Stack *stack)
+u8 pop_long(Stack *stack)
 {
-    long higher = (long)pop_int(stack);
-    int lower = pop_int(stack);
+    u8 higher = (u8)pop_int(stack);
+    u8 lower = ((u8)pop_int(stack)) << 32;
     return higher | lower;
 }
 

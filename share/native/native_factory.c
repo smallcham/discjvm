@@ -4,6 +4,8 @@
 
 #include "native_factory.h"
 
+Frame *create_c_frame(Thread *thread, SerialHeap *heap, Frame *frame, char *class_name, MethodInfo* method);
+
 void init_native_factory()
 {
     //函数名 '左括号' 替换为 '9', '右括号' 替换为 '0', '/' 替换为 '_', ';' 替换为 '1'
@@ -37,6 +39,7 @@ void init_native_factory()
     put_map(&native_pool, "jdk/internal/misc/Unsafe.objectFieldOffset1(Ljava/lang/Class;Ljava/lang/String;)J", jdk_internal_misc_Unsafe_objectFieldOffset1_9Ljava_lang_Class1Ljava_lang_String10J);
     put_map(&native_pool, "jdk/internal/misc/Unsafe.storeFence()V", jdk_internal_misc_Unsafe_storeFence_90V);
     put_map(&native_pool, "jdk/internal/misc/Unsafe.compareAndSetInt(Ljava/lang/Object;JII)Z", jdk_internal_misc_Unsafe_compareAndSetInt_9Ljava_lang_Object1JII0Z);
+    put_map(&native_pool, "jdk/internal/misc/Unsafe.getObjectVolatile(Ljava/lang/Object;J)Ljava/lang/Object;", jdk_internal_misc_Unsafe_getObjectVolatile_9Ljava_lang_Object1J0Ljava_lang_Object1);
 
     //ClassLoader
     put_map(&native_pool, "java/lang/ClassLoader.registerNatives()V", java_lang_ClassLoader_registerNatives_90V);
@@ -74,30 +77,50 @@ void invoke_native(Thread *thread, SerialHeap *heap)
         NativeMethod method = frame->native_method;
         method(thread, heap, frame);
         frame->native_method = NULL;
+        free(frame);
     } while (!is_empty_stack(thread->c_stack));
 }
 
-void create_c_frame_and_invoke(Thread *thread, SerialHeap *heap, Frame *frame, char *class_name, char *method_name, char *method_desc)
+void print_native_log(Frame *frame, MethodInfo *method)
 {
-    frame->native_method = find_native(class_name, method_name, method_desc);
-    push_stack(thread->c_stack, frame);
-    printf("[**INVOKE-NATIVE] %s.%s.%s\n", class_name, method_name, method_desc);
-    invoke_native(thread, heap);
     printf("\t\t\t\t[opstack.%s.%s]", frame->class->class_name, frame->method->name);
     print_stack(frame->operand_stack);
     printf("\t\t\t\t[localvars.%s.%s]", frame->class->class_name, frame->method->name);
     print_local_variables(frame);
-    printf("[**ESC-NATIVE] %s.%s.%s\n", class_name, method_name, method_desc);
+    printf("[**ESC-NATIVE] %s.%s.%s\n", frame->class->class_name, method->name, method->desc);
 }
 
-void create_c_frame_and_invoke_add_params_plus1(Thread *thread, SerialHeap *heap, Frame *frame, MethodInfo *method, char *class_name, char *method_name, char *method_desc)
+Frame *create_c_frame(Thread *thread, SerialHeap *heap, Frame *frame, char *class_name, MethodInfo* method)
 {
-    add_params_and_plus1(frame, frame, method);
-    create_c_frame_and_invoke(thread, heap, frame, class_name, method_name, method_desc);
+    Frame *new_frame = malloc(sizeof(Frame) + sizeof(Slot) * (method->params_count + 1));
+    new_frame->native_method = find_native(class_name, method->name, method->desc);
+    new_frame->operand_stack = frame->operand_stack;
+    new_frame->constant_pool = frame->constant_pool;
+    new_frame->method = method;
+    new_frame->code_info = NULL;
+    new_frame->pop_hook = NULL;
+    new_frame->class = frame->class;
+    new_frame->pc = 0;
+    push_stack(thread->c_stack, new_frame);
+    return new_frame;
 }
 
-void create_c_frame_and_invoke_add_params(Thread *thread, SerialHeap *heap, Frame *frame, MethodInfo *method, char *class_name, char *method_name, char *method_desc)
+Frame *create_c_frame_and_invoke_add_params_plus1(Thread *thread, SerialHeap *heap, Frame *frame, char *class_name, MethodInfo *method)
 {
-    add_params(frame, frame, method);
-    create_c_frame_and_invoke(thread, heap, frame, class_name, method_name, method_desc);
+    Frame *new_frame = create_c_frame(thread, heap, frame, class_name, method);
+    add_params_and_plus1(frame, new_frame, method);
+    printf("[**INVOKE-NATIVE] %s.%s.%s\n", class_name, method->name, method->desc);
+    invoke_native(thread, heap);
+    print_native_log(frame, method);
+    return new_frame;
+}
+
+Frame *create_c_frame_and_invoke_add_params(Thread *thread, SerialHeap *heap, Frame *frame, char *class_name, MethodInfo *method)
+{
+    Frame *new_frame = create_c_frame(thread, heap, frame, class_name, method);
+    add_params(frame, new_frame, method);
+    printf("[**INVOKE-NATIVE] %s.%s.%s\n", class_name, method->name, method->desc);
+    invoke_native(thread, heap);
+    print_native_log(frame, method);
+    return new_frame;
 }
