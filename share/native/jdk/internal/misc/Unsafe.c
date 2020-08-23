@@ -69,6 +69,7 @@ void jdk_internal_misc_Unsafe_getObjectVolatile_9Ljava_lang_Object1J0Ljava_lang_
     long higher = frame->local_variables[2]->value;
     long lower = frame->local_variables[3]->value;
     push_object(frame->operand_stack, ref->fields[higher | lower].object_value);
+//    push_object(frame->operand_stack, ref->fields[higher | lower].object_value);
 //    printf_err("err");
 //    exit(-1);
 }
