@@ -63,13 +63,50 @@ void jdk_internal_misc_Unsafe_compareAndSetInt_9Ljava_lang_Object1JII0Z(Thread *
     }
 }
 
+void jdk_internal_misc_Unsafe_compareAndSetObject_9Ljava_lang_Object1JLjava_lang_Object1Ljava_lang_Object10Z(Thread *thread, SerialHeap *heap, Frame *frame)
+{
+    Array *ref = frame->local_variables[1]->object_value;
+    u8 higher = frame->local_variables[2]->value;
+    u8 lower = frame->local_variables[3]->value;
+    Slot *slot = &ref->objects[0]->fields[higher | lower];
+    Object *expect = frame->local_variables[4]->object_value;
+    Object *value = frame->local_variables[5]->object_value;
+    if (expect == slot->object_value) {
+        slot->object_value = value;
+        push_int(frame->operand_stack, 1);
+    } else {
+        push_int(frame->operand_stack, 0);
+    }
+}
+
+void jdk_internal_misc_Unsafe_compareAndSetLong_9Ljava_lang_Object1JJJ0Z(Thread *thread, SerialHeap *heap, Frame *frame)
+{
+    Array *ref = frame->local_variables[1]->object_value;
+    u8 higher = frame->local_variables[2]->value;
+    u8 lower = frame->local_variables[3]->value;
+    Slot *slot = &ref->objects[0]->fields[higher | lower];
+    Object *expect = frame->local_variables[4]->object_value;
+    Object *value = frame->local_variables[5]->object_value;
+    if (expect == slot->object_value) {
+        slot->object_value = value;
+        push_int(frame->operand_stack, 1);
+    } else {
+        push_int(frame->operand_stack, 0);
+    }
+}
+
 void jdk_internal_misc_Unsafe_getObjectVolatile_9Ljava_lang_Object1J0Ljava_lang_Object1(Thread *thread, SerialHeap *heap, Frame *frame)
 {
-    Object *ref = frame->local_variables[1]->object_value;
-    long higher = frame->local_variables[2]->value;
-    long lower = frame->local_variables[3]->value;
-    push_object(frame->operand_stack, ref->fields[higher | lower].object_value);
-//    push_object(frame->operand_stack, ref->fields[higher | lower].object_value);
-//    printf_err("err");
-//    exit(-1);
+//    Object *ref = frame->local_variables[1]->object_value;
+//    long higher = frame->local_variables[2]->value;
+//    long lower = frame->local_variables[3]->value;
+//    int idx = higher | lower;
+//    FieldInfo field = ref->class->fields[idx];
+//    if (field.offset >= ref->class->object_fields_count) {
+//        push_slot(frame->operand_stack, NULL_SLOT);
+//    } else {
+//        push_slot(frame->operand_stack, ref->fields[field.offset].object_value);
+//    }
+    //TODO
+    push_slot(frame->operand_stack, NULL_SLOT);
 }

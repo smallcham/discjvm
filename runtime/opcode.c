@@ -851,7 +851,7 @@ void ishl(SerialHeap *heap, Thread *thread, Frame *frame) {
 }
 
 void lshl(SerialHeap *heap, Thread *thread, Frame *frame) {
-    long value2 = pop_long(frame->operand_stack);
+    int value2 = pop_int(frame->operand_stack);
     long value1 = pop_long(frame->operand_stack);
     push_long(frame->operand_stack, value1 << (value2 & 0x3f));
     step_pc_1(frame);
@@ -865,7 +865,7 @@ void ishr(SerialHeap *heap, Thread *thread, Frame *frame) {
 }
 
 void lshr(SerialHeap *heap, Thread *thread, Frame *frame) {
-    long value2 = pop_long(frame->operand_stack);
+    int value2 = pop_int(frame->operand_stack);
     long value1 = pop_long(frame->operand_stack);
     push_long(frame->operand_stack, value1 >> (value2 & 0x3f));
     step_pc_1(frame);
@@ -879,7 +879,7 @@ void iushr(SerialHeap *heap, Thread *thread, Frame *frame) {
 }
 
 void lushr(SerialHeap *heap, Thread *thread, Frame *frame) {
-    long value2 = pop_long(frame->operand_stack);
+    int value2 = pop_int(frame->operand_stack);
     long value1 = pop_long(frame->operand_stack);
     push_long(frame->operand_stack, (long)((unsigned long)value1 >> (value2 & 0x3f)));
     step_pc_1(frame);

@@ -359,6 +359,7 @@ ClassFile *load_primitive_class(Thread *thread, SerialHeap *heap, char *primitiv
     memset(class, 0, sizeof(ClassFile));
     class->class_name = (u1*)name;
     class->fields_count = 1;
+    class->object_fields_count = 1;
     class->class_object = malloc_object(heap, load_class(thread, heap, "java/lang/Class"));
     class->init_state = CLASS_INITED;
     put_class_to_cache(&heap->class_pool, class);

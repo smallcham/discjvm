@@ -38,6 +38,7 @@ void put_class_to_cache(HashMap **pool, ClassFile *class)
 Object *malloc_object(SerialHeap *heap, ClassFile *class)
 {
     Object *object = malloc(sizeof(Object));
+    memset(object, 0, sizeof(Object));
     object->class = class;
     object->fields = create_slot_by_size(class->object_fields_count);
 //    object->fields = create_map(class->fields_count * 1.3 + 1);
@@ -47,6 +48,7 @@ Object *malloc_object(SerialHeap *heap, ClassFile *class)
 Object *malloc_null_object(SerialHeap *heap)
 {
     Object *object = malloc(sizeof(Object));
+    memset(object, 0, sizeof(Object));
     object->class = NULL;
     object->fields = NULL;
     return object;
@@ -55,8 +57,12 @@ Object *malloc_null_object(SerialHeap *heap)
 Array *malloc_array(SerialHeap *heap, ClassFile *class, int length)
 {
     Array *array = malloc(sizeof(Array) + sizeof(Object) * length);
+    memset(array, 0, sizeof(Array) + sizeof(Object) * length);
     array->length = length;
     array->class = class;
+    for (int i = 0; i < length; i++) {
+        array->objects[i] = malloc_object(heap, class);
+    }
     return array;
 }
 

@@ -27,7 +27,11 @@ Slot *create_slot_set_value(u4 value)
 
 Slot *create_slot_by_size(int size)
 {
+    if (size < 1) {
+        return NULL;
+    }
     Slot *slot = malloc(sizeof(Slot) * size);
+    memset(slot, 0, sizeof(Slot) * size);
     for (int i = 0; i < size; i++) {
         slot[i].value = 0;
         slot[i].object_value = NULL;
