@@ -20,15 +20,19 @@ void free_frame(Frame **frame)
     *frame = NULL;
 }
 
+Frame *create_vm_frame_by_method_with_push(Thread* thread, ClassFile *class, MethodInfo *method, CodeAttribute *code)
+{
+    Frame *frame = create_vm_frame_by_method(thread, class, method, code);
+    if (NULL != frame) push_stack(thread->vm_stack, frame);
+    return frame;
+}
+
 Frame *create_vm_frame_by_method(Thread* thread, ClassFile *class, MethodInfo *method, CodeAttribute *code)
 {
     if (NULL == code) return NULL;
     Frame *frame = (Frame*)malloc(sizeof(Frame) + (sizeof(Slot) * code->max_locals));
     for (int i = 0; i < code->max_locals; i++) {
         frame->local_variables[i] = create_slot();
-//        frame->local_variables[i] = malloc(sizeof(Slot));
-//        frame->local_variables[i]->value = 0;
-//        frame->local_variables[i]->object_value = NULL;
     }
     frame->operand_stack = create_stack(code->max_stack);
     frame->constant_pool = class->constant_pool;
@@ -37,28 +41,26 @@ Frame *create_vm_frame_by_method(Thread* thread, ClassFile *class, MethodInfo *m
     frame->pop_hook = NULL;
     frame->class = class;
     frame->pc = 0;
-    push_stack(thread->vm_stack, frame);
-//    printf("[INVOKE] %s - %s.%s\n", frame->class->class_name, frame->method->name, frame->method->desc);
     return frame;
 }
 
 Frame *create_vm_frame_by_method_add_params(Thread* thread, ClassFile *class, Frame *frame, MethodInfo *method, CodeAttribute *code)
 {
-    Frame *new_frame = create_vm_frame_by_method(thread, class, method, code);
+    Frame *new_frame = create_vm_frame_by_method_with_push(thread, class, method, code);
     if (NULL != new_frame) add_params(frame, new_frame, method);
     return new_frame;
 }
 
 Frame *create_vm_frame_by_method_add_params_plus1(Thread* thread, ClassFile *class, Frame *frame, MethodInfo *method, CodeAttribute *code)
 {
-    Frame *new_frame = create_vm_frame_by_method(thread, class, method, code);
+    Frame *new_frame = create_vm_frame_by_method_with_push(thread, class, method, code);
     if (NULL != new_frame) add_params_and_plus1(frame, new_frame, method);
     return new_frame;
 }
 
 Frame *create_vm_frame_by_method_add_hook(Thread* thread, ClassFile *class, MethodInfo *method, CodeAttribute *code, PopHook hook)
 {
-    Frame *frame = create_vm_frame_by_method(thread, class, method, code);
+    Frame *frame = create_vm_frame_by_method_with_push(thread, class, method, code);
     if (NULL == frame) return NULL;
     frame->pop_hook = hook;
     return frame;

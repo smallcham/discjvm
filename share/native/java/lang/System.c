@@ -19,6 +19,8 @@ void java_lang_System_initProperties_9Ljava_util_Properties10Ljava_util_Properti
         push_object(frame->operand_stack, object);
         create_string_object_without_back(thread, heap, frame, _keys[i]);
         create_string_object_without_back(thread, heap, frame, get_map(&VM_OPTS, _keys[i]));
+//        Frame *new_frame = create_vm_frame_by_method(thread, object->class, method, get_method_code(object->class->constant_pool, *method));
+//        add_params_and_plus1(frame, new_frame, method);
         create_vm_frame_by_method_add_params_plus1(thread, object->class, frame, method, get_method_code(object->class->constant_pool, *method));
     }
     free(_keys);

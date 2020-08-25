@@ -161,7 +161,7 @@ void* pop_stack(Stack *stack)
 void *get_stack(Stack *stack)
 {
     if (is_empty_stack(stack)) return NULL;
-    return (void *) stack->tail->value;
+    return stack->tail->value;
 }
 
 Slot *get_slot(Stack *stack)

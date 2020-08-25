@@ -162,13 +162,13 @@ void start_vm(char *class_path)
 
     //初始化3阶段
     MethodInfo *init_phase3 = find_method_with_desc(&thread, heap, system, "initPhase3", "()V");
-    Frame *phase3_frame = create_vm_frame_by_method(&thread, system, init_phase3, get_method_code(system->constant_pool, *init_phase3));
+    Frame *phase3_frame = create_vm_frame_by_method_with_push(&thread, system, init_phase3, get_method_code(system->constant_pool, *init_phase3));
     push_slot(phase3_frame->operand_stack, system_object);
     add_params_and_plus1(phase3_frame, phase3_frame, init_phase3);
 
     //初始化2阶段
     MethodInfo *init_phase2 = find_method_with_desc(&thread, heap, system, "initPhase2", "(ZZ)I");
-    Frame *phase2_frame = create_vm_frame_by_method(&thread, system, init_phase2, get_method_code(system->constant_pool, *init_phase2));
+    Frame *phase2_frame = create_vm_frame_by_method_with_push(&thread, system, init_phase2, get_method_code(system->constant_pool, *init_phase2));
     push_slot(phase2_frame->operand_stack, system_object);
     push_slot(phase2_frame->operand_stack, create_slot_set_value(1));
     push_slot(phase2_frame->operand_stack, create_slot_set_value(1));
@@ -176,12 +176,12 @@ void start_vm(char *class_path)
 
     //初始化1阶段
     MethodInfo *init_phase1 = find_method_with_desc(&thread, heap, system, "initPhase1", "()V");
-    Frame *phase1_frame = create_vm_frame_by_method(&thread, system, init_phase1, get_method_code(system->constant_pool, *init_phase1));
+    Frame *phase1_frame = create_vm_frame_by_method_with_push(&thread, system, init_phase1, get_method_code(system->constant_pool, *init_phase1));
     push_slot(phase1_frame->operand_stack, system_object);
     add_params_and_plus1(phase1_frame, phase1_frame, init_phase1);
 
     //创建main Thread
-    Frame *jthread_frame = create_vm_frame_by_method(&thread, jthread, jthread_init, get_method_code(jthread->constant_pool, *jthread_init));
+    Frame *jthread_frame = create_vm_frame_by_method_with_push(&thread, jthread, jthread_init, get_method_code(jthread->constant_pool, *jthread_init));
     push_slot(jthread_frame->operand_stack, jthread_object);
     push_slot(jthread_frame->operand_stack, jthread_group_object);
     create_string_object_without_back(&thread, heap, jthread_frame, "main");
@@ -190,7 +190,7 @@ void start_vm(char *class_path)
 //    run(&thread, heap);
 
     //创建ThreadGroup
-    Frame *jthread_group_frame = create_vm_frame_by_method(&thread, jthread_group, jthread_group_init, get_method_code(jthread_group->constant_pool, *jthread_group_init));
+    Frame *jthread_group_frame = create_vm_frame_by_method_with_push(&thread, jthread_group, jthread_group_init, get_method_code(jthread_group->constant_pool, *jthread_group_init));
     push_slot(jthread_group_frame->operand_stack, jthread_group_object);
     add_params_and_plus1(jthread_group_frame, jthread_group_frame, jthread_group_init);
 
