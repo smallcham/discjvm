@@ -135,7 +135,6 @@ void nop(SerialHeap *heap, Thread *thread, Frame *frame) {
 
 void aconst_null(SerialHeap *heap, Thread *thread, Frame *frame) {
     push_slot(frame->operand_stack, NULL_SLOT);
-//    create_null_object(thread, heap, frame);
     step_pc_1(frame);
 }
 

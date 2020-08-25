@@ -10,4 +10,8 @@
 
 void printf_err(const char *format, ...);
 
+void printf_warn(const char *format, ...);
+
+void printf_succ(const char *format, ...);
+
 #endif //DISCJVM_IOUTIL_H

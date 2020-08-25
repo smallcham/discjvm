@@ -221,6 +221,8 @@ Slot *NULL_SLOT;
 
 u1 *get_utf8_bytes(ConstantPool *pool, u2 index);
 
+int is_array(void *ref);
+
 Slot *create_slot();
 
 Slot *create_slot_set_value(u4 value);

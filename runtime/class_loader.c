@@ -722,37 +722,37 @@ u1 *get_array_class_name_by_name_str(u1 *name)
 void create_object_with_backpc(Thread *thread, SerialHeap *heap, Frame *frame, u2 index, int back)
 {
     CONSTANT_Class_info class_info = *(CONSTANT_Class_info*)frame->constant_pool[index].info;
-    u1 *class_name = get_utf8_bytes(frame->constant_pool, class_info.name_index);
-    int is_arr = class_name[0] == '[';
-    class_name = get_array_class_name_by_name_str(class_name);
-    ClassFile *class = load_class(thread, heap, class_name);
+//    u1 *class_name = get_utf8_bytes(frame->constant_pool, class_info.name_index);
+//    int is_arr = class_name[0] == '[';
+//    class_name = get_array_class_name_by_name_str(class_name);
+    ClassFile *class = load_class_by_class_info_name_index(thread, heap, frame->constant_pool, class_info.name_index);
     if (class_is_not_init(class)) {
         back_pc(frame, back);
         init_class(thread, heap, class);
         return;
     }
-    if (is_arr) {
-        push_object(frame->operand_stack, malloc_array(heap, class, 0));
-    } else {
+//    if (is_arr) {
+//        push_object(frame->operand_stack, malloc_array(heap, class, 0));
+//    } else {
         push_object(frame->operand_stack, malloc_object(heap, class));
-    }
+//    }
 }
 
 void create_object_with_class_name_and_backpc(Thread *thread, SerialHeap *heap, Frame *frame, char *class_name, int back)
 {
-    int is_arr = class_name[0] == '[';
-    class_name = get_array_class_name_by_name_str(class_name);
+//    int is_arr = class_name[0] == '[';
+//    class_name = get_array_class_name_by_name_str(class_name);
     ClassFile *class = load_class(thread, heap, class_name);
     if (class_is_not_init(class)) {
         back_pc(frame, back);
         init_class(thread, heap, class);
         return;
     }
-    if (is_arr) {
-        push_object(frame->operand_stack, malloc_array(heap, class, 0));
-    } else {
+//    if (is_arr) {
+//        push_object(frame->operand_stack, malloc_array(heap, class, 0));
+//    } else {
         push_object(frame->operand_stack, malloc_object(heap, class));
-    }
+//    }
 }
 
 void create_object(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
@@ -864,7 +864,10 @@ void create_array_reference(Thread *thread, SerialHeap *heap, Frame *frame, u2 i
         return;
     }
     int count = pop_int(frame->operand_stack);
-    push_object(frame->operand_stack, malloc_array(heap, class, count));
+    char *_arr_name = malloc(strlen(class->class_name) + 2);
+    sprintf(_arr_name, "[%s", class->class_name);
+    push_object(frame->operand_stack, malloc_array(heap, load_primitive_class(thread, heap, _arr_name), count));
+    free(_arr_name);
 }
 
 ClassFile *load_class_by_class_info_name_index(Thread *thread, SerialHeap *heap, ConstantPool *constant_pool, u2 index)

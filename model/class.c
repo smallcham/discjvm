@@ -38,3 +38,9 @@ Slot *create_slot_by_size(int size)
     }
     return slot;
 }
+
+int is_array(void *ref)
+{
+    Object *object = ref;
+    return object->class->class_name[0] == '[';
+}

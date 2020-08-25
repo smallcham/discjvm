@@ -89,7 +89,7 @@ void print_native_log(Frame *frame, MethodInfo *method)
     print_stack(frame->operand_stack);
     printf("\t\t\t\t[localvars.%s.%s]", frame->class->class_name, frame->method->name);
     print_local_variables(frame);
-    printf("[**ESC-NATIVE] %s.%s.%s\n", frame->class->class_name, method->name, method->desc);
+    printf_warn("[**ESC-NATIVE] %s.%s.%s\n", frame->class->class_name, method->name, method->desc);
 }
 
 Frame *create_c_frame(Thread *thread, SerialHeap *heap, Frame *frame, char *class_name, MethodInfo* method)
@@ -111,7 +111,7 @@ Frame *create_c_frame_and_invoke_add_params_plus1(Thread *thread, SerialHeap *he
 {
     Frame *new_frame = create_c_frame(thread, heap, frame, class_name, method);
     add_params_and_plus1(frame, new_frame, method);
-    printf("[**INVOKE-NATIVE] %s.%s.%s\n", class_name, method->name, method->desc);
+    printf_warn("[**INVOKE-NATIVE] %s.%s.%s\n", class_name, method->name, method->desc);
     invoke_native(thread, heap);
     print_native_log(frame, method);
     return new_frame;
@@ -121,7 +121,7 @@ Frame *create_c_frame_and_invoke_add_params(Thread *thread, SerialHeap *heap, Fr
 {
     Frame *new_frame = create_c_frame(thread, heap, frame, class_name, method);
     add_params(frame, new_frame, method);
-    printf("[**INVOKE-NATIVE] %s.%s.%s\n", class_name, method->name, method->desc);
+    printf_warn("[**INVOKE-NATIVE] %s.%s.%s\n", class_name, method->name, method->desc);
     invoke_native(thread, heap);
     print_native_log(frame, method);
     return new_frame;
