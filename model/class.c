@@ -41,6 +41,18 @@ Slot *create_slot_by_size(int size)
 
 int is_array(void *ref)
 {
-    Object *object = ref;
+    Array *object = ref;
     return object->class->class_name[0] == '[';
+}
+
+int is_object_array(void *ref)
+{
+    Array *object = ref;
+    return is_array(ref) && object->class->class_name[1] == 'L';
+}
+
+int is_primitive_array(void *ref)
+{
+    Array *object = ref;
+    return is_array(ref) && object->class->class_name[1] != 'L';
 }

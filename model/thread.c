@@ -149,6 +149,23 @@ void add_params(Frame *frame, Frame *new_frame, MethodInfo *method)
     free(slots);
 }
 
+u8 get_long_localvar(Frame *frame, int index)
+{
+    u8 higher = frame->local_variables[index]->value;
+    u8 lower = frame->local_variables[index + 1]->value;
+    return higher | lower;
+}
+
+u4 get_localvar(Frame *frame, int index)
+{
+    return frame->local_variables[index]->value;
+}
+
+void *get_ref_localvar(Frame *frame, int index)
+{
+    return frame->local_variables[index]->object_value;
+}
+
 void print_local_variables(Frame *frame)
 {
     printf("\t\t\t<");

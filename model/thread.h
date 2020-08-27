@@ -45,6 +45,12 @@ void free_frame(Frame **frame);
 
 void print_local_variables(Frame *frame);
 
+u4 get_localvar(Frame *frame, int index);
+
+u8 get_long_localvar(Frame *frame, int index);
+
+void *get_ref_localvar(Frame *frame, int index);
+
 void add_params(Frame *frame, Frame *new_frame, MethodInfo *method);
 
 void add_params_and_plus1(Frame *frame, Frame *new_frame, MethodInfo *method);

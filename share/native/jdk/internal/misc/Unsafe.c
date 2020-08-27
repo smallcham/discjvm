@@ -10,8 +10,18 @@ void jdk_internal_misc_Unsafe_registerNatives_90V(Thread *thread, SerialHeap *he
 
 void jdk_internal_misc_Unsafe_arrayBaseOffset0_9java_lang_Class10I(Thread *thread, SerialHeap *heap, Frame *frame)
 {
-    Object *object = frame->local_variables[1]->object_value;
-    push_int(frame->operand_stack, 0);
+    Array *ref = frame->local_variables[1]->object_value;
+    if (!is_array(ref)) {
+        printf_err("Invalid Class, [%s] Not A Array", ref->class->class_name);
+        exit(-1);
+    } else if (is_object_array(ref)) {
+        push_int(frame->operand_stack, 0);
+    } else if (is_primitive_array(ref)) {
+        push_int(frame->operand_stack, 0);
+    } else {
+        //ShouldNotReachHere
+        printf_err("ShouldNotReachHere");
+    }
 }
 
 void jdk_internal_misc_Unsafe_arrayIndexScale0_9Ljava_lang_Class10I(Thread *thread, SerialHeap *heap, Frame *frame)
@@ -36,8 +46,8 @@ void jdk_internal_misc_Unsafe_unalignedAccess0_90Z(Thread *thread, SerialHeap *h
 
 void jdk_internal_misc_Unsafe_objectFieldOffset1_9Ljava_lang_Class1Ljava_lang_String10J(Thread *thread, SerialHeap *heap, Frame *frame)
 {
-    Object *object = frame->local_variables[1]->object_value;
-    Object *string = frame->local_variables[2]->object_value;
+    Object *object = get_ref_localvar(frame, 1);
+    Object *string = get_ref_localvar(frame, 2);
     char *name = get_str_field_value_by_object(string);
     FieldInfo *field = get_field_by_name(object->class, name);
     push_long(frame->operand_stack, field->offset);
@@ -50,14 +60,13 @@ void jdk_internal_misc_Unsafe_storeFence_90V(Thread *thread, SerialHeap *heap, F
 
 void jdk_internal_misc_Unsafe_compareAndSetInt_9Ljava_lang_Object1JII0Z(Thread *thread, SerialHeap *heap, Frame *frame)
 {
-    Object *ref = frame->local_variables[1]->object_value;
-    u8 higher = frame->local_variables[2]->value;
-    u8 lower = frame->local_variables[3]->value;
-    Slot *slot = &ref->fields[higher | lower];
-    u8 expect = frame->local_variables[4]->value;
-    u8 value = frame->local_variables[5]->value;
-    if (expect == slot->value) {
-        slot->value = value;
+    Object *ref = get_ref_localvar(frame, 1);
+    u8 offset = get_long_localvar(frame, 2);
+    Slot *slot = &ref->fields[offset];
+    u8 e = get_localvar(frame, 4);
+    u8 x = get_localvar(frame, 5);
+    if (e == slot->value) {
+        slot->value = x;
         push_int(frame->operand_stack, 1);
     } else {
         push_int(frame->operand_stack, 0);
@@ -66,20 +75,22 @@ void jdk_internal_misc_Unsafe_compareAndSetInt_9Ljava_lang_Object1JII0Z(Thread *
 
 void jdk_internal_misc_Unsafe_compareAndSetObject_9Ljava_lang_Object1JLjava_lang_Object1Ljava_lang_Object10Z(Thread *thread, SerialHeap *heap, Frame *frame)
 {
-    u8 higher = frame->local_variables[2]->value;
-    u8 lower = frame->local_variables[3]->value;
-    Object *expect = frame->local_variables[4]->object_value;
-    Object *value = frame->local_variables[5]->object_value;
+    u8 offset = get_long_localvar(frame, 2);
+    Object *e = get_ref_localvar(frame, 4);
+    Object *x = get_ref_localvar(frame, 5);
     Slot *slot = NULL;
-    if(is_array(frame->local_variables[1]->object_value)) {
-        Array *ref = frame->local_variables[1]->object_value;
-        slot = &ref->objects[0]->fields[higher | lower];
+    void *obj = get_ref_localvar(frame, 1);
+    if(is_array(obj)) {
+        Array *ref = obj;
+        if (NULL != ref->objects[0]) {
+            slot = &ref->objects[0]->fields[offset];
+        }
     } else {
-        Object *ref = frame->local_variables[1]->object_value;
-        slot = &ref->fields[higher | lower];
+        Object *ref = obj;
+        slot = &ref->fields[offset];
     }
-    if (expect == slot->object_value) {
-        slot->object_value = value;
+    if (NULL != slot && e == slot->object_value) {
+        slot->object_value = x;
         push_int(frame->operand_stack, 1);
     } else {
         push_int(frame->operand_stack, 0);
@@ -88,20 +99,19 @@ void jdk_internal_misc_Unsafe_compareAndSetObject_9Ljava_lang_Object1JLjava_lang
 
 void jdk_internal_misc_Unsafe_compareAndSetLong_9Ljava_lang_Object1JJJ0Z(Thread *thread, SerialHeap *heap, Frame *frame)
 {
-    u8 higher = frame->local_variables[2]->value;
-    u8 lower = frame->local_variables[3]->value;
-    u8 expect = frame->local_variables[4]->value;
-    u8 value = frame->local_variables[5]->value;
+    u8 offset = get_long_localvar(frame, 2);
+    u8 e = get_localvar(frame, 4);
+    u8 x = get_localvar(frame, 5);
     Slot *slot = NULL;
-    if(is_array(frame->local_variables[1]->object_value)) {
-        Array *ref = frame->local_variables[1]->object_value;
-        slot = &ref->objects[0]->fields[higher | lower];
+    if(is_array(get_ref_localvar(frame, 1))) {
+        Array *ref = get_ref_localvar(frame, 1);
+        slot = &ref->objects[0]->fields[offset];
     } else {
-        Object *ref = frame->local_variables[1]->object_value;
-        slot = &ref->fields[higher | lower];
+        Object *ref = get_ref_localvar(frame, 1);
+        slot = &ref->fields[offset];
     }
-    if (expect == slot->value) {
-        slot->value = value;
+    if (e == slot->value) {
+        slot->value = x;
         push_int(frame->operand_stack, 1);
     } else {
         push_int(frame->operand_stack, 0);
@@ -110,22 +120,20 @@ void jdk_internal_misc_Unsafe_compareAndSetLong_9Ljava_lang_Object1JJJ0Z(Thread 
 
 void jdk_internal_misc_Unsafe_getObjectVolatile_9Ljava_lang_Object1J0Ljava_lang_Object1(Thread *thread, SerialHeap *heap, Frame *frame)
 {
-    u8 higher = frame->local_variables[2]->value;
-    u8 lower = frame->local_variables[3]->value;
-    Slot *slot = NULL;
-    if(is_array(frame->local_variables[1]->object_value)) {
-        Array *ref = frame->local_variables[1]->object_value;
-        slot = &ref->objects[0]->fields[higher | lower];
-    } else {
-        Object *ref = frame->local_variables[1]->object_value;
-        slot = &ref->fields[higher | lower];
-    }
-//    FieldInfo field = ref->class->fields[idx];
-//    if (field.offset >= ref->class->object_fields_count) {
-//        push_slot(frame->operand_stack, NULL_SLOT);
-//    } else {
-//        push_slot(frame->operand_stack, ref->fields[field.offset].object_value);
-//    }
     //TODO
-    push_slot(frame->operand_stack, NULL_SLOT);
+    u8 offset = get_long_localvar(frame, 2);
+    Slot *slot = NULL;
+    if(is_array(get_ref_localvar(frame, 1))) {
+        Array *ref = get_ref_localvar(frame, 1);
+        if (NULL == ref->objects[0]) {
+            push_slot(frame->operand_stack, NULL_SLOT);
+            return;
+        } else {
+            slot = &ref->objects[0]->fields[offset];
+        }
+    } else {
+        Object *ref = get_ref_localvar(frame, 1);
+        slot = &ref->fields[offset];
+    }
+    push_slot(frame->operand_stack, slot);
 }
