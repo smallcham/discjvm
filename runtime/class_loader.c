@@ -10,6 +10,7 @@ ClassFile *load_class_by_bytes(Thread *thread, SerialHeap *heap, u1 *bytes)
     class->init_state = CLASS_NOT_INIT;
     class->class_object = NULL;
     class->super_class = NULL;
+    class->component_class = NULL;
     class->object_fields_count = 0;
     class->static_fields_count = 0;
     u1 *class_file = bytes;
@@ -353,16 +354,19 @@ ClassFile *load_primitive_class(Thread *thread, SerialHeap *heap, char *primitiv
         return class_from_cache;
     }
     unsigned long size = strlen(primitive_name);
-    char *name = malloc(size);
+    char *name = malloc(size + 1);
     strcpy(name, primitive_name);
+    name[size] = '\0';
     ClassFile *class = malloc(sizeof(ClassFile));
     memset(class, 0, sizeof(ClassFile));
     class->class_name = (u1*)name;
     class->fields_count = 1;
     class->object_fields_count = 1;
-    class->class_object = malloc_object(heap, load_class(thread, heap, "java/lang/Class"));
     class->init_state = CLASS_INITED;
     put_class_to_cache(&heap->class_pool, class);
+    class->class_object = malloc_object(heap, load_class(thread, heap, primitive_name));
+    u1 *component_name = get_primitive_array_class_name_by_name_str(name);
+    if (NULL != component_name) class->component_class = load_class(thread, heap, component_name);
     return class;
 }
 
@@ -719,6 +723,37 @@ u1 *get_array_class_name_by_name_str(u1 *name)
     return name;
 }
 
+u1 *get_primitive_array_class_name_by_name_str(u1 *name)
+{
+    if (!str_start_with(name, "[")) {
+        return NULL;
+    }
+    switch (name[1]) {
+        case 'V': return "void";
+        case 'Z': return "boolean";
+        case 'B': return "byte";
+        case 'C': return "char";
+        case 'S': return "short";
+        case 'I': return "int";
+        case 'J': return "long";
+        case 'F': return "float";
+        case 'D': return "double";
+        case 'L': {
+            name += 2;
+            unsigned long size = strlen(name);
+            if (name[size - 1] == ';') {
+                u1 *_name = malloc(size);
+                memcpy(_name, name, size - 1);
+                _name[size - 1] = '\0';
+                return _name;
+            } else {
+                return name;
+            }
+        }
+    }
+    return NULL;
+}
+
 void create_object_with_backpc(Thread *thread, SerialHeap *heap, Frame *frame, u2 index, int back)
 {
     CONSTANT_Class_info class_info = *(CONSTANT_Class_info*)frame->constant_pool[index].info;
@@ -865,7 +900,7 @@ void create_array_reference(Thread *thread, SerialHeap *heap, Frame *frame, u2 i
     }
     int count = pop_int(frame->operand_stack);
     char *_arr_name = malloc(strlen(class->class_name) + 2);
-    sprintf(_arr_name, "[%s", class->class_name);
+    sprintf(_arr_name, "[L%s", class->class_name);
     push_object(frame->operand_stack, malloc_array(heap, load_primitive_class(thread, heap, _arr_name), count));
     free(_arr_name);
 }
@@ -907,7 +942,7 @@ int class_is_inited(ClassFile *class)
     return class->init_state == CLASS_INITED;
 }
 
-void set_class_inited_by_frame(Thread *thread, SerialHeap *heap, Frame *frame)
+void set_class_inited_by_frame(Thread *thread, SerialHeap *heap, Frame *frame, Frame *next_frame)
 {
     frame->class->init_state = CLASS_INITED;
 }

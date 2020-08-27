@@ -164,6 +164,12 @@ void *get_stack(Stack *stack)
     return stack->tail->value;
 }
 
+void *get_prev(Stack *stack)
+{
+    if (is_empty_stack(stack) || NULL == stack->tail->prev) return NULL;
+    return ((Entry*)(stack->tail->prev))->value;
+}
+
 Slot *get_slot(Stack *stack)
 {
     return get_stack(stack);

@@ -181,6 +181,7 @@ typedef struct {
 //    HashMap *static_fields;
     Slot *static_fields;
     void *class_object;
+    void *component_class;
     void *super_class;
     u1 init_state;
 } ClassFile;

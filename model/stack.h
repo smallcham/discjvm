@@ -54,6 +54,8 @@ void* pop_stack(Stack *stack);
 
 void* get_stack(Stack *stack);
 
+void *get_prev(Stack *stack);
+
 char* find_in_stack(Stack *stack, char* value);
 
 int get_int(Stack *stack);

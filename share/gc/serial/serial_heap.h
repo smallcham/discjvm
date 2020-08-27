@@ -6,6 +6,7 @@
 #define DISCJVM_SERIAL_HEAP_H
 
 #include "stdlib.h"
+#include "stdio.h"
 #include "../../../model/hash_map.h"
 #include "../../../model/class.h"
 

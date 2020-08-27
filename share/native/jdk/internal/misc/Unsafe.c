@@ -10,6 +10,7 @@ void jdk_internal_misc_Unsafe_registerNatives_90V(Thread *thread, SerialHeap *he
 
 void jdk_internal_misc_Unsafe_arrayBaseOffset0_9java_lang_Class10I(Thread *thread, SerialHeap *heap, Frame *frame)
 {
+    Object *object = frame->local_variables[1]->object_value;
     push_int(frame->operand_stack, 0);
 }
 
@@ -109,10 +110,16 @@ void jdk_internal_misc_Unsafe_compareAndSetLong_9Ljava_lang_Object1JJJ0Z(Thread 
 
 void jdk_internal_misc_Unsafe_getObjectVolatile_9Ljava_lang_Object1J0Ljava_lang_Object1(Thread *thread, SerialHeap *heap, Frame *frame)
 {
-//    Object *ref = frame->local_variables[1]->object_value;
-//    long higher = frame->local_variables[2]->value;
-//    long lower = frame->local_variables[3]->value;
-//    int idx = higher | lower;
+    u8 higher = frame->local_variables[2]->value;
+    u8 lower = frame->local_variables[3]->value;
+    Slot *slot = NULL;
+    if(is_array(frame->local_variables[1]->object_value)) {
+        Array *ref = frame->local_variables[1]->object_value;
+        slot = &ref->objects[0]->fields[higher | lower];
+    } else {
+        Object *ref = frame->local_variables[1]->object_value;
+        slot = &ref->fields[higher | lower];
+    }
 //    FieldInfo field = ref->class->fields[idx];
 //    if (field.offset >= ref->class->object_fields_count) {
 //        push_slot(frame->operand_stack, NULL_SLOT);

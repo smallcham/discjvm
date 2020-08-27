@@ -9,7 +9,7 @@
 #include "class.h"
 #include "../util/endian.h"
 
-typedef void (*PopHook)(void *, void *, void *);
+typedef void (*PopHook)(void *, void *, void *, void *);
 
 typedef struct {
     u4 pc;

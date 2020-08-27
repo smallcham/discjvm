@@ -54,14 +54,14 @@ Object *malloc_null_object(SerialHeap *heap)
     return object;
 }
 
-Array *malloc_array(SerialHeap *heap, ClassFile *class, int length)
+Array *malloc_array(SerialHeap *heap, ClassFile *class,  int length)
 {
     Array *array = malloc(sizeof(Array) + sizeof(Object) * length);
     memset(array, 0, sizeof(Array) + sizeof(Object) * length);
     array->length = length;
     array->class = class;
     for (int i = 0; i < length; i++) {
-        array->objects[i] = malloc_object(heap, class);
+        array->objects[i] = NULL;
     }
     return array;
 }

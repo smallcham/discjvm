@@ -67,7 +67,7 @@ int class_is_in_init(ClassFile *class);
 
 int class_is_inited(ClassFile *class);
 
-void set_class_inited_by_frame(Thread *thread, SerialHeap *heap, Frame *frame);
+void set_class_inited_by_frame(Thread *thread, SerialHeap *heap, Frame *frame, Frame *next_frame);
 
 void clinit_class_and_exec(Thread *thread, SerialHeap *heap, ClassFile *class);
 
@@ -90,6 +90,8 @@ MethodInfo *find_method_with_desc(Thread *thread, SerialHeap *heap, ClassFile *c
 MethodInfo *find_method(Thread *thread, SerialHeap *heap, ClassFile *class, char *name);
 
 u1 *get_array_class_name_by_name_str(u1 *name);
+
+u1 *get_primitive_array_class_name_by_name_str(u1 *name);
 
 u1 *get_class_name_by_index(ConstantPool *pool, u2 index);
 

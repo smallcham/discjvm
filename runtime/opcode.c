@@ -1151,37 +1151,37 @@ void tableswitch(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void lookupswitch(SerialHeap *heap, Thread *thread, Frame *frame) {}
 
 void ireturn(SerialHeap *heap, Thread *thread, Frame *frame) {
-    frame = pop_frame(thread, heap);
-    Frame *next = get_stack(thread->vm_stack);
+    Frame *next = get_prev(thread->vm_stack);
     if (NULL != next) push_slot_from(frame->operand_stack, next->operand_stack);
+    frame = pop_frame(thread, heap);
     free_frame(&frame);
 }
 
 void lreturn(SerialHeap *heap, Thread *thread, Frame *frame) {
-    frame = pop_frame(thread, heap);
-    Frame *next = get_stack(thread->vm_stack);
+    Frame *next = get_prev(thread->vm_stack);
     if (NULL != next) push_long_from(frame->operand_stack, next->operand_stack);
+    frame = pop_frame(thread, heap);
     free_frame(&frame);
 }
 
 void freturn(SerialHeap *heap, Thread *thread, Frame *frame) {
-    frame = pop_frame(thread, heap);
-    Frame *next = get_stack(thread->vm_stack);
+    Frame *next = get_prev(thread->vm_stack);
     if (NULL != next) push_float(next->operand_stack, pop_float(frame->operand_stack));
+    frame = pop_frame(thread, heap);
     free_frame(&frame);
 }
 
 void dreturn(SerialHeap *heap, Thread *thread, Frame *frame) {
-    frame = pop_frame(thread, heap);
-    Frame *next = get_stack(thread->vm_stack);
+    Frame *next = get_prev(thread->vm_stack);
     if (NULL != next) push_double_from(frame->operand_stack, next->operand_stack);
+    frame = pop_frame(thread, heap);
     free_frame(&frame);
 }
 
 void areturn(SerialHeap *heap, Thread *thread, Frame *frame) {
-    frame = pop_frame(thread, heap);
-    Frame *next = get_stack(thread->vm_stack);
+    Frame *next = get_prev(thread->vm_stack);
     if (NULL != next) push_slot_from(frame->operand_stack, next->operand_stack);
+    frame = pop_frame(thread, heap);
     free_frame(&frame);
 }
 
@@ -1794,7 +1794,10 @@ Frame *pop_frame(Thread *thread, SerialHeap *heap)
 {
     printf("\t\t\t\t[framestack]");
     Frame *frame = pop_stack(thread->vm_stack);
-    if (NULL != frame->pop_hook) frame->pop_hook(thread, heap, frame);
+    if (NULL != frame->pop_hook) {
+        printf_warn("[INVOKE-HOOK]");
+        frame->pop_hook(thread, heap, frame, get_stack(thread->vm_stack));
+    }
     printf("\n\t\t\t<-[ESC] %s - %s.%s%s\n\n", instructions_desc[read_code(frame)], frame->class->class_name, frame->method->name, frame->method->desc);
     return frame;
 }

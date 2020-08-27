@@ -1,4 +1,5 @@
 #include "jmod.h"
+#include "../util/ioutil.h"
 
 u1 *load_from_jmod(char *jmod_name, char *name)
 {
@@ -33,6 +34,10 @@ u1 *load_from_jmod(char *jmod_name, char *name)
     //Read the compressed file
     zip_file_t *f = zip_fopen(z, full_name, 0);
     zip_fread(f, contents, st.size);
+    if (NULL == f) {
+        printf_err("Class [%s] Not Found!", full_name);
+        exit(-1);
+    }
     zip_fclose(f);
 
     //And close the archive
