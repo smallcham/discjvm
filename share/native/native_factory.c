@@ -19,6 +19,7 @@ void init_native_factory()
     put_map(&native_pool, "java/lang/Class.registerNatives()V", java_lang_Class_registerNatives_90V);
     put_map(&native_pool, "java/lang/Class.getPrimitiveClass(Ljava/lang/String;)Ljava/lang/Class;", java_lang_Class_getPrimitiveClass_9Ljava_lang_String10Ljava_lang_Class);
     put_map(&native_pool, "java/lang/Class.desiredAssertionStatus0(Ljava/lang/Class;)Z", java_lang_Class_desiredAssertionStatus0_9Ljava_lang_Class10Z);
+    put_map(&native_pool, "java/lang/Class.isArray()Z", java_lang_Class_isArray_90Z);
 
     //System
     put_map(&native_pool, "java/lang/System.registerNatives()V", java_lang_System_registerNatives_90V);
@@ -55,6 +56,12 @@ void init_native_factory()
 
     //Throwable
     put_map(&native_pool, "java/lang/Throwable.fillInStackTrace(I)Ljava/lang/Throwable;", java_lang_Throwable_fillInStackTrace_9I0Ljava_lang_Throwable1);
+
+    //VM
+    put_map(&native_pool, "jdk/internal/misc/VM.initialize()V", jdk_internal_misc_VM_initialize_90V);
+
+    //Array
+    put_map(&native_pool, "java/lang/reflect/Array.newArray(Ljava/lang/Class;I)Ljava/lang/Object;", java_lang_reflect_Array_newArray_9Ljava_lang_Class1I0Ljava_lang_Object1);
 }
 
 NativeMethod find_native(char *class_name, char *method_name, char *method_desc)

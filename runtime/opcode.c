@@ -1307,9 +1307,11 @@ void checkcast(SerialHeap *heap, Thread *thread, Frame *frame) {
                 break;
             }
         }
+        //TODO
         if (!is_instance_of(ref->class, class)) {
             printf_err("throws ClassCastException!");
-            exit(-1);
+            printf_warn("DEBUG HANDLE!");
+//            exit(-1);
         }
     }
     step_pc_1(frame);

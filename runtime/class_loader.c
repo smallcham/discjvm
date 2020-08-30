@@ -452,7 +452,14 @@ void do_invokeinterface_by_index(Thread *thread, SerialHeap *heap, Frame *frame,
     u1 *method_desc = get_utf8_bytes(frame->constant_pool, name_and_type_info.descriptor_index);
     ClassFile *class = load_class(thread, heap, class_name);
     printf("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class_name, name_and_type_info.name_index, method_name, name_and_type_info.descriptor_index, method_desc);
-    MethodInfo *method = find_method_iter_super_with_desc(thread, heap, &class, method_name, method_name);
+    int params_count = parse_method_param_count(*(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info);
+    Slot **slots = pop_slot_with_num(frame->operand_stack, params_count + 1);
+    for (int i = 0; i < params_count + 1; i++) {
+        push_slot(frame->operand_stack, slots[i]);
+    }
+    Object *object = slots[0]->object_value;
+    class = object->class;
+    MethodInfo *method = find_method_iter_super_with_desc(thread, heap, &class, method_name, method_desc);
     if (NULL == method) exit(-1);
     if ((method->access_flags & ACC_NATIVE) != 0) {
         create_c_frame_and_invoke_add_params_plus1(thread, heap, frame, class->class_name, method);

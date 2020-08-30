@@ -166,6 +166,16 @@ void *get_ref_localvar(Frame *frame, int index)
     return frame->local_variables[index]->object_value;
 }
 
+void *get_localvar_this(Frame *frame)
+{
+    return get_ref_localvar(frame, 0);
+}
+
+void *set_ref_localvar(Frame *frame, int index, void *object_value)
+{
+    return frame->local_variables[index]->object_value = object_value;
+}
+
 void print_local_variables(Frame *frame)
 {
     printf("\t\t\t<");

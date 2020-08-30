@@ -21,3 +21,8 @@ void java_lang_Class_desiredAssertionStatus0_9Ljava_lang_Class10Z(Thread *thread
 {
     push_int(frame->operand_stack, 0);
 }
+
+void java_lang_Class_isArray_90Z(Thread *thread, SerialHeap *heap, Frame *frame)
+{
+    push_int(frame->operand_stack, is_array(get_localvar_this(frame)));
+}

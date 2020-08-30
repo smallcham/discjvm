@@ -17,6 +17,8 @@
 #include "java/lang/Runtime.h"
 #include "java/security/AccessController.h"
 #include "java/lang/Throwable.h"
+#include "jdk/internal/misc/VM.h"
+#include "java/lang/reflect/Array.h"
 
 typedef void (*NativeMethod)(Thread *, SerialHeap *, Frame *);
 

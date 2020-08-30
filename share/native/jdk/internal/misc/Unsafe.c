@@ -15,7 +15,7 @@ void jdk_internal_misc_Unsafe_arrayBaseOffset0_9java_lang_Class10I(Thread *threa
         printf_err("Invalid Class, [%s] Not A Array", ref->class->class_name);
         exit(-1);
     } else if (is_object_array(ref)) {
-        push_int(frame->operand_stack, 0);
+        push_int(frame->operand_stack, 1);
     } else if (is_primitive_array(ref)) {
         push_int(frame->operand_stack, 0);
     } else {
@@ -78,23 +78,20 @@ void jdk_internal_misc_Unsafe_compareAndSetObject_9Ljava_lang_Object1JLjava_lang
     u8 offset = get_long_localvar(frame, 2);
     Object *e = get_ref_localvar(frame, 4);
     Object *x = get_ref_localvar(frame, 5);
-    Slot *slot = NULL;
-    void *obj = get_ref_localvar(frame, 1);
-    if(is_array(obj)) {
-        Array *ref = obj;
-        if (NULL != ref->objects[0]) {
-            slot = &ref->objects[0]->fields[offset];
-        }
+    void *object = get_ref_localvar(frame, 1);
+    if (offset > 0) {
+        Array *ref = object;
+        ref->objects[0] = x;
     } else {
-        Object *ref = obj;
-        slot = &ref->fields[offset];
+        set_ref_localvar(frame, 1, x);
     }
-    if (NULL != slot && e == slot->object_value) {
-        slot->object_value = x;
-        push_int(frame->operand_stack, 1);
-    } else {
-        push_int(frame->operand_stack, 0);
-    }
+    push_int(frame->operand_stack, 1);
+
+//    if (e == x) {
+//        push_int(frame->operand_stack, 1);
+//    } else {
+//        push_int(frame->operand_stack, 0);
+//    }
 }
 
 void jdk_internal_misc_Unsafe_compareAndSetLong_9Ljava_lang_Object1JJJ0Z(Thread *thread, SerialHeap *heap, Frame *frame)
