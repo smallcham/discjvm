@@ -326,24 +326,23 @@ Object *get_bootstrap_class_loader(Thread *thread, SerialHeap *heap)
 
 ClassFile *load_class(Thread *thread, SerialHeap *heap, char *full_class_name)
 {
-    if (full_class_name[0] == '[') {
-        return load_primitive_class(thread, heap, full_class_name);
-    }
     ClassFile *class_from_cache = get_class_from_cache(heap->class_pool, full_class_name);
     if (NULL != class_from_cache) {
         return class_from_cache;
     }
-
+    if (full_class_name[0] == '[') {
+        return load_primitive_class(thread, heap, full_class_name);
+    }
     ClassFile *class = (ClassFile*)malloc(sizeof(ClassFile));
     class->init_state = CLASS_NOT_INIT;
+
     u1 *class_file = get_class_bytes(full_class_name);
     class = load_class_by_bytes(thread, heap, class_file);
-    Object *class_object = malloc_object(heap, class);
 
-//    Slot *slot = create_slot();
-//    slot->object_value = get_bootstrap_class_loader(thread, heap);
-//    put_field_to_map(&class_object->fields, "classLoader", "Ljava/lang/ClassLoader;", slot);
+    Object *class_object = malloc_object(heap, class);
+    class_object->fields = create_object_slot(heap, load_class(thread, heap, "java/lang/Class"));
     class->class_object = class_object;
+//    class->class_object = malloc_object(heap, load_class(thread, heap, "java/lang/Class"));
     return class;
 }
 
@@ -364,7 +363,13 @@ ClassFile *load_primitive_class(Thread *thread, SerialHeap *heap, char *primitiv
     class->object_fields_count = 1;
     class->init_state = CLASS_INITED;
     put_class_to_cache(&heap->class_pool, class);
-    class->class_object = malloc_object(heap, load_class(thread, heap, primitive_name));
+
+    Object *class_object = malloc_object(heap, load_class(thread, heap, primitive_name));
+    class_object->fields = create_object_slot(heap, load_class(thread, heap, "java/lang/Class"));
+    class->class_object = class_object;
+
+//    class->class_object = malloc_object(heap, load_class(thread, heap, "java/lang/Class"));
+
     u1 *component_name = get_primitive_array_class_name_by_name_str(name);
     if (NULL != component_name) class->component_class = load_class(thread, heap, component_name);
     return class;

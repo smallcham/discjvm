@@ -118,6 +118,7 @@ void start_vm(char *class_path)
     init_primitives(&thread, heap);
     init_lib_by_names(&thread, heap, base_lib, 5);
 
+
     //创建 main方法栈帧
     ClassFile *class = load_class(&thread, heap, class_path);
     clinit_class_and_exec(&thread, heap, class);
@@ -126,7 +127,7 @@ void start_vm(char *class_path)
     CodeAttribute *main_code = get_method_code(class->constant_pool, *main);
 
     if (NULL == main) exit(-1);
-    create_vm_frame_by_method(&thread, class, main, main_code);
+    create_vm_frame_by_method_with_push(&thread, class, main, main_code);
 
     //new ThreadGroup
     ClassFile *jthread_group = load_class(&thread, heap, "java/lang/ThreadGroup");

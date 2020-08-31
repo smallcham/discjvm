@@ -10,11 +10,11 @@ void java_lang_Object_registerNatives_90V(Thread *thread, SerialHeap *heap, Fram
 
 void java_lang_Object_getClass_90Ljava_lang_Class(Thread *thread, SerialHeap *heap, Frame *frame)
 {
-    push_object(frame->operand_stack, frame->class->class_object);
+    Object *this = get_localvar_this(frame);
+    push_object(frame->operand_stack, this->class->class_object);
 }
 
 void java_lang_Object_hashCode_90I(Thread *thread, SerialHeap *heap, Frame *frame)
 {
-    Object *object = frame->local_variables[0]->object_value;
-    push_int(frame->operand_stack, (int)object);
+    push_int(frame->operand_stack, (int)get_localvar_this(frame));
 }
