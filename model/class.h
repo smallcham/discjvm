@@ -188,12 +188,13 @@ typedef struct {
 
 typedef struct {
     ClassFile *class;
+    ClassFile *raw_class;
     Slot *fields;
-//    HashMap *fields;
 } Object;
 
 typedef struct {
     ClassFile *class;
+    ClassFile *raw_class;
     u4 length;
     Object *objects[];
 } Array;
@@ -224,9 +225,17 @@ u1 *get_utf8_bytes(ConstantPool *pool, u2 index);
 
 int is_array(void *ref);
 
+int is_array_by_name(char *name);
+
+int is_array_by_raw(void *raw_class);
+
 int is_object_array(void *ref);
 
+int is_object_array_by_raw(void *raw_class);
+
 int is_primitive_array(void *ref);
+
+int is_primitive_array_by_raw(void *raw_class);
 
 Slot *create_slot();
 

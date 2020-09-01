@@ -339,10 +339,10 @@ ClassFile *load_class(Thread *thread, SerialHeap *heap, char *full_class_name)
     u1 *class_file = get_class_bytes(full_class_name);
     class = load_class_by_bytes(thread, heap, class_file);
 
-    Object *class_object = malloc_object(heap, class);
-    class_object->fields = create_object_slot(heap, load_class(thread, heap, "java/lang/Class"));
+    Object *class_object = malloc_object(heap, load_class(thread, heap, "java/lang/Class"));
+    class_object->raw_class = class;
     class->class_object = class_object;
-//    class->class_object = malloc_object(heap, load_class(thread, heap, "java/lang/Class"));
+
     return class;
 }
 
@@ -364,14 +364,20 @@ ClassFile *load_primitive_class(Thread *thread, SerialHeap *heap, char *primitiv
     class->init_state = CLASS_INITED;
     put_class_to_cache(&heap->class_pool, class);
 
-    Object *class_object = malloc_object(heap, load_class(thread, heap, primitive_name));
-    class_object->fields = create_object_slot(heap, load_class(thread, heap, "java/lang/Class"));
+    Object *class_object = malloc_object(heap, load_class(thread, heap, "java/lang/Class"));
+    class_object->raw_class = class;
     class->class_object = class_object;
 
-//    class->class_object = malloc_object(heap, load_class(thread, heap, "java/lang/Class"));
+//    if (NULL != class->class_object && is_array_by_name(class->class_name)) {
+//        ClassFile *component_class = class->component_class;
+//        put_field_by_name_and_desc(class->class_object, "componentType", "Ljava/lang/Class;", create_object_slot_set_object(heap, component_class->class_object));
+//    }
 
-    u1 *component_name = get_primitive_array_class_name_by_name_str(name);
-    if (NULL != component_name) class->component_class = load_class(thread, heap, component_name);
+//    u1 *component_name = get_primitive_array_class_name_by_name_str(name);
+//    if (NULL != component_name) {
+//        ClassFile *component_class = load_class(thread, heap, component_name);
+//        class->component_class = component_class;
+//    }
     return class;
 }
 
@@ -847,37 +853,10 @@ void create_array_by_type(Thread *thread, SerialHeap *heap, Frame *frame, u1 typ
     }
     int size = count * type_size;
     ClassFile *class = load_class(thread, heap, desc);
-//    Object *object = (Object*)malloc(sizeof(Object) + sizeof(Slot) * count);
-//    object->class = class;
-//    object->length = count;
     Object *object = malloc_object(heap, class);
-//    Slot *value = create_slot();
-//    value->object_value = malloc(size);
-//    memset(value->object_value, 0, size);
     void *value = malloc(size);
     memset(value, 0, size);
     object->fields[0].object_value = value;
-//    put_object_value_field_by_name_and_desc(object, "value", desc, value);
-//    FieldInfo *field = get_field_by_name_and_desc(class, "value", desc);
-//    object->fields[field->offset].object_value = malloc(size);
-//    memset(object->fields[field->offset].object_value, 0, size);
-
-//    put_field_to_map(&object->fields, "value", name, value);
-//    for (int i = 0; i < count; i++) {
-//        Slot *slot = create_slot_by_size(size);
-//        Field *field = malloc(sizeof(Field));
-//        for (int j = 0; j < class->fields_count; j++) {
-//            if (strcmp(class->fields[j].name, "value") == 0) {
-//                field->field_info = &class->fields[j];
-//                break;
-//            }
-//        }
-//        field->slot = slot;
-//        u1 *desc = malloc(strlen(class->class_name) + 3);
-//        sprintf(desc, "[L%s;", class->class_name);
-//        put_field_to_map(&class->static_fields, class->class_name, "value", desc, );
-//        free(desc);
-//    }
     push_object(frame->operand_stack, object);
 }
 
@@ -913,7 +892,13 @@ void create_array_reference(Thread *thread, SerialHeap *heap, Frame *frame, u2 i
     int count = pop_int(frame->operand_stack);
     char *_arr_name = malloc(strlen(class->class_name) + 2);
     sprintf(_arr_name, "[L%s", class->class_name);
-    push_object(frame->operand_stack, malloc_array(heap, load_primitive_class(thread, heap, _arr_name), count));
+    Array *arr = malloc_array(heap, load_primitive_class(thread, heap, _arr_name), count);
+    push_object(frame->operand_stack, arr);
+
+    if (NULL != class->class_object) {
+        put_field_by_name_and_desc(arr->class->class_object, "componentType", "Ljava/lang/Class;", create_object_slot_set_object(heap, class->class_object));
+    }
+
     free(_arr_name);
 }
 
@@ -1020,6 +1005,10 @@ void init_class(Thread *thread, SerialHeap *heap, ClassFile *class)
     if (class_is_inited(class)) return;
     printf("\t\t\t\t-> jump <clinit> - %s\n", class->class_name);
     class->init_state = CLASS_IN_INIT;
+    ClassFile *_class = load_class(thread, heap, "java/lang/Class");
+    if (class_is_not_init(_class)) {
+        init_class(thread, heap, _class);
+    }
 //    class->static_fields = malloc(sizeof(Field) * class->fields_count);
 //    MethodInfo *init = find_method_with_desc(thread, heap, class, "<init>", "()V");
 //    CodeAttribute *init_code = get_method_code(*init);
@@ -1272,5 +1261,12 @@ Slot *create_object_slot(SerialHeap *heap, ClassFile *class)
 {
     Slot *slot = create_slot();
     slot->object_value = malloc_object(heap, class);
+    return slot;
+}
+
+Slot *create_object_slot_set_object(SerialHeap *heap, Object *object)
+{
+    Slot *slot = create_slot();
+    slot->object_value = object;
     return slot;
 }

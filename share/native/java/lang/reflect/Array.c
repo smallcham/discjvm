@@ -12,6 +12,6 @@ void java_lang_reflect_Array_newArray_9Ljava_lang_Class1I0Ljava_lang_Object1(Thr
         exit(-1);
     }
     int length = get_localvar(frame, 1);
-    ClassFile *class = this->class->component_class;
+    ClassFile *class = this->raw_class;
     push_object(frame->operand_stack, malloc_array(heap, class, length));
 }

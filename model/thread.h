@@ -51,6 +51,8 @@ u8 get_long_localvar(Frame *frame, int index);
 
 void *get_ref_localvar(Frame *frame, int index);
 
+void **get_ref_addr_localvar(Frame *frame, int index);
+
 void *get_localvar_this(Frame *frame);
 
 void *set_ref_localvar(Frame *frame, int index, void *object_value);

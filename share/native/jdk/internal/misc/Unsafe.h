@@ -5,6 +5,7 @@
 #ifndef DISCJVM_UNSAFE_H
 #define DISCJVM_UNSAFE_H
 
+#include "stddef.h"
 #include "../../../../../model/thread.h"
 #include "../../../../../runtime/class_loader.h"
 

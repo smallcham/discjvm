@@ -115,8 +115,8 @@ void start_vm(char *class_path)
     init_instructions_desc();
     Thread thread = create_thread(100, 100);
 //    init_lib(&thread, heap);
-    init_primitives(&thread, heap);
     init_lib_by_names(&thread, heap, base_lib, 5);
+    init_primitives(&thread, heap);
 
 
     //创建 main方法栈帧

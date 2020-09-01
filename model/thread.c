@@ -166,6 +166,11 @@ void *get_ref_localvar(Frame *frame, int index)
     return frame->local_variables[index]->object_value;
 }
 
+void **get_ref_addr_localvar(Frame *frame, int index)
+{
+    return &(frame->local_variables[index]->object_value);
+}
+
 void *get_localvar_this(Frame *frame)
 {
     return get_ref_localvar(frame, 0);

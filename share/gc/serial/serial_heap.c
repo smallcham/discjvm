@@ -40,6 +40,7 @@ Object *malloc_object(SerialHeap *heap, ClassFile *class)
     Object *object = malloc(sizeof(Object));
     memset(object, 0, sizeof(Object));
     object->class = class;
+    object->raw_class = class;
     object->fields = create_slot_by_size(class->object_fields_count);
 //    object->fields = create_map(class->fields_count * 1.3 + 1);
     return object;
@@ -50,6 +51,7 @@ Object *malloc_null_object(SerialHeap *heap)
     Object *object = malloc(sizeof(Object));
     memset(object, 0, sizeof(Object));
     object->class = NULL;
+    object->raw_class = NULL;
     object->fields = NULL;
     return object;
 }
@@ -60,6 +62,7 @@ Array *malloc_array(SerialHeap *heap, ClassFile *class,  int length)
     memset(array, 0, sizeof(Array) + sizeof(Object) * length);
     array->length = length;
     array->class = class;
+    array->raw_class = class;
     for (int i = 0; i < length; i++) {
         array->objects[i] = NULL;
     }

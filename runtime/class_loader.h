@@ -137,4 +137,6 @@ int is_instance_of(ClassFile *source, ClassFile *target);
 
 Slot *create_object_slot(SerialHeap *heap, ClassFile *class);
 
+Slot *create_object_slot_set_object(SerialHeap *heap, Object *object);
+
 #endif //DISCJVM_CLASS_LOADER_H

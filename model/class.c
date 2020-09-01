@@ -39,10 +39,21 @@ Slot *create_slot_by_size(int size)
     return slot;
 }
 
+int is_array_by_name(char *name)
+{
+    return name[0] == '[';
+}
+
 int is_array(void *ref)
 {
     Array *object = ref;
-    return object->class->class_name[0] == '[';
+    return is_array_by_name(object->class->class_name);
+}
+
+int is_array_by_raw(void *raw_class)
+{
+    Object *object = raw_class;
+    return is_array_by_name(object->raw_class->class_name);
 }
 
 int is_object_array(void *ref)
@@ -51,8 +62,20 @@ int is_object_array(void *ref)
     return is_array(ref) && object->class->class_name[1] == 'L';
 }
 
+int is_object_array_by_raw(void *raw_class)
+{
+    Object *object = raw_class;
+    return is_array_by_raw(raw_class) && object->raw_class->class_name[1] == 'L';
+}
+
 int is_primitive_array(void *ref)
 {
     Array *object = ref;
     return is_array(ref) && object->class->class_name[1] != 'L';
+}
+
+int is_primitive_array_by_raw(void *raw_class)
+{
+    Object *object = raw_class;
+    return is_array_by_raw(raw_class) && object->raw_class->class_name[1] != 'L';
 }
