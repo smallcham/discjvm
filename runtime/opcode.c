@@ -448,7 +448,13 @@ void iaload(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void laload(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void faload(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void daload(SerialHeap *heap, Thread *thread, Frame *frame) {}
-void aaload(SerialHeap *heap, Thread *thread, Frame *frame) {}
+
+void aaload(SerialHeap *heap, Thread *thread, Frame *frame) {
+    int index = pop_int(frame->operand_stack);
+    Array *array = pop_object(frame->operand_stack);
+    push_object(frame->operand_stack, array->objects[index]);
+    step_pc_1(frame);
+}
 
 void baload(SerialHeap *heap, Thread *thread, Frame *frame) {
     int index = pop_int(frame->operand_stack);
@@ -1377,7 +1383,12 @@ void checkcast(SerialHeap *heap, Thread *thread, Frame *frame) {
 }
 
 void instanceof(SerialHeap *heap, Thread *thread, Frame *frame) {
-
+    Object *source = pop_object(frame->operand_stack);
+    u1 byte1 = step_pc1_and_read_code(frame);
+    u1 byte2 = step_pc1_and_read_code(frame);
+    ClassFile *target = load_class_by_class_info_index(thread, heap, frame->constant_pool, byte1 << 8 | byte2);
+    push_int(frame->operand_stack, is_instance_of(source->raw_class, target));
+    step_pc_1(frame);
 }
 
 void monitorenter(SerialHeap *heap, Thread *thread, Frame *frame) {

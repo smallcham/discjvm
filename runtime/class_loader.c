@@ -11,6 +11,7 @@ ClassFile *load_class_by_bytes(Thread *thread, SerialHeap *heap, u1 *bytes)
     class->class_object = NULL;
     class->super_class = NULL;
     class->component_class = NULL;
+    class->interfaces_info = NULL;
     class->object_fields_count = 0;
     class->static_fields_count = 0;
     u1 *class_file = bytes;
@@ -221,9 +222,16 @@ ClassFile *load_class_by_bytes(Thread *thread, SerialHeap *heap, u1 *bytes)
     class_file += sizeof(u2);
     if (class->interfaces_count > 0) {
         u2 len = class->interfaces_count * sizeof(u2);
-        class->interfaces = (u2 *) malloc(len);
-        memcpy(class->interfaces, class_file, len);
-        class_file += len;
+        class->interfaces = malloc(len);
+        InterfaceInfo *interfaces_info = malloc(class->interfaces_count * sizeof(InterfaceInfo));
+        for (int i = 0; i < class->interfaces_count; i++) {
+            class->interfaces[i] = l2b_2(*(u2*)class_file);
+            class_file += sizeof(u2);
+            CONSTANT_Class_info interface_info = *(CONSTANT_Class_info*)class->constant_pool[class->interfaces[i]].info;
+            interfaces_info[i].class = malloc(sizeof(ClassFile));
+            interfaces_info[i].class = load_class_by_class_info_name_index(thread, heap, class->constant_pool, interface_info.name_index);
+        }
+        class->interfaces_info = interfaces_info;
     }
     class->fields_count = l2b_2(*(u2 *) class_file);
     class_file += sizeof(u2);
@@ -817,7 +825,7 @@ void create_object_with_backpc(Thread *thread, SerialHeap *heap, Frame *frame, u
 //    if (is_arr) {
 //        push_object(frame->operand_stack, malloc_array(heap, class, 0));
 //    } else {
-        push_object(frame->operand_stack, malloc_object(heap, class));
+    push_object(frame->operand_stack, malloc_object(heap, class));
 //    }
 }
 
@@ -834,7 +842,7 @@ void create_object_with_class_name_and_backpc(Thread *thread, SerialHeap *heap, 
 //    if (is_arr) {
 //        push_object(frame->operand_stack, malloc_array(heap, class, 0));
 //    } else {
-        push_object(frame->operand_stack, malloc_object(heap, class));
+    push_object(frame->operand_stack, malloc_object(heap, class));
 //    }
 }
 
@@ -1078,8 +1086,8 @@ void clinit_class_and_exec(Thread *thread, SerialHeap *heap, ClassFile *class)
 u1* get_class_bytes(char *path)
 {
     if (str_start_with(path, "java/") ||
-            str_start_with(path, "jdk/") ||
-            str_start_with(path, "sun/")) {
+        str_start_with(path, "jdk/") ||
+        str_start_with(path, "sun/")) {
         return load_from_jmod("java.base.jmod", path);
     }
     FILE *fp = fopen(path, "rb");
@@ -1282,24 +1290,29 @@ CONSTANT_InterfaceMethodref_info get_interface_info_from_bytes(ConstantPool *poo
 //TODO 逻辑未完成, 需要测试调整
 int is_instance_of(ClassFile *source, ClassFile *target)
 {
-    if (source == target) return 1;
-    if (!is_array_by_name(source->class_name)) {
-        u2 *bytes = source->interfaces[0];
-        l2b_2(*(u2*)bytes);
-        CONSTANT_InterfaceMethodref_info info = *(CONSTANT_InterfaceMethodref_info*)source->interfaces[0];
-        if ((target->access_flags & ACC_INTERFACE) != 0) {
-            for (int i = 0; i < source->interfaces_count; i++) {
-                CONSTANT_InterfaceMethodref_info info = *(CONSTANT_InterfaceMethodref_info*)source->interfaces[i];
-            }
-        } else {
-            while (1) {
-                ClassFile *super = source->super_class;
-                if (NULL == super) break;
-                if (super->class_name == target->class_name) return 1;
-            }
-        }
-    }
-    return 0;
+    return 1;
+//    if (source == target) return 1;
+//    if (!is_array_by_name(source->class_name)) {
+//        if ((source->access_flags & ACC_INTERFACE) == 0) {
+//            if ((target->access_flags & ACC_INTERFACE) == 0) {
+//                while (1) {
+//                    ClassFile *super = target->super_class;
+//                    if (NULL == super) break;
+//                    if (super->class_name == target->class_name) return 1;
+//                    if (strcmp(super->class_name, "java/lang/Object") == 0) break;
+//                }
+//            } else {
+//
+//            }
+//        } else {
+//            if ((target->access_flags & ACC_INTERFACE) == 0) {
+//                return strcmp(target->class_name, "java/lang/Class") == 0;
+//            } else {
+//
+//            }
+//        }
+//    }
+//    return 0;
 }
 
 MethodInfo *find_method(Thread *thread, SerialHeap *heap, ClassFile *class, char *name) {

@@ -50,6 +50,10 @@ typedef struct {
 } FieldInfo;
 
 typedef struct {
+    void *class;
+} InterfaceInfo;
+
+typedef struct {
     u2 access_flags;
     u2 name_index;
     u2 descriptor_index;
@@ -170,16 +174,16 @@ typedef struct {
     u1 *class_name;
     u2 super_class_index;
     u2 interfaces_count;
-    u2 *interfaces; // [interfaces_count]
+    u2 *interfaces;
+    InterfaceInfo *interfaces_info;
     u2 fields_count;
-    FieldInfo *fields; // [fields_count]
+    FieldInfo *fields;
     u2 object_fields_count;
     u2 static_fields_count;
     u2 methods_count;
-    MethodInfo *methods; // [methods_count]
+    MethodInfo *methods;
     u2 attributes_count;
-    AttributeInfo *attributes; // [attributes_count]
-//    HashMap *static_fields;
+    AttributeInfo *attributes;
     Slot *static_fields;
     void *class_object;
     void *component_class;
