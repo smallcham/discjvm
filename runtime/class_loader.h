@@ -29,6 +29,8 @@ void put_static_field_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
 
 void put_field(Thread *thread, SerialHeap *heap, Frame *frame, CONSTANT_Fieldref_info field_ref_info);
 
+void put_str_field(SerialHeap *heap, Object *object, char *str);
+
 void put_field_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index);
 
 char *get_str_from_string_index(ConstantPool *constant_pool, u2 index);
@@ -89,7 +91,7 @@ MethodInfo *find_method_with_desc(Thread *thread, SerialHeap *heap, ClassFile *c
 
 MethodInfo *find_method(Thread *thread, SerialHeap *heap, ClassFile *class, char *name);
 
-u1 *get_array_class_name_by_name_str(u1 *name);
+u1 *get_class_name_by_name_str(char name);
 
 u1 *get_primitive_array_class_name_by_name_str(u1 *name);
 
@@ -117,6 +119,10 @@ char *get_str_field_value_by_object(Object *object);
 
 FieldInfo *get_field_by_name(ClassFile *class, char *name);
 
+u8 get_field_value_by_name_and_desc(Object *object, char *name, char *desc);
+
+void *get_field_object_value_by_name_and_desc(Object *object, char *name, char *desc);
+
 //void put_field_to_map(HashMap **map, u1 *name, u1 *desc, Slot *value);
 //
 //void put_int_field_to_map(HashMap **map, u1 *name, u1 *desc, int value);
@@ -137,6 +143,6 @@ int is_instance_of(ClassFile *source, ClassFile *target);
 
 Slot *create_object_slot(SerialHeap *heap, ClassFile *class);
 
-Slot *create_object_slot_set_object(SerialHeap *heap, Object *object);
+Slot *create_object_slot_set_object(SerialHeap *heap, void *object);
 
 #endif //DISCJVM_CLASS_LOADER_H

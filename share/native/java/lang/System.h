@@ -12,4 +12,8 @@ void java_lang_System_registerNatives_90V(Thread *thread, SerialHeap *heap, Fram
 
 void java_lang_System_initProperties_9Ljava_util_Properties10Ljava_util_Properties1(Thread *thread, SerialHeap *heap, Frame *frame);
 
+void java_lang_System_arraycopy_9Ljava_lang_Object1ILjava_lang_Object1II0V(Thread *thread, SerialHeap *heap, Frame *frame);
+
+void java_lang_System_nanoTime_90J(Thread *thread, SerialHeap *heap, Frame *frame);
+
 #endif //DISCJVM_CLASS_H

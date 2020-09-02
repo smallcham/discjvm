@@ -10,4 +10,6 @@
 
 void jdk_internal_misc_VM_initialize_90V(Thread *thread, SerialHeap *heap, Frame *frame);
 
+void jdk_internal_misc_VM_initializeFromArchive_9Ljava_lang_Class10V(Thread *thread, SerialHeap *heap, Frame *frame);
+
 #endif //DISCJVM_VM_H

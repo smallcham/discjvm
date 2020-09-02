@@ -260,9 +260,14 @@ void print_stack(Stack *stack)
         if (NULL == next || NULL == next->value || NULL == next->prev) break;
         Slot *value = next->value;
         if (NULL != value->object_value) {
-            Object *obj = value->object_value;
-            if (NULL != obj->class) printf("%s", obj->class->class_name);
-            else printf("NULL-OBJECT(%p)", obj);
+            if (value->is_string == 0) {
+                Object *obj = value->object_value;
+                if (NULL != obj->class) printf("%s", obj->class->class_name);
+                else printf("NULL-OBJECT(%p)", obj);
+            } else {
+                char *str = value->object_value;
+                printf("%s", str);
+            }
         } else {
             printf("%d", value->value);
         }

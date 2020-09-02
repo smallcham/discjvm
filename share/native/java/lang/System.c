@@ -31,6 +31,33 @@ void java_lang_System_initProperties_9Ljava_util_Properties10Ljava_util_Properti
     free(_keys);
 }
 
+void java_lang_System_arraycopy_9Ljava_lang_Object1ILjava_lang_Object1II0V(Thread *thread, SerialHeap *heap, Frame *frame)
+{
+    Array *source = get_localvar_this(frame);
+    u8 s_pos = get_localvar(frame, 1);
+    Array *dest = get_ref_localvar(frame, 2);
+    u8 d_pos = get_localvar(frame, 3);
+    u8 length = get_localvar(frame, 4);
+    if (NULL == source || NULL == dest) {
+        printf_err("Need Throw Exception");
+        exit(-1);
+    }
+    if (s_pos < 0 || d_pos < 0 || length < 0 || s_pos + length > source->length || d_pos + length > dest->length) {
+        printf_err("Need Throw IndexOutOfBoundsException");
+        exit(-1);
+    }
+    //TODO array copy
+    printf_warn("Not Complete, 'Do Array Copy'!!!");
+}
+
+void java_lang_System_nanoTime_90J(Thread *thread, SerialHeap *heap, Frame *frame)
+{
+    struct timespec spec;
+    clock_gettime(CLOCK_REALTIME, &spec);
+    long sec = spec.tv_sec;
+    push_long(frame->operand_stack, 1000 * sec + spec.tv_nsec / 1000);
+}
+
 //添加frame弹出钩子, 用以消除setProperty方法areturn指令返回的值
 void pop_return_hook_(Thread *thread, SerialHeap *heap, Frame *frame, Frame *next_frame)
 {

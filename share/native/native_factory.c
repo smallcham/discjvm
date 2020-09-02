@@ -24,6 +24,8 @@ void init_native_factory()
     //System
     put_map(&native_pool, "java/lang/System.registerNatives()V", java_lang_System_registerNatives_90V);
     put_map(&native_pool, "java/lang/System.initProperties(Ljava/util/Properties;)Ljava/util/Properties;", java_lang_System_initProperties_9Ljava_util_Properties10Ljava_util_Properties1);
+    put_map(&native_pool, "java/lang/System.arraycopy(Ljava/lang/Object;ILjava/lang/Object;II)V", java_lang_System_arraycopy_9Ljava_lang_Object1ILjava_lang_Object1II0V);
+    put_map(&native_pool, "java/lang/System.nanoTime()J", java_lang_System_nanoTime_90J);
 
     //Thread
     put_map(&native_pool, "java/lang/Thread.registerNatives()V", java_lang_Thread_registerNatives_90V);
@@ -59,9 +61,17 @@ void init_native_factory()
 
     //VM
     put_map(&native_pool, "jdk/internal/misc/VM.initialize()V", jdk_internal_misc_VM_initialize_90V);
+    put_map(&native_pool, "jdk/internal/misc/VM.initializeFromArchive(Ljava/lang/Class;)V", jdk_internal_misc_VM_initializeFromArchive_9Ljava_lang_Class10V);
 
     //Array
     put_map(&native_pool, "java/lang/reflect/Array.newArray(Ljava/lang/Class;I)Ljava/lang/Object;", java_lang_reflect_Array_newArray_9Ljava_lang_Class1I0Ljava_lang_Object1);
+
+    //Float
+    put_map(&native_pool, "java/lang/Float.floatToRawIntBits(F)I", java_lang_Float_floatToRawIntBits_9F0I);
+
+    //Double
+    put_map(&native_pool, "java/lang/Double.doubleToRawLongBits(D)J", java_lang_Double_doubleToRawLongBits_9D0J);
+    put_map(&native_pool, "java/lang/Double.longBitsToDouble(J)D", java_lang_Double_longBitsToDouble_9J0D);
 }
 
 NativeMethod find_native(char *class_name, char *method_name, char *method_desc)

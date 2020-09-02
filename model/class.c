@@ -14,6 +14,7 @@ Slot *create_slot()
 {
     Slot *slot = malloc(sizeof(Slot));
     slot->value = 0;
+    slot->is_string = 0;
     slot->object_value = NULL;
     return slot;
 }
@@ -34,6 +35,7 @@ Slot *create_slot_by_size(int size)
     memset(slot, 0, sizeof(Slot) * size);
     for (int i = 0; i < size; i++) {
         slot[i].value = 0;
+        slot[i].is_string = 0;
         slot[i].object_value = NULL;
     }
     return slot;

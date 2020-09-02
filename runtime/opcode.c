@@ -214,8 +214,8 @@ void bipush(SerialHeap *heap, Thread *thread, Frame *frame) {
 }
 
 void sipush(SerialHeap *heap, Thread *thread, Frame *frame) {
-    u1 byte2 = step_pc1_and_read_code(frame);
     u1 byte1 = step_pc1_and_read_code(frame);
+    u1 byte2 = step_pc1_and_read_code(frame);
     short value = (byte1 << 8) | byte2;
     push_int(frame->operand_stack, (int)value);
     step_pc_1(frame);
@@ -449,7 +449,21 @@ void laload(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void faload(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void daload(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void aaload(SerialHeap *heap, Thread *thread, Frame *frame) {}
-void baload(SerialHeap *heap, Thread *thread, Frame *frame) {}
+
+void baload(SerialHeap *heap, Thread *thread, Frame *frame) {
+    int index = pop_int(frame->operand_stack);
+    Slot *slot = pop_slot(frame->operand_stack);
+    if (slot->is_string) {
+        char *str = slot->object_value;
+        push_int(frame->operand_stack, (int)(str[index]));
+    } else {
+        Array *array = slot->object_value;
+        u4 *value = array->raw_object;
+        push_int(frame->operand_stack, (int)(value[index]));
+    }
+    step_pc_1(frame);
+}
+
 void caload(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void saload(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void istore(SerialHeap *heap, Thread *thread, Frame *frame) {
@@ -563,57 +577,97 @@ void astore_3(SerialHeap *heap, Thread *thread, Frame *frame) {
 }
 
 void xastore_(SerialHeap *heap, Thread *thread, Frame *frame, char desc) {
+//    Slot *value = pop_slot(frame->operand_stack);
+//    int index = pop_int(frame->operand_stack);
+//    Object *ref = pop_object(frame->operand_stack);
+//    switch (desc) {
+//        case 'Z': {
+//            int *objects = ref->fields[0].object_value;
+//            objects[index] = value->value;
+//            break;
+//        }
+//        case 'C': {
+//            char *objects = ref->fields[0].object_value;
+//            objects[index] = value->value;
+//            break;
+//        }
+//        case 'F': {
+//            float *objects = ref->fields[0].object_value;
+//            objects[index] = value->value;
+//            break;
+//        }
+//        case 'D': {
+//            double *objects = ref->fields[0].object_value;
+//            objects[index] = value->value;
+//            break;
+//        }
+//        case 'B': {
+//            char *objects = ref->fields[0].object_value;
+//            objects[index] = value->value;
+//            break;
+//        }
+//        case 'S': {
+//            short *objects = ref->fields[0].object_value;
+//            objects[index] = value->value;
+//            break;
+//        }
+//        case 'I': {
+//            int *objects = ref->fields[0].object_value;
+//            objects[index] = value->value;
+//            break;
+//        }
+//        case 'J': {
+//            long *objects = ref->fields[0].object_value;
+//            objects[index] = value->value;
+//            break;
+//        }
+//    }
+
     Slot *value = pop_slot(frame->operand_stack);
     int index = pop_int(frame->operand_stack);
-    Object *ref = pop_object(frame->operand_stack);
-//    u1 *_desc = malloc(3);
-//    sprintf(_desc, "[%c", desc);
-//    FieldInfo *field = get_field_by_name_and_desc(ref->class, "value", _desc);
-//    Slot *field = get_field_from_map(&ref->fields, "value", _desc);
+    Array *ref = pop_object(frame->operand_stack);
     switch (desc) {
         case 'Z': {
-//            field->object_value;
-            int *objects = ref->fields[0].object_value;
+            int *objects = ref->raw_object;
             objects[index] = value->value;
             break;
         }
         case 'C': {
-            char *objects = ref->fields[0].object_value;
+            char *objects = ref->raw_object;
             objects[index] = value->value;
             break;
         }
         case 'F': {
-            float *objects = ref->fields[0].object_value;
+            float *objects = ref->raw_object;
             objects[index] = value->value;
             break;
         }
         case 'D': {
-            double *objects = ref->fields[0].object_value;
+            double *objects = ref->raw_object;
             objects[index] = value->value;
             break;
         }
         case 'B': {
-            char *objects = ref->fields[0].object_value;
+            char *objects = ref->raw_object;
             objects[index] = value->value;
             break;
         }
         case 'S': {
-            short *objects = ref->fields[0].object_value;
+            short *objects = ref->raw_object;
             objects[index] = value->value;
             break;
         }
         case 'I': {
-            int *objects = ref->fields[0].object_value;
+            int *objects = ref->raw_object;
             objects[index] = value->value;
             break;
         }
         case 'J': {
-            long *objects = ref->fields[0].object_value;
+            long *objects = ref->raw_object;
             objects[index] = value->value;
             break;
         }
     }
-//    free(_desc);
 }
 
 void iastore(SerialHeap *heap, Thread *thread, Frame *frame) {
@@ -1271,9 +1325,14 @@ void anewarray(SerialHeap *heap, Thread *thread, Frame *frame) {
 }
 
 void arraylength(SerialHeap *heap, Thread *thread, Frame *frame) {
-    Array *array = pop_object(frame->operand_stack);
-    if (NULL == array) exit(-1);
-    push_int(frame->operand_stack, array->length);
+    Slot *slot = pop_slot(frame->operand_stack);
+    if (slot->is_string) {
+        push_int(frame->operand_stack, strlen(slot->object_value));
+    } else {
+        Array *array = slot->object_value;
+        if (NULL == array) exit(-1);
+        push_int(frame->operand_stack, array->length);
+    }
     step_pc_1(frame);
 }
 
@@ -1311,13 +1370,15 @@ void checkcast(SerialHeap *heap, Thread *thread, Frame *frame) {
         if (!is_instance_of(ref->class, class)) {
             printf_err("throws ClassCastException!");
             printf_warn("DEBUG HANDLE!");
-//            exit(-1);
+            exit(-1);
         }
     }
     step_pc_1(frame);
 }
 
-void instanceof(SerialHeap *heap, Thread *thread, Frame *frame) {}
+void instanceof(SerialHeap *heap, Thread *thread, Frame *frame) {
+
+}
 
 void monitorenter(SerialHeap *heap, Thread *thread, Frame *frame) {
     pop_slot(frame->operand_stack);

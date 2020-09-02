@@ -19,6 +19,8 @@
 #include "java/lang/Throwable.h"
 #include "jdk/internal/misc/VM.h"
 #include "java/lang/reflect/Array.h"
+#include "java/lang/Float.h"
+#include "java/lang/Double.h"
 
 typedef void (*NativeMethod)(Thread *, SerialHeap *, Frame *);
 

@@ -188,9 +188,14 @@ void print_local_variables(Frame *frame)
         Slot *value = frame->local_variables[i];
         if (NULL != value) {
             if (NULL != value->object_value) {
-                Object *obj = value->object_value;
-                if (NULL != obj->class) printf("[%d-> %s],", i, obj->class->class_name);
-                else printf("[%d-> NULL-OBJECT(%p)],", i, obj);
+                if (value->is_string == 0) {
+                    Object *obj = value->object_value;
+                    if (NULL != obj->class) printf("[%d-> %s],", i, obj->class->class_name);
+                    else printf("[%d-> NULL-OBJECT(%p)],", i, obj);
+                } else {
+                    char *str = value->object_value;
+                    printf("[%d-> %s],", i, str);
+                }
             } else {
                 printf("[%d-> %d],", i, value->value);
             }

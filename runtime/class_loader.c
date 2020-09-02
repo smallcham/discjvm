@@ -358,6 +358,7 @@ ClassFile *load_primitive_class(Thread *thread, SerialHeap *heap, char *primitiv
     name[size] = '\0';
     ClassFile *class = malloc(sizeof(ClassFile));
     memset(class, 0, sizeof(ClassFile));
+    class->magic = CLASS_MAGIC_NUMBER;
     class->class_name = (u1*)name;
     class->fields_count = 1;
     class->object_fields_count = 1;
@@ -507,7 +508,17 @@ void do_invokevirtual_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
     CONSTANT_Utf8_info method_name_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.name_index].info;
     CONSTANT_Utf8_info method_desc_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info;
     ClassFile *class = load_class(thread, heap, class_name_info.bytes);
+    ClassFile *_class = class;
     printf("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class->class_name, name_and_type_info.name_index, method_name_info.bytes, name_and_type_info.descriptor_index, method_desc_info.bytes);
+
+    int params_count = parse_method_param_count(*(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info);
+    Slot **slots = pop_slot_with_num(frame->operand_stack, params_count + 1);
+    for (int i = 0; i < params_count + 1; i++) {
+        push_slot(frame->operand_stack, slots[i]);
+    }
+    Object *object = slots[0]->object_value;
+    class = object->class;
+
     MethodInfo *method = find_method_iter_super_with_desc(thread, heap, &class, method_name_info.bytes, method_desc_info.bytes);
     if (NULL == method) exit(-1);
     if ((method->access_flags & ACC_NATIVE) != 0) {
@@ -603,7 +614,18 @@ FieldInfo *get_field_by_name(ClassFile *class, char *name)
 
 char *get_str_field_value_by_object(Object *object)
 {
-    FieldInfo *field = get_field_by_name_and_desc(object->class, "value", "[B");
+    return get_field_object_value_by_name_and_desc(object, "value", "[B");
+}
+
+u8 get_field_value_by_name_and_desc(Object *object, char *name, char *desc)
+{
+    FieldInfo *field = get_field_by_name_and_desc(object->class, name, desc);
+    return object->fields[field->offset].value;
+}
+
+void *get_field_object_value_by_name_and_desc(Object *object, char *name, char *desc)
+{
+    FieldInfo *field = get_field_by_name_and_desc(object->class, name, desc);
     return object->fields[field->offset].object_value;
 }
 
@@ -616,6 +638,14 @@ void put_field_by_name_and_desc(Object *object, char *name, char *desc, Slot *va
 {
     FieldInfo *field = get_field_by_name_and_desc(object->class, name, desc);
     object->fields[field->offset] = *value;
+}
+
+void put_str_field(SerialHeap *heap, Object *object, char *str)
+{
+    FieldInfo *field = get_field_by_name_and_desc(object->class, "value", "[B");
+    Slot *slot = create_object_slot_set_object(heap, str);
+    slot->is_string = 1;
+    object->fields[field->offset] = *slot;
 }
 
 void put_value_field_by_name_and_desc(Object *object, char *name, char *desc, int value)
@@ -851,13 +881,17 @@ void create_array_by_type(Thread *thread, SerialHeap *heap, Frame *frame, u1 typ
             type_size = sizeof(long);
             break;
     }
-    int size = count * type_size;
+//    int size = count * type_size;
+//    ClassFile *class = load_class(thread, heap, desc);
+//    Object *object = malloc_object(heap, class);
+//    void *value = malloc(size);
+//    memset(value, 0, size);
+//    object->fields[0].object_value = value;
+//    push_object(frame->operand_stack, object);
+
     ClassFile *class = load_class(thread, heap, desc);
-    Object *object = malloc_object(heap, class);
-    void *value = malloc(size);
-    memset(value, 0, size);
-    object->fields[0].object_value = value;
-    push_object(frame->operand_stack, object);
+    Array *array = malloc_raw_array(heap, class, count, type_size);
+    push_object(frame->operand_stack, array);
 }
 
 void create_string_object(Thread *thread, SerialHeap *heap, Frame *frame, char *str)
@@ -869,7 +903,7 @@ void create_string_object(Thread *thread, SerialHeap *heap, Frame *frame, char *
         return;
     }
     Object *object = malloc_object(heap, class);
-    put_object_value_field_by_name_and_desc(object, "value", "[B", str);
+    put_str_field(heap, object, str);
     push_object(frame->operand_stack, object);
 }
 
@@ -877,7 +911,7 @@ void create_string_object_without_back(Thread *thread, SerialHeap *heap, Frame *
 {
     ClassFile *class = load_class(thread, heap, "java/lang/String");
     Object *object = malloc_object(heap, class);
-    put_object_value_field_by_name_and_desc(object, "value", "[B", str);
+    put_str_field(heap, object, str);
     push_object(frame->operand_stack, object);
 }
 
@@ -1015,8 +1049,10 @@ void init_class(Thread *thread, SerialHeap *heap, ClassFile *class)
 //    create_vm_frame_by_method_add_hook(thread, class, init, init_code, (PopHook) set_class_inited_by_frame);
 
     ClassFile *super = get_super_class(thread, heap, class);
-    if (NULL != super && class_is_not_init(super)) {
-        init_class(thread, heap, super);
+    if (NULL != super) {
+        if (class_is_not_init(super)) {
+            init_class(thread, heap, super);
+        }
         class->super_class = super;
     }
 
@@ -1215,6 +1251,9 @@ void print_class_info(ClassFile class)
 }
 
 MethodInfo *find_method_iter_super_with_desc(Thread *thread, SerialHeap *heap, ClassFile **class, char *name, char *desc) {
+    if (is_array_by_name((*class)->class_name)) {
+        *class = load_class(thread, heap, "java/lang/Object");
+    }
     while (NULL != class)
     {
         MethodInfo *method = find_method_with_desc(thread, heap, *class, name, desc);
@@ -1234,15 +1273,30 @@ MethodInfo *find_method_with_desc(Thread *thread, SerialHeap *heap, ClassFile *c
     return NULL;
 }
 
+CONSTANT_InterfaceMethodref_info get_interface_info_from_bytes(ConstantPool *pool, u2 *bytes)
+{
+    bytes += sizeof(u2);
+    return *(CONSTANT_InterfaceMethodref_info*)pool[(int)bytes].info;
+}
+
 //TODO 逻辑未完成, 需要测试调整
 int is_instance_of(ClassFile *source, ClassFile *target)
 {
     if (source == target) return 1;
-    if (source->class_name[0] != '[') {
-        while (1) {
-            ClassFile *super = source->super_class;
-            if (NULL == super) break;
-            if (super->class_name == target->class_name) return 1;
+    if (!is_array_by_name(source->class_name)) {
+        u2 *bytes = source->interfaces[0];
+        l2b_2(*(u2*)bytes);
+        CONSTANT_InterfaceMethodref_info info = *(CONSTANT_InterfaceMethodref_info*)source->interfaces[0];
+        if ((target->access_flags & ACC_INTERFACE) != 0) {
+            for (int i = 0; i < source->interfaces_count; i++) {
+                CONSTANT_InterfaceMethodref_info info = *(CONSTANT_InterfaceMethodref_info*)source->interfaces[i];
+            }
+        } else {
+            while (1) {
+                ClassFile *super = source->super_class;
+                if (NULL == super) break;
+                if (super->class_name == target->class_name) return 1;
+            }
         }
     }
     return 0;
@@ -1264,7 +1318,7 @@ Slot *create_object_slot(SerialHeap *heap, ClassFile *class)
     return slot;
 }
 
-Slot *create_object_slot_set_object(SerialHeap *heap, Object *object)
+Slot *create_object_slot_set_object(SerialHeap *heap, void *object)
 {
     Slot *slot = create_slot();
     slot->object_value = object;

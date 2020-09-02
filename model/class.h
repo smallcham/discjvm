@@ -149,6 +149,7 @@ typedef struct {
 } InnerClassesAttribute;
 
 typedef struct {
+    int is_string;
     u8 value;
     void *object_value;
 } Slot;
@@ -196,6 +197,7 @@ typedef struct {
     ClassFile *class;
     ClassFile *raw_class;
     u4 length;
+    void *raw_object;
     Object *objects[];
 } Array;
 
