@@ -229,6 +229,8 @@ Slot *NULL_SLOT;
 
 u1 *get_utf8_bytes(ConstantPool *pool, u2 index);
 
+int is_interface(ClassFile *class);
+
 int is_array(void *ref);
 
 int is_array_by_name(char *name);

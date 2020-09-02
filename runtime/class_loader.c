@@ -1290,29 +1290,52 @@ CONSTANT_InterfaceMethodref_info get_interface_info_from_bytes(ConstantPool *poo
 //TODO 逻辑未完成, 需要测试调整
 int is_instance_of(ClassFile *source, ClassFile *target)
 {
+    if (source == target) return 1;
+    if (!is_array_by_name(source->class_name)) {
+        if (!is_interface(source)) {
+            if (!is_interface(target)) {
+                while (1) {
+                    ClassFile *super = source->super_class;
+                    if (NULL == super) break;
+                    if (strcmp(super->class_name, target->class_name) == 0) return 1;
+                    if (strcmp(super->class_name, "java/lang/Object") == 0) break;
+                }
+            } else {
+                while (1) {
+                    ClassFile *super = source->super_class;
+                    if (NULL == super || strcmp(super->class_name, "java/lang/Object") == 0) break;
+                    for (int i = 0; i < super->interfaces_count; i++) {
+                        ClassFile *_interface = super->interfaces_info[i].class;
+                        if (strcmp(_interface->class_name, target->class_name) == 0) return 1;
+                    }
+                }
+            }
+        } else {
+            if (!is_interface(target)) {
+                return strcmp(target->class_name, "java/lang/Class") == 0;
+            } else {
+                while (1) {
+                    ClassFile *super = target->super_class;
+                    if (NULL == super || strcmp(super->class_name, "java/lang/Object") == 0) break;
+                    for (int i = 0; i < super->interfaces_count; i++) {
+                        ClassFile *_interface = super->interfaces_info[i].class;
+                        if (strcmp(_interface->class_name, source->class_name) == 0) return 1;
+                    }
+                }
+            }
+        }
+    } else {
+        if (!is_array_by_name(target->class_name)) {
+            if (!is_interface(target)) {
+                return strcmp(target->class_name, "java/lang/Class") == 0;
+            } else {
+                return strcmp(target->class_name, "java/lang/Cloneable") == 0 || strcmp(target->class_name, "java/io/Serializable") == 0;
+            }
+        } else {
+            return source->component_class == target->component_class || is_instance_of(source->component_class, target->component_class);
+        }
+    }
     return 1;
-//    if (source == target) return 1;
-//    if (!is_array_by_name(source->class_name)) {
-//        if ((source->access_flags & ACC_INTERFACE) == 0) {
-//            if ((target->access_flags & ACC_INTERFACE) == 0) {
-//                while (1) {
-//                    ClassFile *super = target->super_class;
-//                    if (NULL == super) break;
-//                    if (super->class_name == target->class_name) return 1;
-//                    if (strcmp(super->class_name, "java/lang/Object") == 0) break;
-//                }
-//            } else {
-//
-//            }
-//        } else {
-//            if ((target->access_flags & ACC_INTERFACE) == 0) {
-//                return strcmp(target->class_name, "java/lang/Class") == 0;
-//            } else {
-//
-//            }
-//        }
-//    }
-//    return 0;
 }
 
 MethodInfo *find_method(Thread *thread, SerialHeap *heap, ClassFile *class, char *name) {

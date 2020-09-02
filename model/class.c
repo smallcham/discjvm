@@ -81,3 +81,8 @@ int is_primitive_array_by_raw(void *raw_class)
     Object *object = raw_class;
     return is_array_by_raw(raw_class) && object->raw_class->class_name[1] != 'L';
 }
+
+int is_interface(ClassFile *class)
+{
+    return (class->access_flags & ACC_INTERFACE) != 0;
+}
