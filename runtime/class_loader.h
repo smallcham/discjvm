@@ -145,4 +145,10 @@ Slot *create_object_slot(SerialHeap *heap, ClassFile *class);
 
 Slot *create_object_slot_set_object(SerialHeap *heap, void *object);
 
+int is_parent(ClassFile *this, ClassFile *super);
+
+int is_impl_interface(ClassFile *this, ClassFile *interface);
+
+MethodInfo *find_interface_method_iter_super_with_desc(Thread *thread, SerialHeap *heap, ClassFile **class, char *name, char *desc);
+
 #endif //DISCJVM_CLASS_LOADER_H

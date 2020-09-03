@@ -237,6 +237,8 @@ int is_array_by_name(char *name);
 
 int is_array_by_raw(void *raw_class);
 
+int class_is_array(ClassFile *class);
+
 int is_object_array(void *ref);
 
 int is_object_array_by_raw(void *raw_class);

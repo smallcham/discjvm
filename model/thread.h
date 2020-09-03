@@ -47,6 +47,16 @@ void print_local_variables(Frame *frame);
 
 u4 get_localvar(Frame *frame, int index);
 
+Slot *get_slot_localvar(Frame *frame, int index);
+
+void set_long_localvar(Frame *frame, int index, u4 higher, u4 lower);
+
+void set_localvar_with_slot(Frame *frame, int index, Slot *value);
+
+void set_long_localvar_with_slot(Frame *frame, int index, Slot *higher, Slot *lower);
+
+void set_localvar(Frame *frame, int index, u4 value);
+
 u8 get_long_localvar(Frame *frame, int index);
 
 void *get_ref_localvar(Frame *frame, int index);

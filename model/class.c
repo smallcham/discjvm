@@ -46,6 +46,11 @@ int is_array_by_name(char *name)
     return name[0] == '[';
 }
 
+int class_is_array(ClassFile *class)
+{
+    return class->class_name[0] == '[';
+}
+
 int is_array(void *ref)
 {
     Array *object = ref;

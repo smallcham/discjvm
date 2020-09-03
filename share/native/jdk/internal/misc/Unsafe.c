@@ -95,38 +95,45 @@ void jdk_internal_misc_Unsafe_compareAndSetLong_9Ljava_lang_Object1JJJ0Z(Thread 
     u8 offset = get_long_localvar(frame, 2);
     u8 e = get_localvar(frame, 4);
     u8 x = get_localvar(frame, 5);
-    Slot *slot = NULL;
-    if(is_array(get_ref_localvar(frame, 1))) {
-        Array *ref = get_ref_localvar(frame, 1);
-        slot = &ref->objects[0]->fields[offset];
-    } else {
-        Object *ref = get_ref_localvar(frame, 1);
-        slot = &ref->fields[offset];
-    }
-    if (e == slot->value) {
-        slot->value = x;
-        push_int(frame->operand_stack, 1);
-    } else {
-        push_int(frame->operand_stack, 0);
-    }
+    void *object = get_ref_localvar(frame, 1);
+    long *p = ((char*)object + offset);
+    *p = x;
+    push_int(frame->operand_stack, 1);
+//    Slot *slot = NULL;
+//    if(is_array(get_ref_localvar(frame, 1))) {
+//        Array *ref = get_ref_localvar(frame, 1);
+//        slot = &ref->objects[0]->fields[offset];
+//    } else {
+//        Object *ref = get_ref_localvar(frame, 1);
+//        slot = &ref->fields[offset];
+//    }
+//    if (e == slot->value) {
+//        slot->value = x;
+//        push_int(frame->operand_stack, 1);
+//    } else {
+//        push_int(frame->operand_stack, 0);
+//    }
 }
 
 void jdk_internal_misc_Unsafe_getObjectVolatile_9Ljava_lang_Object1J0Ljava_lang_Object1(Thread *thread, SerialHeap *heap, Frame *frame)
 {
     //TODO
     u8 offset = get_long_localvar(frame, 2);
-    Slot *slot = NULL;
-    if(is_array(get_ref_localvar(frame, 1))) {
-        Array *ref = get_ref_localvar(frame, 1);
-        if (NULL == ref->objects[0]) {
-            push_slot(frame->operand_stack, NULL_SLOT);
-            return;
-        } else {
-            slot = &ref->objects[0]->fields[offset];
-        }
-    } else {
-        Object *ref = get_ref_localvar(frame, 1);
-        slot = &ref->fields[offset];
-    }
-    push_slot(frame->operand_stack, slot);
+    void *object = get_ref_localvar(frame, 1);
+    Object *ref = (Object*)((char*)object + offset);
+    push_object(frame->operand_stack, ref);
+//    Slot *slot = NULL;
+//    if(is_array(get_ref_localvar(frame, 1))) {
+//        Array *ref = get_ref_localvar(frame, 1);
+//        if (NULL == ref->objects[0]) {
+//            push_slot(frame->operand_stack, NULL_SLOT);
+//            return;
+//        } else {
+//            slot = &ref->objects[0]->fields[offset];
+//        }
+//    } else {
+//        Object *ref = get_ref_localvar(frame, 1);
+//        slot = &ref->fields[offset];
+//    }
+//    push_slot(frame->operand_stack, slot);
 }

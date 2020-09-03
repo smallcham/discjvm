@@ -266,7 +266,7 @@ void print_stack(Stack *stack)
                 else printf("NULL-OBJECT(%p)", obj);
             } else {
                 char *str = value->object_value;
-                printf("%s", str);
+                printf("\"%s\"", str);
             }
         } else {
             printf("%d", value->value);

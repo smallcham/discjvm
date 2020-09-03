@@ -308,139 +308,131 @@ void ldc2_w(SerialHeap *heap, Thread *thread, Frame *frame) {
 }
 
 void iload(SerialHeap *heap, Thread *thread, Frame *frame) {
-    push_int(frame->operand_stack, frame->local_variables[step_pc1_and_read_code(frame)]->value);
+    push_int(frame->operand_stack, get_localvar(frame, step_pc1_and_read_code(frame)));
     step_pc_1(frame);
 }
 
 void lload(SerialHeap *heap, Thread *thread, Frame *frame) {
     u1 index = step_pc1_and_read_code(frame);
-    push_slot(frame->operand_stack, frame->local_variables[index + 1]);
-    push_slot(frame->operand_stack, frame->local_variables[index]);
+    push_long(frame->operand_stack, get_long_localvar(frame, index));
     step_pc_1(frame);
 }
 
 void fload(SerialHeap *heap, Thread *thread, Frame *frame) {
-    push_float(frame->operand_stack, frame->local_variables[step_pc1_and_read_code(frame)]->value);
+    push_float(frame->operand_stack, get_localvar(frame, step_pc1_and_read_code(frame)));
     step_pc_1(frame);
 }
 
 void dload(SerialHeap *heap, Thread *thread, Frame *frame) {
     u1 index = step_pc1_and_read_code(frame);
-    push_int(frame->operand_stack, frame->local_variables[index + 1]->value);
-    push_int(frame->operand_stack, frame->local_variables[index]->value);
+    push_double(frame->operand_stack, get_long_localvar(frame, index));
+//    push_int(frame->operand_stack, frame->local_variables[index + 1]->value);
+//    push_int(frame->operand_stack, frame->local_variables[index]->value);
     step_pc_1(frame);
 }
 
 void aload(SerialHeap *heap, Thread *thread, Frame *frame) {
-    push_slot(frame->operand_stack, frame->local_variables[step_pc1_and_read_code(frame)]);
+    push_slot(frame->operand_stack, get_slot_localvar(frame, step_pc1_and_read_code(frame)));
     step_pc_1(frame);
 }
 
 void iload_0(SerialHeap *heap, Thread *thread, Frame *frame) {
-    push_int(frame->operand_stack, frame->local_variables[0]->value);
+    push_int(frame->operand_stack, get_localvar(frame, 0));
     step_pc_1(frame);
 }
 
 void iload_1(SerialHeap *heap, Thread *thread, Frame *frame) {
-    push_int(frame->operand_stack, frame->local_variables[1]->value);
+    push_int(frame->operand_stack, get_localvar(frame, 1));
     step_pc_1(frame);
 }
 
 void iload_2(SerialHeap *heap, Thread *thread, Frame *frame) {
-    push_int(frame->operand_stack, frame->local_variables[2]->value);
+    push_int(frame->operand_stack, get_localvar(frame, 2));
     step_pc_1(frame);
 }
 
 void iload_3(SerialHeap *heap, Thread *thread, Frame *frame) {
-    push_int(frame->operand_stack, frame->local_variables[3]->value);
+    push_int(frame->operand_stack, get_localvar(frame, 3));
     step_pc_1(frame);
 }
 
 void lload_0(SerialHeap *heap, Thread *thread, Frame *frame) {
-    push_slot(frame->operand_stack, frame->local_variables[1]);
-    push_slot(frame->operand_stack, frame->local_variables[0]);
+    push_long(frame->operand_stack, get_long_localvar(frame, 0));
     step_pc_1(frame);
 }
 
 void lload_1(SerialHeap *heap, Thread *thread, Frame *frame) {
-    push_int(frame->operand_stack, 2);
-    push_int(frame->operand_stack, 1);
+    push_long(frame->operand_stack, get_long_localvar(frame, 1));
     step_pc_1(frame);
 }
 
 void lload_2(SerialHeap *heap, Thread *thread, Frame *frame) {
-    push_int(frame->operand_stack, 3);
-    push_int(frame->operand_stack, 2);
+    push_long(frame->operand_stack, get_long_localvar(frame, 2));
     step_pc_1(frame);
 }
 
 void lload_3(SerialHeap *heap, Thread *thread, Frame *frame) {
-    push_int(frame->operand_stack, 4);
-    push_int(frame->operand_stack, 3);
+    push_long(frame->operand_stack, get_long_localvar(frame, 3));
     step_pc_1(frame);
 }
 
 void fload_0(SerialHeap *heap, Thread *thread, Frame *frame) {
-    push_float(frame->operand_stack, 0);
+    push_float(frame->operand_stack, get_localvar(frame, 0));
     step_pc_1(frame);
 }
 
 void fload_1(SerialHeap *heap, Thread *thread, Frame *frame) {
-    push_float(frame->operand_stack, 1);
+    push_float(frame->operand_stack, get_localvar(frame, 1));
     step_pc_1(frame);
 }
 
 void fload_2(SerialHeap *heap, Thread *thread, Frame *frame) {
-    push_float(frame->operand_stack, 2);
+    push_float(frame->operand_stack, get_localvar(frame, 2));
     step_pc_1(frame);
 }
 
 void fload_3(SerialHeap *heap, Thread *thread, Frame *frame) {
-    push_float(frame->operand_stack, 3);
+    push_float(frame->operand_stack, get_localvar(frame, 3));
     step_pc_1(frame);
 }
 
 void dload_0(SerialHeap *heap, Thread *thread, Frame *frame) {
-    push_int(frame->operand_stack, 0);
-    push_int(frame->operand_stack, 0);
+    push_double(frame->operand_stack, get_long_localvar(frame, 0));
     step_pc_1(frame);
 }
 
 void dload_1(SerialHeap *heap, Thread *thread, Frame *frame) {
-    push_int(frame->operand_stack, 0);
-    push_int(frame->operand_stack, 0);
+    push_double(frame->operand_stack, get_long_localvar(frame, 1));
     step_pc_1(frame);
 }
 
 void dload_2(SerialHeap *heap, Thread *thread, Frame *frame) {
-    push_int(frame->operand_stack, 0);
-    push_int(frame->operand_stack, 2);
+    push_double(frame->operand_stack, get_long_localvar(frame, 2));
     step_pc_1(frame);
 }
 
 void dload_3(SerialHeap *heap, Thread *thread, Frame *frame) {
-    push_int(frame->operand_stack, 0);
-    push_int(frame->operand_stack, 3);
+    push_double(frame->operand_stack, get_long_localvar(frame, 3));
     step_pc_1(frame);
 }
 
 void aload_0(SerialHeap *heap, Thread *thread, Frame *frame) {
-    push_slot(frame->operand_stack, frame->local_variables[0]);
+    push_slot(frame->operand_stack, get_slot_localvar(frame, 0));
     step_pc_1(frame);
 }
 
 void aload_1(SerialHeap *heap, Thread *thread, Frame *frame) {
-    push_slot(frame->operand_stack, frame->local_variables[1]);
+    push_slot(frame->operand_stack, get_slot_localvar(frame, 1));
     step_pc_1(frame);
 }
 
 void aload_2(SerialHeap *heap, Thread *thread, Frame *frame) {
-    push_slot(frame->operand_stack, frame->local_variables[2]);
+    push_slot(frame->operand_stack, get_slot_localvar(frame, 2));
     step_pc_1(frame);
 }
 
 void aload_3(SerialHeap *heap, Thread *thread, Frame *frame) {
-    push_slot(frame->operand_stack, frame->local_variables[3]);
+    push_slot(frame->operand_stack, get_slot_localvar(frame, 3));
     step_pc_1(frame);
 }
 
@@ -480,15 +472,17 @@ void lstore(SerialHeap *heap, Thread *thread, Frame *frame) {
     Slot *lower = pop_slot(frame->operand_stack);
     Slot *higher = pop_slot(frame->operand_stack);
     int index = step_pc1_and_read_code(frame);
-    frame->local_variables[index] = higher;
-    frame->local_variables[index + 1] = lower;
+    set_long_localvar_with_slot(frame, index, higher, lower);
+//    frame->local_variables[index] = higher;
+//    frame->local_variables[index + 1] = lower;
     step_pc_1(frame);
 }
 
 void fstore(SerialHeap *heap, Thread *thread, Frame *frame) {
     Slot *value = pop_slot(frame->operand_stack);
     int index = step_pc1_and_read_code(frame);
-    frame->local_variables[index] = value;
+    set_localvar_with_slot(frame, index, value);
+//    frame->local_variables[index] = value;
     step_pc_1(frame);
 }
 
@@ -496,58 +490,69 @@ void dstore(SerialHeap *heap, Thread *thread, Frame *frame) {
     Slot *lower = pop_slot(frame->operand_stack);
     Slot *higher = pop_slot(frame->operand_stack);
     int index = step_pc1_and_read_code(frame);
-    frame->local_variables[index] = higher;
-    frame->local_variables[index + 1] = lower;
+//    frame->local_variables[index] = higher;
+//    frame->local_variables[index + 1] = lower;
+    set_long_localvar_with_slot(frame, index, higher, lower);
     step_pc_1(frame);
 }
 
 void astore(SerialHeap *heap, Thread *thread, Frame *frame) {
     u1 index = step_pc1_and_read_code(frame);
-    frame->local_variables[index] = pop_slot(frame->operand_stack);
+//    frame->local_variables[index] = pop_slot(frame->operand_stack);
+    set_localvar_with_slot(frame, index, pop_slot(frame->operand_stack));
     step_pc_1(frame);
 }
 
 void istore_0(SerialHeap *heap, Thread *thread, Frame *frame) {
-    frame->local_variables[0]->value = pop_int(frame->operand_stack);
+//    frame->local_variables[0]->value = pop_int(frame->operand_stack);
+    set_localvar(frame, 0, pop_int(frame->operand_stack));
     step_pc_1(frame);
 }
 
 void istore_1(SerialHeap *heap, Thread *thread, Frame *frame) {
-    frame->local_variables[1]->value = pop_int(frame->operand_stack);
+    set_localvar(frame, 1, pop_int(frame->operand_stack));
     step_pc_1(frame);
 }
 
 void istore_2(SerialHeap *heap, Thread *thread, Frame *frame) {
-    frame->local_variables[2]->value = pop_int(frame->operand_stack);
+    set_localvar(frame, 2, pop_int(frame->operand_stack));
     step_pc_1(frame);
 }
 
 void istore_3(SerialHeap *heap, Thread *thread, Frame *frame) {
-    frame->local_variables[3]->value = pop_int(frame->operand_stack);
+    set_localvar(frame, 3, pop_int(frame->operand_stack));
     step_pc_1(frame);
 }
 
 void lstore_0(SerialHeap *heap, Thread *thread, Frame *frame) {
-    frame->local_variables[0]->value = pop_int(frame->operand_stack);
-    frame->local_variables[1]->value = pop_int(frame->operand_stack);
+//    frame->local_variables[0]->value = pop_int(frame->operand_stack);
+//    frame->local_variables[1]->value = pop_int(frame->operand_stack);
+//    step_pc_1(frame);
+
+    u4 lower = pop_int(frame->operand_stack);
+    u4 higher = pop_int(frame->operand_stack);
+    set_long_localvar(frame, 0, higher, lower);
     step_pc_1(frame);
 }
 
 void lstore_1(SerialHeap *heap, Thread *thread, Frame *frame) {
-    frame->local_variables[1]->value = pop_int(frame->operand_stack);
-    frame->local_variables[2]->value = pop_int(frame->operand_stack);
+    u4 lower = pop_int(frame->operand_stack);
+    u4 higher = pop_int(frame->operand_stack);
+    set_long_localvar(frame, 1, higher, lower);
     step_pc_1(frame);
 }
 
 void lstore_2(SerialHeap *heap, Thread *thread, Frame *frame) {
-    frame->local_variables[2]->value = pop_int(frame->operand_stack);
-    frame->local_variables[3]->value = pop_int(frame->operand_stack);
+    u4 lower = pop_int(frame->operand_stack);
+    u4 higher = pop_int(frame->operand_stack);
+    set_long_localvar(frame, 2, higher, lower);
     step_pc_1(frame);
 }
 
 void lstore_3(SerialHeap *heap, Thread *thread, Frame *frame) {
-    frame->local_variables[3]->value = pop_int(frame->operand_stack);
-    frame->local_variables[4]->value = pop_int(frame->operand_stack);
+    u4 lower = pop_int(frame->operand_stack);
+    u4 higher = pop_int(frame->operand_stack);
+    set_long_localvar(frame, 3, higher, lower);
     step_pc_1(frame);
 }
 
@@ -561,24 +566,24 @@ void dstore_2(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void dstore_3(SerialHeap *heap, Thread *thread, Frame *frame) {}
 
 void astore_0(SerialHeap *heap, Thread *thread, Frame *frame) {
-    frame->local_variables[0] = pop_slot(frame->operand_stack);
+//    frame->local_variables[0] = pop_slot(frame->operand_stack);
+    set_localvar_with_slot(frame, 0, pop_slot(frame->operand_stack));
     step_pc_1(frame);
 }
 
 void astore_1(SerialHeap *heap, Thread *thread, Frame *frame) {
-    frame->local_variables[1] = pop_slot(frame->operand_stack);
-    Slot slot = *(Slot*)frame->local_variables[1];
-//    printf("%s\n", (*(Object*)slot.object_value).class->class_name);
+//    frame->local_variables[1] = pop_slot(frame->operand_stack);
+    set_localvar_with_slot(frame, 1, pop_slot(frame->operand_stack));
     step_pc_1(frame);
 }
 
 void astore_2(SerialHeap *heap, Thread *thread, Frame *frame) {
-    frame->local_variables[2] = pop_slot(frame->operand_stack);
+    set_localvar_with_slot(frame, 2, pop_slot(frame->operand_stack));
     step_pc_1(frame);
 }
 
 void astore_3(SerialHeap *heap, Thread *thread, Frame *frame) {
-    frame->local_variables[3] = pop_slot(frame->operand_stack);
+    set_localvar_with_slot(frame, 3, pop_slot(frame->operand_stack));
     step_pc_1(frame);
 }
 
@@ -1386,8 +1391,12 @@ void instanceof(SerialHeap *heap, Thread *thread, Frame *frame) {
     Object *source = pop_object(frame->operand_stack);
     u1 byte1 = step_pc1_and_read_code(frame);
     u1 byte2 = step_pc1_and_read_code(frame);
-    ClassFile *target = load_class_by_class_info_index(thread, heap, frame->constant_pool, byte1 << 8 | byte2);
-    push_int(frame->operand_stack, is_instance_of(source->raw_class, target));
+    if (NULL == source) {
+        push_int(frame->operand_stack, 0);
+    } else {
+        ClassFile *target = load_class_by_class_info_index(thread, heap, frame->constant_pool, byte1 << 8 | byte2);
+        push_int(frame->operand_stack, is_instance_of(source->raw_class, target));
+    }
     step_pc_1(frame);
 }
 

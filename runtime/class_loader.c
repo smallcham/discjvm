@@ -479,7 +479,7 @@ void do_invokeinterface_by_index(Thread *thread, SerialHeap *heap, Frame *frame,
     }
     Object *object = slots[0]->object_value;
     class = object->class;
-    MethodInfo *method = find_method_iter_super_with_desc(thread, heap, &class, method_name, method_desc);
+    MethodInfo *method = find_interface_method_iter_super_with_desc(thread, heap, &class, method_name, method_desc);
     if (NULL == method) exit(-1);
     if ((method->access_flags & ACC_NATIVE) != 0) {
         create_c_frame_and_invoke_add_params_plus1(thread, heap, frame, class->class_name, method);
@@ -516,7 +516,6 @@ void do_invokevirtual_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
     CONSTANT_Utf8_info method_name_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.name_index].info;
     CONSTANT_Utf8_info method_desc_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info;
     ClassFile *class = load_class(thread, heap, class_name_info.bytes);
-    ClassFile *_class = class;
     printf("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class->class_name, name_and_type_info.name_index, method_name_info.bytes, name_and_type_info.descriptor_index, method_desc_info.bytes);
 
     int params_count = parse_method_param_count(*(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info);
@@ -1271,6 +1270,22 @@ MethodInfo *find_method_iter_super_with_desc(Thread *thread, SerialHeap *heap, C
     return NULL;
 }
 
+MethodInfo *find_interface_method_iter_super_with_desc(Thread *thread, SerialHeap *heap, ClassFile **class, char *name, char *desc) {
+    ClassFile *back_class = *class;
+    MethodInfo *method = find_method_iter_super_with_desc(thread, heap, class, name, desc);
+    if (NULL != method) return method;
+    for (int i = 0; i < back_class->interfaces_count; i++) {
+        ClassFile *interface = back_class->interfaces_info[i].class;
+        method = find_method_iter_super_with_desc(thread, heap, &interface, name, desc);
+        if (NULL != method) {
+            *class = interface;
+            return method;
+        }
+        *class = get_super_class(thread, heap, *class);
+    }
+    return NULL;
+}
+
 MethodInfo *find_method_with_desc(Thread *thread, SerialHeap *heap, ClassFile *class, char *name, char *desc) {
     for (int i = 0; i < class->methods_count; i++)
     {
@@ -1281,61 +1296,64 @@ MethodInfo *find_method_with_desc(Thread *thread, SerialHeap *heap, ClassFile *c
     return NULL;
 }
 
-CONSTANT_InterfaceMethodref_info get_interface_info_from_bytes(ConstantPool *pool, u2 *bytes)
-{
-    bytes += sizeof(u2);
-    return *(CONSTANT_InterfaceMethodref_info*)pool[(int)bytes].info;
-}
-
 //TODO 逻辑未完成, 需要测试调整
-int is_instance_of(ClassFile *source, ClassFile *target)
+int is_instance_of(ClassFile *s, ClassFile *t)
 {
-    if (source == target) return 1;
-    if (!is_array_by_name(source->class_name)) {
-        if (!is_interface(source)) {
-            if (!is_interface(target)) {
-                while (1) {
-                    ClassFile *super = source->super_class;
-                    if (NULL == super) break;
-                    if (strcmp(super->class_name, target->class_name) == 0) return 1;
-                    if (strcmp(super->class_name, "java/lang/Object") == 0) break;
-                }
+    if (s == t) return 1;
+    if (!class_is_array(s)) {
+        if (!is_interface(s)) {
+            if (!is_interface(t)) {
+                return is_parent(s, t);
             } else {
-                while (1) {
-                    ClassFile *super = source->super_class;
-                    if (NULL == super || strcmp(super->class_name, "java/lang/Object") == 0) break;
-                    for (int i = 0; i < super->interfaces_count; i++) {
-                        ClassFile *_interface = super->interfaces_info[i].class;
-                        if (strcmp(_interface->class_name, target->class_name) == 0) return 1;
-                    }
-                }
+                return is_impl_interface(s, t);
             }
         } else {
-            if (!is_interface(target)) {
-                return strcmp(target->class_name, "java/lang/Class") == 0;
+            if (!is_interface(t)) {
+                return strcmp(t->class_name, "java/lang/Object") == 0;
             } else {
-                while (1) {
-                    ClassFile *super = target->super_class;
-                    if (NULL == super || strcmp(super->class_name, "java/lang/Object") == 0) break;
-                    for (int i = 0; i < super->interfaces_count; i++) {
-                        ClassFile *_interface = super->interfaces_info[i].class;
-                        if (strcmp(_interface->class_name, source->class_name) == 0) return 1;
-                    }
-                }
+                return is_impl_interface(s, t);
             }
         }
     } else {
-        if (!is_array_by_name(target->class_name)) {
-            if (!is_interface(target)) {
-                return strcmp(target->class_name, "java/lang/Class") == 0;
+        ClassFile *sc = s->component_class;
+        if (!class_is_array(t)) {
+            if (!is_interface(t)) {
+                return strcmp(t->class_name, "java/lang/Object") == 0;
             } else {
-                return strcmp(target->class_name, "java/lang/Cloneable") == 0 || strcmp(target->class_name, "java/io/Serializable") == 0;
+                return strcmp(t->class_name, "java/lang/Cloneable") == 0 || strcmp(t->class_name, "java/io/Serializable") == 0;
             }
         } else {
-            return source->component_class == target->component_class || is_instance_of(source->component_class, target->component_class);
+            ClassFile *tc = t->component_class;
+            return tc == sc || is_instance_of(sc, tc);
         }
     }
-    return 1;
+    return 0;
+}
+
+int is_impl_interface(ClassFile *this, ClassFile *interface)
+{
+    for (int j = 0; j < this->interfaces_count; j++) {
+        ClassFile *source = this->interfaces_info[j].class;
+        if (source == interface) {
+            return 1;
+        }
+        if (source->interfaces_count > 0) return is_impl_interface(source, interface);
+    }
+    return 0;
+}
+
+int is_parent(ClassFile *this, ClassFile *super)
+{
+    while (1) {
+        ClassFile *temp = this;
+        if (NULL == temp) return 0;
+        if (strcmp(temp->class_name, "java/lang/Object")) {
+            if (this == super) return 1;
+            else return 0;
+        }
+        if (temp == super) return 1;
+        temp = this->super_class;
+    }
 }
 
 MethodInfo *find_method(Thread *thread, SerialHeap *heap, ClassFile *class, char *name) {

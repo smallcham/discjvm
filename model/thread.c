@@ -161,6 +161,11 @@ u4 get_localvar(Frame *frame, int index)
     return frame->local_variables[index]->value;
 }
 
+Slot *get_slot_localvar(Frame *frame, int index)
+{
+    return frame->local_variables[index];
+}
+
 void *get_ref_localvar(Frame *frame, int index)
 {
     return frame->local_variables[index]->object_value;
@@ -174,6 +179,28 @@ void **get_ref_addr_localvar(Frame *frame, int index)
 void *get_localvar_this(Frame *frame)
 {
     return get_ref_localvar(frame, 0);
+}
+
+void set_localvar(Frame *frame, int index, u4 value)
+{
+    frame->local_variables[index]->value = value;
+}
+
+void set_localvar_with_slot(Frame *frame, int index, Slot *value)
+{
+    frame->local_variables[index] = value;
+}
+
+void set_long_localvar(Frame *frame, int index, u4 higher, u4 lower)
+{
+    set_localvar(frame, index, higher);
+    set_localvar(frame, index + 1, lower);
+}
+
+void set_long_localvar_with_slot(Frame *frame, int index, Slot *higher, Slot *lower)
+{
+    set_localvar_with_slot(frame, index, higher);
+    set_localvar_with_slot(frame, index + 1, lower);
 }
 
 void *set_ref_localvar(Frame *frame, int index, void *object_value)
@@ -194,7 +221,7 @@ void print_local_variables(Frame *frame)
                     else printf("[%d-> NULL-OBJECT(%p)],", i, obj);
                 } else {
                     char *str = value->object_value;
-                    printf("[%d-> %s],", i, str);
+                    printf("[%d-> \"%s\"],", i, str);
                 }
             } else {
                 printf("[%d-> %d],", i, value->value);

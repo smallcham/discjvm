@@ -16,5 +16,5 @@ void java_lang_Object_getClass_90Ljava_lang_Class(Thread *thread, SerialHeap *he
 
 void java_lang_Object_hashCode_90I(Thread *thread, SerialHeap *heap, Frame *frame)
 {
-    push_int(frame->operand_stack, (int)get_localvar_this(frame));
+    push_int(frame->operand_stack, abs((int)get_localvar_this(frame)));
 }
