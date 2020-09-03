@@ -1885,9 +1885,11 @@ Frame *pop_frame(Thread *thread, SerialHeap *heap)
     return frame;
 }
 
+long count = 0;
+
 void exec(Operator operator, SerialHeap *heap, Thread *thread, Frame *frame)
 {
-    printf("\t\t\t%s.%s%s\t\t\t#%d %s:\n", frame->class->class_name, frame->method->name, frame->method->desc, frame->pc, instructions_desc[read_code(frame)]);
+    printf("\t\t\t[%ld] - %s.%s%s\t\t\t#%d %s:\n", count++, frame->class->class_name, frame->method->name, frame->method->desc, frame->pc, instructions_desc[read_code(frame)]);
     operator(heap, thread, frame);
     Frame *_frame = get_stack(thread->vm_stack);
     if (NULL != _frame && NULL != _frame->class) {

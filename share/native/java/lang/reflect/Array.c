@@ -18,4 +18,7 @@ void java_lang_reflect_Array_newArray_9Ljava_lang_Class1I0Ljava_lang_Object1(Thr
     Array *arr = malloc_array(heap, load_primitive_class(thread, heap, _arr_name), length);
     free(_arr_name);
     push_object(frame->operand_stack, arr);
+    if (NULL != class->class_object) {
+        put_field_by_name_and_desc(arr->class->class_object, "componentType", "Ljava/lang/Class;", create_object_slot_set_object(heap, class->class_object));
+    }
 }

@@ -1299,6 +1299,7 @@ MethodInfo *find_method_with_desc(Thread *thread, SerialHeap *heap, ClassFile *c
 //TODO 逻辑未完成, 需要测试调整
 int is_instance_of(ClassFile *s, ClassFile *t)
 {
+    if (NULL == s || NULL == t) return 0;
     if (s == t) return 1;
     if (!class_is_array(s)) {
         if (!is_interface(s)) {

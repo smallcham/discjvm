@@ -95,9 +95,8 @@ void jdk_internal_misc_Unsafe_compareAndSetLong_9Ljava_lang_Object1JJJ0Z(Thread 
     u8 offset = get_long_localvar(frame, 2);
     u8 e = get_localvar(frame, 4);
     u8 x = get_localvar(frame, 5);
-    void *object = get_ref_localvar(frame, 1);
-    long *p = ((char*)object + offset);
-    *p = x;
+    Object *object = get_ref_localvar(frame, 1);
+    object->fields[offset].value = x;
     push_int(frame->operand_stack, 1);
 //    Slot *slot = NULL;
 //    if(is_array(get_ref_localvar(frame, 1))) {
@@ -121,7 +120,8 @@ void jdk_internal_misc_Unsafe_getObjectVolatile_9Ljava_lang_Object1J0Ljava_lang_
     u8 offset = get_long_localvar(frame, 2);
     void *object = get_ref_localvar(frame, 1);
     Object *ref = (Object*)((char*)object + offset);
-    push_object(frame->operand_stack, ref);
+    //need fix, why ref's address is poito &class
+    push_object(frame->operand_stack, ref->class);
 //    Slot *slot = NULL;
 //    if(is_array(get_ref_localvar(frame, 1))) {
 //        Array *ref = get_ref_localvar(frame, 1);

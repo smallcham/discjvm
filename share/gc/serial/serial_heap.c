@@ -48,12 +48,13 @@ Object *malloc_object(SerialHeap *heap, ClassFile *class)
 
 Object *malloc_null_object(SerialHeap *heap)
 {
-    Object *object = malloc(sizeof(Object));
-    memset(object, 0, sizeof(Object));
-    object->class = NULL;
-    object->raw_class = NULL;
-    object->fields = NULL;
-    return object;
+//    Object *object = malloc(sizeof(Object));
+//    memset(object, 0, sizeof(Object));
+//    object->class = NULL;
+//    object->raw_class = NULL;
+//    object->fields = NULL;
+//    return object;
+    return NULL;
 }
 
 Array *malloc_array(SerialHeap *heap, ClassFile *class, int length)

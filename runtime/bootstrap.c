@@ -93,7 +93,7 @@ HashMap **init_vm_opts()
 void start_vm(char *class_path)
 {
     JAVA_HOME = getenv("JAVA_HOME");
-    NULL_SLOT = create_slot_by_size(2);
+    NULL_SLOT = create_slot_by_size(1);
     VM_OPTS = *init_vm_opts();
 
     char *base_lib[] = {

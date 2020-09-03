@@ -11,9 +11,7 @@ void java_lang_Class_registerNatives_90V(Thread *thread, SerialHeap *heap, Frame
 void java_lang_Class_getPrimitiveClass_9Ljava_lang_String10Ljava_lang_Class(Thread *thread, SerialHeap *heap, Frame *frame)
 {
     Object *object = get_localvar_this(frame);
-//    Slot *field = get_field_from_map(&object->fields, "value", "[C");
-    FieldInfo *field = get_field_by_name_and_desc(object->class, "value", "[B");
-    ClassFile *class = load_primitive_class(thread, heap, object->fields[field->offset].object_value);
+    ClassFile *class = load_primitive_class(thread, heap, get_str_field_value_by_object(object));
     push_object(frame->operand_stack, class->class_object);
 }
 
