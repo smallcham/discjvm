@@ -119,9 +119,9 @@ void jdk_internal_misc_Unsafe_getObjectVolatile_9Ljava_lang_Object1J0Ljava_lang_
     //TODO
     u8 offset = get_long_localvar(frame, 2);
     void *object = get_ref_localvar(frame, 1);
-    Object *ref = (Object*)((char*)object + offset);
+    Object **ref = object + offset;
     //need fix, why ref's address is poito &class
-    push_object(frame->operand_stack, ref->class);
+    push_object(frame->operand_stack, *ref);
 //    Slot *slot = NULL;
 //    if(is_array(get_ref_localvar(frame, 1))) {
 //        Array *ref = get_ref_localvar(frame, 1);
