@@ -262,7 +262,13 @@ void print_stack(Stack *stack)
         if (NULL != value->object_value) {
             if (value->is_string == 0) {
                 Object *obj = value->object_value;
-                if (NULL != obj->class) printf("%s", obj->class->class_name);
+                if (NULL != obj->class) {
+                    if (strcmp(obj->class->class_name, "java/lang/String") == 0) {
+                        printf("\"%s\"", obj->fields->object_value);
+                    } else {
+                        printf("%s", obj->class->class_name);
+                    }
+                }
                 else printf("NULL-OBJECT(%p)", obj);
             } else {
                 char *str = value->object_value;

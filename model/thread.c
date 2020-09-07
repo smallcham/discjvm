@@ -217,7 +217,13 @@ void print_local_variables(Frame *frame)
             if (NULL != value->object_value) {
                 if (value->is_string == 0) {
                     Object *obj = value->object_value;
-                    if (NULL != obj->class) printf("[%d-> %s],", i, obj->class->class_name);
+                    if (NULL != obj->class) {
+                        if (strcmp(obj->class->class_name, "java/lang/String") == 0) {
+                            printf("[%d-> \"%s\"],", i, obj->fields->object_value);
+                        } else {
+                            printf("[%d-> %s],", i, obj->class->class_name);
+                        }
+                    }
                     else printf("[%d-> NULL-OBJECT(%p)],", i, obj);
                 } else {
                     char *str = value->object_value;

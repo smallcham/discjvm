@@ -46,8 +46,9 @@ void java_lang_System_arraycopy_9Ljava_lang_Object1ILjava_lang_Object1II0V(Threa
         printf_err("Need Throw IndexOutOfBoundsException");
         exit(-1);
     }
-    //TODO array copy
-    printf_warn("Not Complete, 'Do Array Copy'!!!");
+    for (int i = s_pos, j = d_pos; i < s_pos + length; i++, j++) {
+        dest->objects[j] = source->objects[i];
+    }
 }
 
 void java_lang_System_nanoTime_90J(Thread *thread, SerialHeap *heap, Frame *frame)

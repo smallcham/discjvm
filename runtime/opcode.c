@@ -804,57 +804,57 @@ void dup2_x2(SerialHeap *heap, Thread *thread, Frame *frame) {
 void swap(SerialHeap *heap, Thread *thread, Frame *frame) {}
 
 void iadd(SerialHeap *heap, Thread *thread, Frame *frame) {
-    int value1 = pop_int(frame->operand_stack);
     int value2 = pop_int(frame->operand_stack);
+    int value1 = pop_int(frame->operand_stack);
     push_int(frame->operand_stack, value1 + value2);
     step_pc_1(frame);
 }
 
 void ladd(SerialHeap *heap, Thread *thread, Frame *frame) {
-    long value1 = pop_long(frame->operand_stack);
     long value2 = pop_long(frame->operand_stack);
+    long value1 = pop_long(frame->operand_stack);
     push_long(frame->operand_stack, value1 + value2);
     step_pc_1(frame);
 }
 
 void fadd(SerialHeap *heap, Thread *thread, Frame *frame) {
-    float value1 = pop_float(frame->operand_stack);
     float value2 = pop_float(frame->operand_stack);
+    float value1 = pop_float(frame->operand_stack);
     push_float(frame->operand_stack, value1 + value2);
     step_pc_1(frame);
 }
 
 void dadd(SerialHeap *heap, Thread *thread, Frame *frame) {
-    double value1 = pop_double(frame->operand_stack);
     double value2 = pop_double(frame->operand_stack);
+    double value1 = pop_double(frame->operand_stack);
     push_double(frame->operand_stack, value1 + value2);
     step_pc_1(frame);
 }
 
 void isub(SerialHeap *heap, Thread *thread, Frame *frame) {
-    int value1 = pop_int(frame->operand_stack);
     int value2 = pop_int(frame->operand_stack);
+    int value1 = pop_int(frame->operand_stack);
     push_int(frame->operand_stack, value1 - value2);
     step_pc_1(frame);
 }
 
 void lsub(SerialHeap *heap, Thread *thread, Frame *frame) {
-    long value1 = pop_long(frame->operand_stack);
     long value2 = pop_long(frame->operand_stack);
+    long value1 = pop_long(frame->operand_stack);
     push_long(frame->operand_stack, value1 - value2);
     step_pc_1(frame);
 }
 
 void fsub(SerialHeap *heap, Thread *thread, Frame *frame) {
-    float value1 = pop_float(frame->operand_stack);
     float value2 = pop_float(frame->operand_stack);
+    float value1 = pop_float(frame->operand_stack);
     push_float(frame->operand_stack, value1 - value2);
     step_pc_1(frame);
 }
 
 void dsub(SerialHeap *heap, Thread *thread, Frame *frame) {
-    double value1 = pop_double(frame->operand_stack);
     double value2 = pop_double(frame->operand_stack);
+    double value1 = pop_double(frame->operand_stack);
     push_double(frame->operand_stack, value1 - value2);
     step_pc_1(frame);
 }
