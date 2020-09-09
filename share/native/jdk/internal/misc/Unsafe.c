@@ -17,18 +17,56 @@ void jdk_internal_misc_Unsafe_arrayBaseOffset0_9java_lang_Class10I(Thread *threa
     } else if (is_object_array_by_raw(ref)) {
         push_int(frame->operand_stack, offsetof(Array, objects));
     } else if (is_primitive_array_by_raw(ref)) {
-        push_int(frame->operand_stack, 0);
+        push_int(frame->operand_stack, offsetof(Array, raw_object));
     } else {
         //ShouldNotReachHere
         printf_err("ShouldNotReachHere");
     }
 }
 
+/**
+ * Reports the scale factor for addressing elements in the storage
+ * allocation of a given array class.  However, arrays of "narrow" types
+ * will generally not work properly with accessors like {@link
+ * #getByte(Object, long)}, so the scale factor for such classes is reported
+ * as zero.
+ */
 void jdk_internal_misc_Unsafe_arrayIndexScale0_9Ljava_lang_Class10I(Thread *thread, SerialHeap *heap, Frame *frame)
 {
-    push_int(frame->operand_stack, 1);
+    Object *object = get_ref_localvar(frame, 1);
+    int type_size;
+    switch (object->raw_class->class_name[1]) {
+        case 'Z': case 'C': case 'B':
+            type_size = sizeof(char);
+            break;
+        case 'F':
+            type_size = sizeof(float);
+            break;
+        case 'D':
+            type_size = sizeof(double);
+            break;
+        case 'S':
+            type_size = sizeof(short);
+            break;
+        case 'I':
+            type_size = sizeof(int);
+            break;
+        case 'J':
+            type_size = sizeof(long);
+            break;
+        default:
+            type_size = 8;
+            break;
+    }
+    push_int(frame->operand_stack, type_size);
 }
 
+/**
+ * Reports the size in bytes of a native pointer, as stored via {@link
+ * #putAddress}.  This value will be either 4 or 8.  Note that the sizes of
+ * other primitive types (as stored in native memory blocks) is determined
+ * fully by their information content.
+ */
 void jdk_internal_misc_Unsafe_addressSize0_90I(Thread *thread, SerialHeap *heap, Frame *frame)
 {
     push_int(frame->operand_stack, 8);
@@ -39,6 +77,11 @@ void jdk_internal_misc_Unsafe_isBigEndian0_90Z(Thread *thread, SerialHeap *heap,
     push_int(frame->operand_stack, 1);
 }
 
+/**
+ * Returns true if this platform is capable of performing
+ * accesses at addresses which are not aligned for the type of the
+ * primitive type being accessed, false otherwise.
+ */
 void jdk_internal_misc_Unsafe_unalignedAccess0_90Z(Thread *thread, SerialHeap *heap, Frame *frame)
 {
     push_int(frame->operand_stack, 1);
@@ -117,6 +160,8 @@ void jdk_internal_misc_Unsafe_compareAndSetLong_9Ljava_lang_Object1JJJ0Z(Thread 
 void jdk_internal_misc_Unsafe_getObjectVolatile_9Ljava_lang_Object1J0Ljava_lang_Object1(Thread *thread, SerialHeap *heap, Frame *frame)
 {
     //TODO
+//    u8 offset = get_long_localvar(frame, 2);
+//    offset = 32;
     u8 offset = get_long_localvar(frame, 2);
     void *object = get_ref_localvar(frame, 1);
     Object **ref = object + offset;
