@@ -59,24 +59,20 @@ Object *malloc_null_object(SerialHeap *heap)
 
 Array *malloc_array(SerialHeap *heap, ClassFile *class, int length)
 {
-    Array *array = malloc(sizeof(Array) + sizeof(Object) * length);
-    memset(array, 0, sizeof(Array) + sizeof(Object) * length);
-    array->length = length;
-    array->class = class;
-    array->raw_class = class;
+    Array *array = malloc_array_by_type_size(heap, class, length, sizeof(Object));
+    Object **objects = (Object **) array->objects;
     for (int i = 0; i < length; i++) {
-        array->objects[i] = NULL;
+        objects[i] = NULL;
     }
     return array;
 }
 
-Array *malloc_raw_array(SerialHeap *heap, ClassFile *class, int length, int type_size)
+Array *malloc_array_by_type_size(SerialHeap *heap, ClassFile *class, int length, int type_size)
 {
-    Array *array = malloc(sizeof(Array));
-    memset(array, 0, sizeof(Array));
+    Array *array = malloc(sizeof(Array) + type_size * length);
+    memset(array, 0, sizeof(Array) + type_size * length);
     array->length = length;
     array->class = class;
-    array->raw_object = malloc(length * type_size);
     array->raw_class = class;
     return array;
 }

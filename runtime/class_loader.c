@@ -897,7 +897,7 @@ void create_array_by_type(Thread *thread, SerialHeap *heap, Frame *frame, u1 typ
 //    push_object(frame->operand_stack, object);
 
     ClassFile *class = load_class(thread, heap, desc);
-    Array *array = malloc_raw_array(heap, class, count, type_size);
+    Array *array = malloc_array_by_type_size(heap, class, count, type_size);
     push_object(frame->operand_stack, array);
 }
 

@@ -25,8 +25,6 @@ void java_lang_System_initProperties_9Ljava_util_Properties10Ljava_util_Properti
         add_params_and_plus1(frame, new_frame, method);
         new_frame->pop_hook = (PopHook)pop_return_hook_;
         push_stack(thread->vm_stack, new_frame);
-//        create_vm_frame_by_method_add_params_plus1(thread, object->class, frame, method, get_method_code(object->class->constant_pool, *method));
-
     }
     free(_keys);
 }

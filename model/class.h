@@ -201,8 +201,7 @@ typedef struct {
     ClassFile *class;
     ClassFile *raw_class;
     u4 length;
-    void *raw_object;
-    Object *objects[];
+    void *objects[];
 } Array;
 
 //typedef struct{

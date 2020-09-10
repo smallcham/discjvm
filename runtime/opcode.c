@@ -456,7 +456,7 @@ void baload(SerialHeap *heap, Thread *thread, Frame *frame) {
         push_int(frame->operand_stack, (int)(str[index]));
     } else {
         Array *array = slot->object_value;
-        u4 *value = array->raw_object;
+        u4 *value = (u4*)array->objects;
         push_int(frame->operand_stack, (int)(value[index]));
     }
     step_pc_1(frame);
@@ -638,43 +638,33 @@ void xastore_(SerialHeap *heap, Thread *thread, Frame *frame, char desc) {
     int index = pop_int(frame->operand_stack);
     Array *ref = pop_object(frame->operand_stack);
     switch (desc) {
-        case 'Z': {
-            int *objects = ref->raw_object;
+        case 'Z': case 'I': {
+            int *objects = (int*)ref->objects;
             objects[index] = value->value;
             break;
         }
-        case 'C': {
-            char *objects = ref->raw_object;
+        case 'C': case 'B': {
+            char *objects = (char*)ref->objects;
             objects[index] = value->value;
             break;
         }
         case 'F': {
-            float *objects = ref->raw_object;
+            float *objects = (float*)ref->objects;
             objects[index] = value->value;
             break;
         }
         case 'D': {
-            double *objects = ref->raw_object;
-            objects[index] = value->value;
-            break;
-        }
-        case 'B': {
-            char *objects = ref->raw_object;
+            double *objects = (double*)ref->objects;
             objects[index] = value->value;
             break;
         }
         case 'S': {
-            short *objects = ref->raw_object;
-            objects[index] = value->value;
-            break;
-        }
-        case 'I': {
-            int *objects = ref->raw_object;
+            short *objects = (short*)ref->objects;
             objects[index] = value->value;
             break;
         }
         case 'J': {
-            long *objects = ref->raw_object;
+            long *objects = (long*)ref->objects;
             objects[index] = value->value;
             break;
         }
@@ -992,9 +982,9 @@ void lxor(SerialHeap *heap, Thread *thread, Frame *frame) {
 }
 
 void iinc(SerialHeap *heap, Thread *thread, Frame *frame) {
-    u4 index = step_pc1_and_read_code(frame);
-    u4 increment =  step_pc1_and_read_code(frame);
-    frame->local_variables[index]->value += increment;
+    u1 index = step_pc1_and_read_code(frame);
+    u1 increment = step_pc1_and_read_code(frame);
+    frame->local_variables[index]->value += (char)increment;
     step_pc_1(frame);
 }
 

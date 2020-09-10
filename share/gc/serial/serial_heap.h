@@ -30,7 +30,7 @@ Object *malloc_null_object(SerialHeap *heap);
 
 Array *malloc_array(SerialHeap *heap, ClassFile *class, int length);
 
-Array *malloc_raw_array(SerialHeap *heap, ClassFile *class, int length, int type_size);
+Array *malloc_array_by_type_size(SerialHeap *heap, ClassFile *class, int length, int type_size);
 
 void put_class_to_cache(HashMap **pool, ClassFile *class);
 

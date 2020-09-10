@@ -14,10 +14,8 @@ void jdk_internal_misc_Unsafe_arrayBaseOffset0_9java_lang_Class10I(Thread *threa
     if (!is_array_by_raw(ref)) {
         printf_err("Invalid Class, [%s] Not A Array", ref->class->class_name);
         exit(-1);
-    } else if (is_object_array_by_raw(ref)) {
+    } else if (is_array_by_raw(ref)) {
         push_int(frame->operand_stack, offsetof(Array, objects));
-    } else if (is_primitive_array_by_raw(ref)) {
-        push_int(frame->operand_stack, offsetof(Array, raw_object));
     } else {
         //ShouldNotReachHere
         printf_err("ShouldNotReachHere");
@@ -55,7 +53,7 @@ void jdk_internal_misc_Unsafe_arrayIndexScale0_9Ljava_lang_Class10I(Thread *thre
             type_size = sizeof(long);
             break;
         default:
-            type_size = 8;
+            type_size = sizeof(Object*);
             break;
     }
     push_int(frame->operand_stack, type_size);
@@ -181,4 +179,25 @@ void jdk_internal_misc_Unsafe_getObjectVolatile_9Ljava_lang_Object1J0Ljava_lang_
 //        slot = &ref->fields[offset];
 //    }
 //    push_slot(frame->operand_stack, slot);
+}
+
+/**
+ * Stores a reference value into a given Java variable, with
+ * volatile store semantics. Otherwise identical to {@link #putObject(Object, long, Object)}
+ */
+
+/**
+     * Stores a reference value into a given Java variable.
+     * <p>
+     * Unless the reference {@code x} being stored is either null
+     * or matches the field type, the results are undefined.
+     * If the reference {@code o} is non-null, card marks or
+     * other store barriers for that object (if the VM requires them)
+     * are updated.
+     * @see #putInt(Object, long, int)
+     */
+void jdk_internal_misc_Unsafe_putObjectVolatile_9Ljava_lang_Object1JLjava_lang_Object10V(Thread *thread, SerialHeap *heap, Frame *frame)
+{
+    printf_err("jdk_internal_misc_Unsafe_putObjectVolatile_9Ljava_lang_Object1JLjava_lang_Object10V not complete!");
+    exit(-1);
 }
