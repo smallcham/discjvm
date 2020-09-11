@@ -120,7 +120,7 @@ void jdk_internal_misc_Unsafe_compareAndSetObject_9Ljava_lang_Object1JLjava_lang
     Object *e = get_ref_localvar(frame, 4);
     Object *x = get_ref_localvar(frame, 5);
     void *object = get_ref_localvar(frame, 1);
-    long *p = ((char*)object + offset);
+    long *p = object + offset;
     *p = x;
     push_int(frame->operand_stack, 1);
 
@@ -160,8 +160,8 @@ void jdk_internal_misc_Unsafe_getObjectVolatile_9Ljava_lang_Object1J0Ljava_lang_
     //TODO
 //    u8 offset = get_long_localvar(frame, 2);
 //    offset = 32;
-    u8 offset = get_long_localvar(frame, 2);
     void *object = get_ref_localvar(frame, 1);
+    u8 offset = get_long_localvar(frame, 2);
     Object **ref = object + offset;
     //need fix, why ref's address is poito &class
     push_object(frame->operand_stack, *ref);
@@ -187,6 +187,7 @@ void jdk_internal_misc_Unsafe_getObjectVolatile_9Ljava_lang_Object1J0Ljava_lang_
  */
 
 /**
+     * #putObject
      * Stores a reference value into a given Java variable.
      * <p>
      * Unless the reference {@code x} being stored is either null
@@ -198,6 +199,9 @@ void jdk_internal_misc_Unsafe_getObjectVolatile_9Ljava_lang_Object1J0Ljava_lang_
      */
 void jdk_internal_misc_Unsafe_putObjectVolatile_9Ljava_lang_Object1JLjava_lang_Object10V(Thread *thread, SerialHeap *heap, Frame *frame)
 {
-    printf_err("jdk_internal_misc_Unsafe_putObjectVolatile_9Ljava_lang_Object1JLjava_lang_Object10V not complete!");
-    exit(-1);
+    void *object = get_ref_localvar(frame, 1);
+    u8 offset = get_long_localvar(frame, 2);
+    Object *value = get_ref_localvar(frame, 4);
+    long *p = object + offset;
+    *p = value;
 }
