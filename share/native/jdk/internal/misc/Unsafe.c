@@ -106,12 +106,12 @@ void jdk_internal_misc_Unsafe_compareAndSetInt_9Ljava_lang_Object1JII0Z(Thread *
     Slot *slot = &ref->fields[offset];
     u8 e = get_localvar(frame, 4);
     u8 x = get_localvar(frame, 5);
-    if (e == slot->value) {
+//    if (e == slot->value) {
         slot->value = x;
         push_int(frame->operand_stack, 1);
-    } else {
-        push_int(frame->operand_stack, 0);
-    }
+//    } else {
+//        push_int(frame->operand_stack, 0);
+//    }
 }
 
 void jdk_internal_misc_Unsafe_compareAndSetObject_9Ljava_lang_Object1JLjava_lang_Object1Ljava_lang_Object10Z(Thread *thread, SerialHeap *heap, Frame *frame)

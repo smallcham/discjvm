@@ -13,6 +13,7 @@ typedef void (*PopHook)(void *, void *, void *, void *);
 
 typedef struct {
     u4 pc;
+    long count;
     Stack *operand_stack;
     ClassFile *class;
     ConstantPool *constant_pool;

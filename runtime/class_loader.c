@@ -1345,10 +1345,10 @@ int is_impl_interface(ClassFile *this, ClassFile *interface)
 
 int is_parent(ClassFile *this, ClassFile *super)
 {
+    ClassFile *temp = this;
     while (1) {
-        ClassFile *temp = this;
         if (NULL == temp) return 0;
-        if (strcmp(temp->class_name, "java/lang/Object")) {
+        if (strcmp(temp->class_name, "java/lang/Object") == 0) {
             if (this == super) return 1;
             else return 0;
         }

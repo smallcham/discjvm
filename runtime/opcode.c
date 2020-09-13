@@ -456,8 +456,12 @@ void baload(SerialHeap *heap, Thread *thread, Frame *frame) {
         push_int(frame->operand_stack, (int)(str[index]));
     } else {
         Array *array = slot->object_value;
-        u4 *value = (u4*)array->objects;
-        push_int(frame->operand_stack, (int)(value[index]));
+        if (strcmp(array->class->class_name, "java/lang/String") == 0) {
+            push_int(frame->operand_stack, (int)get_str_field_value_by_object(slot->object_value)[index]);
+        } else {
+            u4 *value = (u4*)array->objects;
+            push_int(frame->operand_stack, (int)(value[index]));
+        }
     }
     step_pc_1(frame);
 }
@@ -1332,7 +1336,11 @@ void arraylength(SerialHeap *heap, Thread *thread, Frame *frame) {
     } else {
         Array *array = slot->object_value;
         if (NULL == array) exit(-1);
-        push_int(frame->operand_stack, array->length);
+        if (strcmp(array->class->class_name, "java/lang/String") == 0) {
+            push_int(frame->operand_stack, strlen(get_str_field_value_by_object(slot->object_value)));
+        } else {
+            push_int(frame->operand_stack, array->length);
+        }
     }
     step_pc_1(frame);
 }
@@ -1880,6 +1888,7 @@ long count = 0;
 void exec(Operator operator, SerialHeap *heap, Thread *thread, Frame *frame)
 {
     printf("\t\t\t[%ld] - %s.%s%s\t\t\t#%d %s:\n", count++, frame->class->class_name, frame->method->name, frame->method->desc, frame->pc, instructions_desc[read_code(frame)]);
+    frame->count = count;
     operator(heap, thread, frame);
     Frame *_frame = get_stack(thread->vm_stack);
     if (NULL != _frame && NULL != _frame->class) {
