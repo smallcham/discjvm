@@ -354,6 +354,16 @@ ClassFile *load_class(Thread *thread, SerialHeap *heap, char *full_class_name)
     return class;
 }
 
+ClassFile *load_primitive_class_by_str_array(Thread *thread, SerialHeap *heap, Array *array)
+{
+    char *name = malloc(array->length + 1);
+    memcpy(name, (char*)array->objects, array->length);
+    name[array->length] = '\0';
+    ClassFile *class = load_primitive_class(thread, heap, name);
+    free(name);
+    return class;
+}
+
 ClassFile *load_primitive_class(Thread *thread, SerialHeap *heap, char *primitive_name)
 {
     ClassFile *class_from_cache = get_class_from_cache(heap->class_pool, primitive_name);
@@ -619,9 +629,21 @@ FieldInfo *get_field_by_name(ClassFile *class, char *name)
     return NULL;
 }
 
+Array *get_str_field_array_value_by_object(Object *object)
+{
+    FieldInfo *field = get_field_by_name_and_desc(object->raw_class, "value", "[B");
+    Array *array = object->fields[field->offset].object_value;
+    return array;
+}
+
 char *get_str_field_value_by_object(Object *object)
 {
-    return get_field_object_value_by_name_and_desc(object, "value", "[B");
+    FieldInfo *field = get_field_by_name_and_desc(object->raw_class, "value", "[B");
+    Array *array = object->fields[field->offset].object_value;
+    char *str = malloc(array->length + 1);
+    memcpy(str, (char*)array->objects, array->length);
+    str[array->length] = '\0';
+    return str;
 }
 
 u8 get_field_value_by_name_and_desc(Object *object, char *name, char *desc)
@@ -647,11 +669,16 @@ void put_field_by_name_and_desc(Object *object, char *name, char *desc, Slot *va
     object->fields[field->offset] = *value;
 }
 
-void put_str_field(SerialHeap *heap, Object *object, char *str)
+void put_str_field(Thread *thread, SerialHeap *heap, Object *object, char *str)
 {
+    u8 len = strlen(str);
     FieldInfo *field = get_field_by_name_and_desc(object->class, "value", "[B");
-    Slot *slot = create_object_slot_set_object(heap, str);
-    slot->is_string = 1;
+    Array *array = malloc_array_by_type_size(heap, load_class(thread, heap, "[B"), len, sizeof(char));
+    char *_str = (char *) array->objects;
+    for (int i = 0; i < len; i++) {
+        _str[i] = str[i];
+    }
+    Slot *slot = create_object_slot_set_object(heap, array);
     object->fields[field->offset] = *slot;
 }
 
@@ -910,7 +937,7 @@ void create_string_object(Thread *thread, SerialHeap *heap, Frame *frame, char *
         return;
     }
     Object *object = malloc_object(heap, class);
-    put_str_field(heap, object, str);
+    put_str_field(thread, heap, object, str);
     push_object(frame->operand_stack, object);
 }
 
@@ -918,7 +945,7 @@ void create_string_object_without_back(Thread *thread, SerialHeap *heap, Frame *
 {
     ClassFile *class = load_class(thread, heap, "java/lang/String");
     Object *object = malloc_object(heap, class);
-    put_str_field(heap, object, str);
+    put_str_field(thread, heap, object, str);
     push_object(frame->operand_stack, object);
 }
 

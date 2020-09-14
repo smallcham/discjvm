@@ -23,13 +23,15 @@ ClassFile *load_class(Thread *thread, SerialHeap *heap, char *full_class_name);
 
 ClassFile *load_primitive_class(Thread *thread, SerialHeap *heap, char *primitive_name);
 
+ClassFile *load_primitive_class_by_str_array(Thread *thread, SerialHeap *heap, Array *array);
+
 void put_static_field(Thread *thread, SerialHeap *heap, Frame *frame, CONSTANT_Fieldref_info field_ref_info);
 
 void put_static_field_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index);
 
 void put_field(Thread *thread, SerialHeap *heap, Frame *frame, CONSTANT_Fieldref_info field_ref_info);
 
-void put_str_field(SerialHeap *heap, Object *object, char *str);
+void put_str_field(Thread *thread, SerialHeap *heap, Object *object, char *str);
 
 void put_field_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index);
 
@@ -114,6 +116,8 @@ void init_static_fields(ClassFile *class);
 FieldInfo *get_field_by_name_and_desc(ClassFile *class, char *name, char *desc);
 
 FieldInfo *get_static_field_by_name_and_desc(ClassFile *class, char *name, char *desc);
+
+Array *get_str_field_array_value_by_object(Object *object);
 
 char *get_str_field_value_by_object(Object *object);
 

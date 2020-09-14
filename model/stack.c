@@ -260,20 +260,20 @@ void print_stack(Stack *stack)
         if (NULL == next || NULL == next->value || NULL == next->prev) break;
         Slot *value = next->value;
         if (NULL != value->object_value) {
-            if (value->is_string == 0) {
-                Object *obj = value->object_value;
-                if (NULL != obj->class) {
-                    if (strcmp(obj->class->class_name, "java/lang/String") == 0) {
-                        printf("\"%s\"", obj->fields->object_value);
-                    } else {
-                        printf("%s", obj->class->class_name);
-                    }
+            Object *obj = value->object_value;
+            if (NULL != obj->class) {
+                if (object_is_string(obj)) {
+                    Array *array = obj->fields->object_value;
+                    char *str = malloc(array->length + 1);
+                    memcpy(str, (char*)array->objects, array->length);
+                    str[array->length] = '\0';
+                    printf("\"%s\"", str);
+                    free(str);
+                } else {
+                    printf("%s", obj->class->class_name);
                 }
-                else printf("NULL-OBJECT(%p)", obj);
-            } else {
-                char *str = value->object_value;
-                printf("\"%s\"", str);
             }
+            else printf("NULL-OBJECT(%p)", obj);
         } else {
             printf("%d", value->value);
         }

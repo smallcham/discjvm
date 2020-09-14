@@ -14,7 +14,6 @@ Slot *create_slot()
 {
     Slot *slot = malloc(sizeof(Slot));
     slot->value = 0;
-    slot->is_string = 0;
     slot->object_value = NULL;
     return slot;
 }
@@ -35,7 +34,6 @@ Slot *create_slot_by_size(int size)
     memset(slot, 0, sizeof(Slot) * size);
     for (int i = 0; i < size; i++) {
         slot[i].value = 0;
-        slot[i].is_string = 0;
         slot[i].object_value = NULL;
     }
     return slot;
@@ -90,4 +88,14 @@ int is_primitive_array_by_raw(void *raw_class)
 int is_interface(ClassFile *class)
 {
     return (class->access_flags & ACC_INTERFACE) != 0;
+}
+
+int object_is_string(Object *object)
+{
+    return NULL != object && class_is_string(object->raw_class);
+}
+
+int class_is_string(ClassFile *class)
+{
+    return NULL != class && strcmp(class->class_name, "java/lang/String") == 0;
 }

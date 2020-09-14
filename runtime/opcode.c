@@ -451,18 +451,9 @@ void aaload(SerialHeap *heap, Thread *thread, Frame *frame) {
 void baload(SerialHeap *heap, Thread *thread, Frame *frame) {
     int index = pop_int(frame->operand_stack);
     Slot *slot = pop_slot(frame->operand_stack);
-    if (slot->is_string) {
-        char *str = slot->object_value;
-        push_int(frame->operand_stack, (int)(str[index]));
-    } else {
-        Array *array = slot->object_value;
-        if (strcmp(array->class->class_name, "java/lang/String") == 0) {
-            push_int(frame->operand_stack, (int)get_str_field_value_by_object(slot->object_value)[index]);
-        } else {
-            u4 *value = (u4*)array->objects;
-            push_int(frame->operand_stack, (int)(value[index]));
-        }
-    }
+    Array *array = slot->object_value;
+    u1 *value = (u1*)array->objects;
+    push_int(frame->operand_stack, (int)(value[index]));
     step_pc_1(frame);
 }
 
@@ -1331,17 +1322,9 @@ void anewarray(SerialHeap *heap, Thread *thread, Frame *frame) {
 
 void arraylength(SerialHeap *heap, Thread *thread, Frame *frame) {
     Slot *slot = pop_slot(frame->operand_stack);
-    if (slot->is_string) {
-        push_int(frame->operand_stack, strlen(slot->object_value));
-    } else {
-        Array *array = slot->object_value;
-        if (NULL == array) exit(-1);
-        if (strcmp(array->class->class_name, "java/lang/String") == 0) {
-            push_int(frame->operand_stack, strlen(get_str_field_value_by_object(slot->object_value)));
-        } else {
-            push_int(frame->operand_stack, array->length);
-        }
-    }
+    Array *array = slot->object_value;
+    if (NULL == array) exit(-1);
+    push_int(frame->operand_stack, array->length);
     step_pc_1(frame);
 }
 

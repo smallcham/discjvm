@@ -28,6 +28,8 @@ Object *malloc_object(SerialHeap *heap, ClassFile *class);
 
 Object *malloc_null_object(SerialHeap *heap);
 
+Object *copy_object(SerialHeap *heap, Object **t, Object *s);
+
 Array *malloc_array(SerialHeap *heap, ClassFile *class, int length);
 
 Array *malloc_array_by_type_size(SerialHeap *heap, ClassFile *class, int length, int type_size);

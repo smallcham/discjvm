@@ -91,6 +91,7 @@ void jdk_internal_misc_Unsafe_objectFieldOffset1_9Ljava_lang_Class1Ljava_lang_St
     Object *string = get_ref_localvar(frame, 2);
     char *name = get_str_field_value_by_object(string);
     FieldInfo *field = get_field_by_name(object->raw_class, name);
+    free(name);
     push_long(frame->operand_stack, field->offset);
 }
 

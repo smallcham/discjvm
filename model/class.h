@@ -153,7 +153,6 @@ typedef struct {
 } InnerClassesAttribute;
 
 typedef struct {
-    int is_string;
     u8 value;
     void *object_value;
 } Slot;
@@ -251,5 +250,9 @@ Slot *create_slot();
 Slot *create_slot_set_value(u4 value);
 
 Slot *create_slot_by_size(int size);
+
+int object_is_string(Object *object);
+
+int class_is_string(ClassFile *class);
 
 #endif //DISCJVM_CLASS_H

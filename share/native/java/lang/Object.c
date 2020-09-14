@@ -17,16 +17,5 @@ void java_lang_Object_getClass_90Ljava_lang_Class(Thread *thread, SerialHeap *he
 void java_lang_Object_hashCode_90I(Thread *thread, SerialHeap *heap, Frame *frame)
 {
     Slot *slot = get_slot_localvar(frame, 0);
-    int hash;
-    if (slot->is_string) {
-        hash = hash_code(slot->object_value);
-    } else {
-        Object *object = slot->object_value;
-        if (strcmp(object->class->class_name, "java/lang/String") == 0) {
-            hash = hash_code(get_str_field_value_by_object(object));
-        } else {
-            hash = hash_code((char*)&object);
-        }
-    }
-    push_int(frame->operand_stack, hash);
+    push_int(frame->operand_stack, hash_code((char*)&slot->object_value));
 }

@@ -215,20 +215,20 @@ void print_local_variables(Frame *frame)
         Slot *value = frame->local_variables[i];
         if (NULL != value) {
             if (NULL != value->object_value) {
-                if (value->is_string == 0) {
-                    Object *obj = value->object_value;
-                    if (NULL != obj->class) {
-                        if (strcmp(obj->class->class_name, "java/lang/String") == 0) {
-                            printf("[%d-> \"%s\"],", i, obj->fields->object_value);
-                        } else {
-                            printf("[%d-> %s],", i, obj->class->class_name);
-                        }
+                Object *obj = value->object_value;
+                if (NULL != obj->class) {
+                    if (object_is_string(obj)) {
+                        Array *array = obj->fields->object_value;
+                        char *str = malloc(array->length + 1);
+                        memcpy(str, (char*)array->objects, array->length);
+                        str[array->length] = '\0';
+                        printf("[%d-> \"%s\"],", i, str);
+                        free(str);
+                    } else {
+                        printf("[%d-> %s],", i, obj->class->class_name);
                     }
-                    else printf("[%d-> NULL-OBJECT(%p)],", i, obj);
-                } else {
-                    char *str = value->object_value;
-                    printf("[%d-> \"%s\"],", i, str);
                 }
+                else printf("[%d-> NULL-OBJECT(%p)],", i, obj);
             } else {
                 printf("[%d-> %d],", i, value->value);
             }

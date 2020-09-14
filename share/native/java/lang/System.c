@@ -51,7 +51,6 @@ void java_lang_System_arraycopy_9Ljava_lang_Object1ILjava_lang_Object1II0V(Threa
         t_obj->class = s_obj->class;
         t_obj->raw_class = s_obj->raw_class;
         for (int k = 0; k < s_obj->raw_class->object_fields_count; k++) {
-            t_obj->fields[k].is_string = s_obj->fields[k].is_string;
             t_obj->fields[k].value = s_obj->fields[k].value;
             t_obj->fields[k].object_value = s_obj->fields[k].object_value;
         }

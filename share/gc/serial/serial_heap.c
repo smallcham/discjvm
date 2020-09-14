@@ -77,6 +77,16 @@ Array *malloc_array_by_type_size(SerialHeap *heap, ClassFile *class, int length,
     return array;
 }
 
+Object *copy_object(SerialHeap *heap, Object **t, Object *s)
+{
+    *t = (Object*)malloc_object(heap, s->raw_class);
+    (*t)->class = s->class;
+    (*t)->raw_class = s->raw_class;
+    for (int i = 0; i < s->raw_class->object_fields_count; i++) {
+
+    }
+}
+
 char *primitive_to_full_name(char *name)
 {
     if (strcmp(name, "int") == 0) return "java/lang/Integer";
