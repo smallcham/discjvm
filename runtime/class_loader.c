@@ -1054,7 +1054,7 @@ void init_fields(ClassFile *class)
     int object_fields_offset = NULL != super ? super->object_fields_count : 0;
     int static_fields_offset = 0;
     for (int i = 0; i < class->fields_count; i++) {
-        if (0 == (class->fields[i].access_flags & ACC_STATIC)) {
+        if (!is_static(class->fields[i].access_flags)) {
             class->fields[i].offset = object_fields_offset;
             object_fields_offset++;
         } else {

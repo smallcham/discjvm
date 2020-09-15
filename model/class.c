@@ -67,10 +67,65 @@ int is_object_array(void *ref)
     return is_array(ref) && object->class->class_name[1] == 'L';
 }
 
+int is_object_by_name(char *name)
+{
+    return name[0] == 'L';
+}
+
+int is_object_array_by_desc(char *desc)
+{
+    return is_array_by_name(desc) && desc[1] == 'L';
+}
+
 int is_object_array_by_raw(void *raw_class)
 {
     Object *object = raw_class;
     return is_array_by_raw(raw_class) && object->raw_class->class_name[1] == 'L';
+}
+
+int is_primitive_desc(char *desc)
+{
+    return strcmp(desc, "void") == 0 ||
+           strcmp(desc, "boolean") == 0 ||
+           strcmp(desc, "byte") == 0 ||
+           strcmp(desc, "char") == 0 ||
+           strcmp(desc, "short") == 0 ||
+           strcmp(desc, "int") == 0 ||
+           strcmp(desc, "long") == 0 ||
+           strcmp(desc, "float") == 0 ||
+           strcmp(desc, "double") == 0 ||
+           (desc[0] == '[' && (
+                   desc[1] == 'Z' ||
+                   desc[1] == 'C' ||
+                   desc[1] == 'F' ||
+                   desc[1] == 'D' ||
+                   desc[1] == 'B' ||
+                   desc[1] == 'S' ||
+                   desc[1] == 'I' ||
+                   desc[1] == 'J'));
+}
+
+int primitive_size(char *desc)
+{
+    if (strcmp(desc, "void") == 0) return sizeof(void);
+    if (strcmp(desc, "boolean") == 0) return sizeof(char);
+    if (strcmp(desc, "byte") == 0) return sizeof(char);
+    if (strcmp(desc, "char") == 0) return sizeof(char);
+    if (strcmp(desc, "short") == 0) return sizeof(short);
+    if (strcmp(desc, "int") == 0) return sizeof(int);
+    if (strcmp(desc, "float") == 0) return sizeof(float);
+    if (strcmp(desc, "double") == 0) return sizeof(double);
+    if (desc[0] == '[') {
+        if (desc[1] == 'Z') return sizeof(char);
+        if (desc[1] == 'C') return sizeof(char);
+        if (desc[1] == 'F') return sizeof(float);
+        if (desc[1] == 'D') return sizeof(double);
+        if (desc[1] == 'B') return sizeof(char);
+        if (desc[1] == 'S') return sizeof(short);
+        if (desc[1] == 'I') return sizeof(int);
+        if (desc[1] == 'J') return sizeof(long);
+    }
+    return -1;
 }
 
 int is_primitive_array(void *ref)
@@ -98,4 +153,9 @@ int object_is_string(Object *object)
 int class_is_string(ClassFile *class)
 {
     return NULL != class && strcmp(class->class_name, "java/lang/String") == 0;
+}
+
+int is_static(u2 access_flags)
+{
+    return 0 != (access_flags & ACC_STATIC);
 }

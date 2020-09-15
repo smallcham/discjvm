@@ -77,13 +77,31 @@ Array *malloc_array_by_type_size(SerialHeap *heap, ClassFile *class, int length,
     return array;
 }
 
-Object *copy_object(SerialHeap *heap, Object **t, Object *s)
+void copy_object(SerialHeap *heap, Object **t, Object *s)
 {
     *t = (Object*)malloc_object(heap, s->raw_class);
     (*t)->class = s->class;
     (*t)->raw_class = s->raw_class;
-    for (int i = 0; i < s->raw_class->object_fields_count; i++) {
-
+    for (int i = 0; i < s->raw_class->fields_count; i++) {
+        FieldInfo field = s->raw_class->fields[i];
+        if (is_static(field.access_flags)) continue;
+        if (is_array_by_name(field.desc)) {
+            if (is_object_array_by_desc(field.desc)) {
+                copy_object(heap, &((*t)->fields[field.offset].object_value), s->fields[field.offset].object_value);
+            } else {
+                int type_size = primitive_size(field.desc);
+                Array *array = s->fields[field.offset].object_value;
+                Array *new_array = malloc_array_by_type_size(heap, array->raw_class, array->length, type_size);
+                memcpy(new_array->objects, array->objects, type_size * array->length);
+                (*t)->fields[field.offset].object_value = new_array;
+            }
+        } else {
+            if (is_object_by_name(field.desc)) {
+                copy_object(heap, &((*t)->fields[field.offset].object_value), s->fields[field.offset].object_value);
+            } else {
+                (*t)->fields[field.offset].value = s->fields[field.offset].value;
+            }
+        }
     }
 }
 

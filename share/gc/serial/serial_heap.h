@@ -28,7 +28,7 @@ Object *malloc_object(SerialHeap *heap, ClassFile *class);
 
 Object *malloc_null_object(SerialHeap *heap);
 
-Object *copy_object(SerialHeap *heap, Object **t, Object *s);
+void copy_object(SerialHeap *heap, Object **t, Object *s);
 
 Array *malloc_array(SerialHeap *heap, ClassFile *class, int length);
 
