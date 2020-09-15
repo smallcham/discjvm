@@ -379,6 +379,10 @@ ClassFile *load_primitive_class(Thread *thread, SerialHeap *heap, char *primitiv
     class->magic = CLASS_MAGIC_NUMBER;
     class->class_name = (u1*)name;
     class->fields_count = 1;
+//    class->fields = malloc(sizeof(FieldInfo));
+//    class->fields->name = (u1*)"value";
+//    class->fields->offset = 0;
+//    class->fields->desc = "[";
     class->object_fields_count = 1;
     class->init_state = CLASS_INITED;
     put_class_to_cache(&heap->class_pool, class);
