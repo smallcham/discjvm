@@ -82,22 +82,46 @@ void copy_object(SerialHeap *heap, Object **t, Object *s)
     *t = (Object*)malloc_object(heap, s->raw_class);
     (*t)->class = s->class;
     (*t)->raw_class = s->raw_class;
+    printf("%s\n", s->raw_class->class_name);
+//    if (strcmp("java/util/Properties", s->raw_class->class_name) == 0) {
+//        printf("111");
+//    }
     for (int i = 0; i < s->raw_class->fields_count; i++) {
         FieldInfo field = s->raw_class->fields[i];
+//        printf("%s.%s->%s\n", s->raw_class->class_name, field.name, field.desc);
         if (is_static(field.access_flags)) continue;
         if (is_array_by_name(field.desc)) {
             if (is_object_array_by_desc(field.desc)) {
-                copy_object(heap, &((*t)->fields[field.offset].object_value), s->fields[field.offset].object_value);
+                Array *s_array = s->fields[field.offset].object_value;
+                if (NULL == s_array) {
+                    (*t)->fields[field.offset].object_value = NULL;
+                    return;
+                }
+                Array *t_array = malloc_array(heap, s_array->raw_class, s_array->length);
+                for (int j = 0; j < s_array->length; j++) {
+                    Object *s_obj = s_array->objects[j];
+                    if (NULL == s_obj) continue;
+                    Object *t_obj;
+                    copy_object(heap, &t_obj, s_obj);
+                    t_array->objects[j] = t_obj;
+                }
+                (*t)->fields[field.offset].object_value = t_array;
             } else {
                 int type_size = primitive_size(field.desc);
                 Array *array = s->fields[field.offset].object_value;
-                Array *new_array = malloc_array_by_type_size(heap, array->raw_class, array->length, type_size);
-                memcpy(new_array->objects, array->objects, type_size * array->length);
-                (*t)->fields[field.offset].object_value = new_array;
+                if (NULL != array) {
+                    Array *new_array = malloc_array_by_type_size(heap, array->raw_class, array->length, type_size);
+                    memcpy(new_array->objects, array->objects, type_size * array->length);
+                    (*t)->fields[field.offset].object_value = new_array;
+                }
             }
         } else {
             if (is_object_by_name(field.desc)) {
-                copy_object(heap, &((*t)->fields[field.offset].object_value), s->fields[field.offset].object_value);
+                if (NULL != s->fields[field.offset].object_value) {
+                    copy_object(heap, &((*t)->fields[field.offset].object_value), s->fields[field.offset].object_value);
+                } else {
+                    return;
+                }
             } else {
                 (*t)->fields[field.offset].value = s->fields[field.offset].value;
             }

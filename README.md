@@ -6,3 +6,5 @@
 # ConcurrentHashMap.equals has effect a endless loop, 
 # probably in method Traverser.advance. 
 # need track and explain it.
+
+# Properties fields is NULL , fix it
