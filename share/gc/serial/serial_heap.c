@@ -82,20 +82,15 @@ void copy_object(SerialHeap *heap, Object **t, Object *s)
     *t = (Object*)malloc_object(heap, s->raw_class);
     (*t)->class = s->class;
     (*t)->raw_class = s->raw_class;
-    printf("%s\n", s->raw_class->class_name);
-//    if (strcmp("java/util/Properties", s->raw_class->class_name) == 0) {
-//        printf("111");
-//    }
     for (int i = 0; i < s->raw_class->fields_count; i++) {
         FieldInfo field = s->raw_class->fields[i];
-//        printf("%s.%s->%s\n", s->raw_class->class_name, field.name, field.desc);
         if (is_static(field.access_flags)) continue;
         if (is_array_by_name(field.desc)) {
             if (is_object_array_by_desc(field.desc)) {
                 Array *s_array = s->fields[field.offset].object_value;
                 if (NULL == s_array) {
                     (*t)->fields[field.offset].object_value = NULL;
-                    return;
+                    continue;
                 }
                 Array *t_array = malloc_array(heap, s_array->raw_class, s_array->length);
                 for (int j = 0; j < s_array->length; j++) {
@@ -120,7 +115,7 @@ void copy_object(SerialHeap *heap, Object **t, Object *s)
                 if (NULL != s->fields[field.offset].object_value) {
                     copy_object(heap, &((*t)->fields[field.offset].object_value), s->fields[field.offset].object_value);
                 } else {
-                    return;
+                    continue;
                 }
             } else {
                 (*t)->fields[field.offset].value = s->fields[field.offset].value;
