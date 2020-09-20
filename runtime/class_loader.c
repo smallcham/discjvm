@@ -466,6 +466,10 @@ void do_invokestatic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2
         init_class(thread, heap, class);
         return;
     }
+    if (strcmp(method_name_info.bytes, "ofEntries") == 0) {
+        printf("111");
+    }
+
     printf("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class_name_info.bytes, name_and_type_info.name_index, method_name_info.bytes, name_and_type_info.descriptor_index, method_desc_info.bytes);
     MethodInfo *method = find_method_with_desc(thread, heap, class, method_name_info.bytes, method_desc_info.bytes);
     if (NULL == method) exit(-1);

@@ -1862,7 +1862,7 @@ Frame *pop_frame(Thread *thread, SerialHeap *heap)
         printf_warn("[INVOKE-HOOK]");
         frame->pop_hook(thread, heap, frame, get_stack(thread->vm_stack));
     }
-    printf("\n\t\t\t<-[ESC] %s - %s.%s%s\n\n", instructions_desc[read_code(frame)], frame->class->class_name, frame->method->name, frame->method->desc);
+    printf_warn("\n\t\t\t<-[ESC] %s - %s.%s%s\n\n", instructions_desc[read_code(frame)], frame->class->class_name, frame->method->name, frame->method->desc);
     return frame;
 }
 

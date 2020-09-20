@@ -8,3 +8,7 @@
 # need track and explain it.
 
 # Properties fields is NULL , fix it
+
+
+# ladd may be error, long type calc has some problem, set frame->count greater then 7984 , fix it
+# look like the store type of the long type push to stack cause next error 
