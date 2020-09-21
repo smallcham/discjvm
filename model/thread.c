@@ -191,16 +191,10 @@ void set_localvar_with_slot(Frame *frame, int index, Slot *value)
     frame->local_variables[index] = value;
 }
 
-void set_long_localvar(Frame *frame, int index, u4 higher, u4 lower)
+void set_long_localvar(Frame *frame, int index, u8 value)
 {
-    set_localvar(frame, index, higher);
-    set_localvar(frame, index + 1, lower);
-}
-
-void set_long_localvar_with_slot(Frame *frame, int index, Slot *higher, Slot *lower)
-{
-    set_localvar_with_slot(frame, index, higher);
-    set_localvar_with_slot(frame, index + 1, lower);
+    set_localvar(frame, index, 0);
+    set_localvar(frame, index + 1, value);
 }
 
 void *set_ref_localvar(Frame *frame, int index, void *object_value)
@@ -230,7 +224,7 @@ void print_local_variables(Frame *frame)
                 }
                 else printf("[%d-> NULL-OBJECT(%p)],", i, obj);
             } else {
-                printf("[%d-> %d],", i, value->value);
+                printf("[%d-> %ld],", i, (long)value->value);
             }
         } else {
             printf("[NULL]");

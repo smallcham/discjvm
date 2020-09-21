@@ -34,7 +34,7 @@ int push_stack(Stack *stack, void *value);
 
 int push_int(Stack *stack, int value);
 
-int push_float(Stack *stack, float value);
+float push_float(Stack *stack, float value);
 
 int push_long(Stack *stack, u8 value);
 

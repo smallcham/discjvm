@@ -204,7 +204,7 @@ void dconst_0(SerialHeap *heap, Thread *thread, Frame *frame) {
 }
 
 void dconst_1(SerialHeap *heap, Thread *thread, Frame *frame) {
-    push_float(frame->operand_stack, 1);
+    push_double(frame->operand_stack, 1);
     step_pc_1(frame);
 }
 
@@ -251,9 +251,14 @@ void ldc(SerialHeap *heap, Thread *thread, Frame *frame) {
         case CONSTANT_Integer:
             push_int(frame->operand_stack, get_u4_value_from_index(frame->constant_pool, index));
             break;
-        case CONSTANT_Float:
-            push_float(frame->operand_stack, get_u4_value_from_index(frame->constant_pool, index));
+        case CONSTANT_Float: {
+            push_int(frame->operand_stack, get_u4_value_from_index(frame->constant_pool, index));
+//            u4 num = get_u4_value_from_index(frame->constant_pool, index);
+//            char str[4];
+//            memcpy(str, &num, 4);
+//            push_float(frame->operand_stack, *(float*)str);
             break;
+        }
     }
     step_pc_1(frame);
 }
@@ -302,8 +307,7 @@ void ldc2_w(SerialHeap *heap, Thread *thread, Frame *frame) {
     u1 byte2 = step_pc1_and_read_code(frame);
     u2 index = (byte1 << 8) | byte2;
     CONSTANT_Long_info long_info = *(CONSTANT_Long_info*)frame->constant_pool[index].info;
-    push_int(frame->operand_stack, long_info.high_bytes);
-    push_int(frame->operand_stack, long_info.low_bytes);
+    push_long(frame->operand_stack, long_info.high_bytes | long_info.low_bytes);
     step_pc_1(frame);
 }
 
@@ -464,10 +468,9 @@ void istore(SerialHeap *heap, Thread *thread, Frame *frame) {
     step_pc_1(frame);
 }
 void lstore(SerialHeap *heap, Thread *thread, Frame *frame) {
-    Slot *lower = pop_slot(frame->operand_stack);
-    Slot *higher = pop_slot(frame->operand_stack);
+    u8 value = pop_long(frame->operand_stack);
     int index = step_pc1_and_read_code(frame);
-    set_long_localvar_with_slot(frame, index, higher, lower);
+    set_long_localvar(frame, index, value);
 //    frame->local_variables[index] = higher;
 //    frame->local_variables[index + 1] = lower;
     step_pc_1(frame);
@@ -482,12 +485,11 @@ void fstore(SerialHeap *heap, Thread *thread, Frame *frame) {
 }
 
 void dstore(SerialHeap *heap, Thread *thread, Frame *frame) {
-    Slot *lower = pop_slot(frame->operand_stack);
-    Slot *higher = pop_slot(frame->operand_stack);
+    u8 value = pop_long(frame->operand_stack);
     int index = step_pc1_and_read_code(frame);
 //    frame->local_variables[index] = higher;
 //    frame->local_variables[index + 1] = lower;
-    set_long_localvar_with_slot(frame, index, higher, lower);
+    set_long_localvar(frame, index, value);
     step_pc_1(frame);
 }
 
@@ -524,30 +526,26 @@ void lstore_0(SerialHeap *heap, Thread *thread, Frame *frame) {
 //    frame->local_variables[1]->value = pop_int(frame->operand_stack);
 //    step_pc_1(frame);
 
-    u4 lower = pop_int(frame->operand_stack);
-    u4 higher = pop_int(frame->operand_stack);
-    set_long_localvar(frame, 0, higher, lower);
+    u8 value = pop_long(frame->operand_stack);
+    set_long_localvar(frame, 0, value);
     step_pc_1(frame);
 }
 
 void lstore_1(SerialHeap *heap, Thread *thread, Frame *frame) {
-    u4 lower = pop_int(frame->operand_stack);
-    u4 higher = pop_int(frame->operand_stack);
-    set_long_localvar(frame, 1, higher, lower);
+    u8 value = pop_long(frame->operand_stack);
+    set_long_localvar(frame, 1, value);
     step_pc_1(frame);
 }
 
 void lstore_2(SerialHeap *heap, Thread *thread, Frame *frame) {
-    u4 lower = pop_int(frame->operand_stack);
-    u4 higher = pop_int(frame->operand_stack);
-    set_long_localvar(frame, 2, higher, lower);
+    u8 value = pop_long(frame->operand_stack);
+    set_long_localvar(frame, 2, value);
     step_pc_1(frame);
 }
 
 void lstore_3(SerialHeap *heap, Thread *thread, Frame *frame) {
-    u4 lower = pop_int(frame->operand_stack);
-    u4 higher = pop_int(frame->operand_stack);
-    set_long_localvar(frame, 3, higher, lower);
+    u8 value = pop_long(frame->operand_stack);
+    set_long_localvar(frame, 3, value);
     step_pc_1(frame);
 }
 
@@ -862,7 +860,12 @@ void idiv(SerialHeap *heap, Thread *thread, Frame *frame) {
     step_pc_1(frame);
 }
 
-void j_ldiv(SerialHeap *heap, Thread *thread, Frame *frame) {}
+void j_ldiv(SerialHeap *heap, Thread *thread, Frame *frame) {
+    long value2 = pop_long(frame->operand_stack);
+    long value1 = pop_long(frame->operand_stack);
+    push_long(frame->operand_stack, value1 / value2);
+    step_pc_1(frame);
+}
 
 void fdiv(SerialHeap *heap, Thread *thread, Frame *frame) {
     float value2 = pop_float(frame->operand_stack);
@@ -1004,7 +1007,7 @@ void l2i(SerialHeap *heap, Thread *thread, Frame *frame) {
 }
 
 void l2f(SerialHeap *heap, Thread *thread, Frame *frame) {
-    push_float(frame->operand_stack, (float)pop_long(frame->operand_stack));
+    push_float(frame->operand_stack, (u4)pop_long(frame->operand_stack));
     step_pc_1(frame);
 }
 

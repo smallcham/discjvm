@@ -108,23 +108,26 @@ Slot **pop_slot_with_num(Stack *stack, int num)
     return slots;
 }
 
-int push_float(Stack *stack, float value)
+float push_float(Stack *stack, float value)
 {
-    return push_int(stack, (int) value);
+    Slot *slot = create_slot();
+    slot->value = value;
+    push_slot(stack, slot);
+    return value;
 }
 
 int push_long(Stack *stack, u8 value)
 {
-    int c = push_int(stack, (u4) value);
-    return c + push_int(stack, (u4) (value >> 32)) == 2;
+    Slot *slot = create_slot();
+    slot->value = value;
+    push_slot(stack, slot);
+    push_int(stack, 0);
+    return value;
 }
 
 void push_long_from(Stack *source, Stack *target)
 {
-    int higher = pop_int(source);
-    int lower = pop_int(source);
-    push_int(target, lower);
-    push_int(target, higher);
+    push_long(target, pop_long(source));
 }
 
 int push_double(Stack *stack, double value)
@@ -134,10 +137,7 @@ int push_double(Stack *stack, double value)
 
 void push_double_from(Stack *source, Stack *target)
 {
-    int higher = pop_int(source);
-    int lower = pop_int(source);
-    push_int(target, higher);
-    push_int(target, lower);
+    push_long(target, pop_long(source));
 }
 
 int is_empty_stack(Stack *stack)
@@ -198,9 +198,7 @@ Object *get_object(Stack *stack)
 
 int pop_int(Stack *stack)
 {
-    Slot *slot = pop_stack(stack);
-    if (NULL == slot) return NULL;
-    return slot->value;
+    return pop_slot(stack)->value;
 }
 
 void *pop_object(Stack *stack)
@@ -211,14 +209,15 @@ void *pop_object(Stack *stack)
 
 float pop_float(Stack *stack)
 {
-    return (float) pop_int(stack);
+    char str[4];
+    memcpy(str, &(pop_slot(stack)->value), 4);
+    return *(float*)str;
 }
 
 u8 pop_long(Stack *stack)
 {
-    u8 higher = (u8)pop_int(stack);
-    u8 lower = ((u8)pop_int(stack)) << 32;
-    return higher | lower;
+    pop_int(stack);
+    return pop_slot(stack)->value;
 }
 
 double pop_double(Stack *stack)
@@ -275,7 +274,7 @@ void print_stack(Stack *stack)
             }
             else printf("NULL-OBJECT(%p)", obj);
         } else {
-            printf("%d", value->value);
+            printf("%ld", (long)value->value);
         }
         printf(", ");
         memcpy(next, next->prev, sizeof(Entry));
