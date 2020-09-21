@@ -38,6 +38,8 @@ float push_float(Stack *stack, float value);
 
 int push_long(Stack *stack, u8 value);
 
+void push_u4(Stack *stack, u4 value);
+
 void push_long_from(Stack *source, Stack *target);
 
 int push_double(Stack *stack, double value);

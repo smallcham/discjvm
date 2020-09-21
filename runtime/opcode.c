@@ -1007,7 +1007,11 @@ void l2i(SerialHeap *heap, Thread *thread, Frame *frame) {
 }
 
 void l2f(SerialHeap *heap, Thread *thread, Frame *frame) {
-    push_float(frame->operand_stack, (u4)pop_long(frame->operand_stack));
+    u8 value = pop_long(frame->operand_stack);
+    u4 temp = (u4)value;
+    u1 bs[4];
+    memcpy(bs, &value, 4);
+    push_u4(frame->operand_stack, bs);
     step_pc_1(frame);
 }
 

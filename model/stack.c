@@ -74,6 +74,13 @@ int push_int(Stack *stack, int value)
     return slot->value;
 }
 
+void push_u4(Stack *stack, u4 value)
+{
+    Slot *slot = create_slot();
+    slot->value = value;
+    push_slot(stack, slot);
+}
+
 Slot *push_slot(Stack *stack, Slot *slot)
 {
     push_stack(stack, slot);
