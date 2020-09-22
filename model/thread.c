@@ -227,7 +227,11 @@ void print_local_variables(Frame *frame)
                             char *str = malloc(array->length + 1);
                             memcpy(str, (char*)array->objects, array->length);
                             str[array->length] = '\0';
-                            printf("[%d-> \"%s\"],", i, str);
+                            if (str[0] == '\n') {
+                                printf("[%d-> \"%s\"],", i, str);
+                            } else {
+                                printf("[%d-> \"\\n\"],", i);
+                            }
                             free(str);
                         }
                     } else {

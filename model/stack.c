@@ -286,7 +286,11 @@ void print_stack(Stack *stack)
                         char *str = malloc(array->length + 1);
                         memcpy(str, (char*)array->objects, array->length);
                         str[array->length] = '\0';
-                        printf("\"%s\"", str);
+                        if (str[0] == '\n') {
+                            printf("\"\\n\"");
+                        } else {
+                            printf("\"%s\"", str);
+                        }
                         free(str);
                     }
                 } else {
