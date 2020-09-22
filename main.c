@@ -9,6 +9,9 @@ int main(int argc, char *argv[]) {
     sprintf(path, "%s/../test/class/Hello.class", buf);
     start_vm(path);
 
+//    float a = 84.0f;
+//    printf("%f", a);
+
 //Array *ref = malloc(sizeof(Array));
 //printf("%p, %p, %p, %p\n", ref, &ref->class, &ref->length, &ref->objects);
 

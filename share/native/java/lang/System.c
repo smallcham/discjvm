@@ -44,23 +44,19 @@ void java_lang_System_arraycopy_9Ljava_lang_Object1ILjava_lang_Object1II0V(Threa
         printf_err("Need Throw IndexOutOfBoundsException");
         exit(-1);
     }
-    for (int i = s_pos, j = d_pos; i < s_pos + length; i++, j++) {
-//        dest->objects[j] = source->objects[i];
-//        Object *s_obj = source->objects[i];
-//        Object *t_obj = dest->objects[j];
-//        copy_object(heap, &t_obj, s_obj);
-//        for (int k = 0; k < s_obj->raw_class->object_fields_count; k++) {
-//            t_obj->fields[k].value = s_obj->fields[k].value;
-//            t_obj->fields[k].object_value = s_obj->fields[k].object_value;
-//        }
-//        dest->objects[j] = t_obj;
-        Object *s_obj = source->objects[i];
-        Object *t_obj = malloc_object(heap, s_obj->raw_class);
-        for (int k = 0; k < s_obj->raw_class->object_fields_count; k++) {
-            t_obj->fields[k].value = s_obj->fields[k].value;
-            t_obj->fields[k].object_value = s_obj->fields[k].object_value;
+    if (is_primitive_array(source)) {
+        int type_size = primitive_size(source->raw_class->class_name);
+        memcpy((char*)dest->objects + (d_pos * type_size), (char*)source->objects + (s_pos * type_size), length * type_size);
+    } else {
+        for (int i = s_pos, j = d_pos; i < s_pos + length; i++, j++) {
+            Object *s_obj = source->objects[i];
+            Object *t_obj = malloc_object(heap, s_obj->raw_class);
+            for (int k = 0; k < s_obj->raw_class->object_fields_count; k++) {
+                t_obj->fields[k].value = s_obj->fields[k].value;
+                t_obj->fields[k].object_value = s_obj->fields[k].object_value;
+            }
+            dest->objects[j] = t_obj;
         }
-        dest->objects[j] = t_obj;
     }
 }
 

@@ -161,6 +161,14 @@ u4 get_localvar(Frame *frame, int index)
     return frame->local_variables[index]->value;
 }
 
+float get_localvar_float(Frame *frame, int index)
+{
+    char str[4];
+    memcpy(str, &(frame->local_variables[index]->value), 4);
+    float val = *(float*)str;
+    return val;
+}
+
 Slot *get_slot_localvar(Frame *frame, int index)
 {
     return frame->local_variables[index];
@@ -213,11 +221,15 @@ void print_local_variables(Frame *frame)
                 if (NULL != obj->class) {
                     if (object_is_string(obj)) {
                         Array *array = obj->fields->object_value;
-                        char *str = malloc(array->length + 1);
-                        memcpy(str, (char*)array->objects, array->length);
-                        str[array->length] = '\0';
-                        printf("[%d-> \"%s\"],", i, str);
-                        free(str);
+                        if (NULL == array) {
+                            printf("[NULL-STR]");
+                        } else {
+                            char *str = malloc(array->length + 1);
+                            memcpy(str, (char*)array->objects, array->length);
+                            str[array->length] = '\0';
+                            printf("[%d-> \"%s\"],", i, str);
+                            free(str);
+                        }
                     } else {
                         printf("[%d-> %s],", i, obj->class->class_name);
                     }

@@ -73,7 +73,7 @@ HashMap **init_vm_opts()
     put_map(&VM_OPTS, "java.vendor.version", "1.0");
     put_map(&VM_OPTS, "java.home", JAVA_HOME);
     put_map(&VM_OPTS, "java.class.version", "55.0");
-    put_map(&VM_OPTS, "java.class.path", JAVA_HOME);
+    put_map(&VM_OPTS, "java.class.path", CLASS_PATH);
     put_map(&VM_OPTS, "os.name", "linux");
     put_map(&VM_OPTS, "os.arch", "amd64");
     put_map(&VM_OPTS, "os.version",  "");
@@ -83,6 +83,7 @@ HashMap **init_vm_opts()
     put_map(&VM_OPTS, "user.name", "");
     put_map(&VM_OPTS, "user.home", "");
     put_map(&VM_OPTS, "user.dir", ".");
+
 //    put_map(&VM_OPTS, "user.country", "CN");
 //    put_map(&VM_OPTS, "file.encoding", "UTF-8");
 //    put_map(&VM_OPTS, "sun.stdout.encoding", "UTF-8");
@@ -93,6 +94,7 @@ HashMap **init_vm_opts()
 void start_vm(char *class_path)
 {
     JAVA_HOME = getenv("JAVA_HOME");
+    CLASS_PATH = getenv("CLASSPATH");
     NULL_SLOT = create_slot_by_size(1);
     VM_OPTS = *init_vm_opts();
 

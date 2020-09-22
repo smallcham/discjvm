@@ -222,6 +222,7 @@ typedef struct {
 //} Class;
 
 char *JAVA_HOME;
+char *CLASS_PATH;
 HashMap *VM_OPTS;
 Slot *NULL_SLOT;
 

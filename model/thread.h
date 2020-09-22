@@ -50,6 +50,8 @@ u4 get_localvar(Frame *frame, int index);
 
 Slot *get_slot_localvar(Frame *frame, int index);
 
+float get_localvar_float(Frame *frame, int index);
+
 void set_long_localvar(Frame *frame, int index, u8 value);
 
 void set_localvar_with_slot(Frame *frame, int index, Slot *value);

@@ -70,6 +70,8 @@ int pop_int(Stack *stack);
 
 float pop_float(Stack *stack);
 
+float push_float_by_u4(Stack *stack, u4 value);
+
 u8 pop_long(Stack *stack);
 
 double pop_double(Stack *stack);

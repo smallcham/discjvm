@@ -118,9 +118,18 @@ Slot **pop_slot_with_num(Stack *stack, int num)
 float push_float(Stack *stack, float value)
 {
     Slot *slot = create_slot();
-    slot->value = value;
+    memcpy(&slot->value, &value, 4);
     push_slot(stack, slot);
     return value;
+}
+
+float push_float_by_u4(Stack *stack, u4 value)
+{
+    char str[4];
+    memcpy(str, &value, 4);
+    float val = *(float*)str;
+    push_float(stack, val);
+    return val;
 }
 
 int push_long(Stack *stack, u8 value)
@@ -217,7 +226,8 @@ void *pop_object(Stack *stack)
 float pop_float(Stack *stack)
 {
     char str[4];
-    memcpy(str, &(pop_slot(stack)->value), 4);
+    Slot *slot = pop_slot(stack);
+    memcpy(str, &(slot->value), 4);
     return *(float*)str;
 }
 
@@ -270,11 +280,15 @@ void print_stack(Stack *stack)
             if (NULL != obj->class) {
                 if (object_is_string(obj)) {
                     Array *array = obj->fields->object_value;
-                    char *str = malloc(array->length + 1);
-                    memcpy(str, (char*)array->objects, array->length);
-                    str[array->length] = '\0';
-                    printf("\"%s\"", str);
-                    free(str);
+                    if (NULL == array) {
+                        printf("[NULL-STR]");
+                    } else {
+                        char *str = malloc(array->length + 1);
+                        memcpy(str, (char*)array->objects, array->length);
+                        str[array->length] = '\0';
+                        printf("\"%s\"", str);
+                        free(str);
+                    }
                 } else {
                     printf("%s", obj->class->class_name);
                 }
