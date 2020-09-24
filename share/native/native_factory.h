@@ -21,6 +21,7 @@
 #include "java/lang/reflect/Array.h"
 #include "java/lang/Float.h"
 #include "java/lang/Double.h"
+#include "java/io/FileInputStream.h"
 
 typedef void (*NativeMethod)(Thread *, SerialHeap *, Frame *);
 

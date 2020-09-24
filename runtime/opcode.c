@@ -1419,14 +1419,14 @@ void ifnull(SerialHeap *heap, Thread *thread, Frame *frame) {
     Object *value = pop_object(frame->operand_stack);
     u1 branch1 = step_pc1_and_read_code_no_submit(frame);
     u1 branch2 = step_pc2_and_read_code_no_submit(frame);
-    frame->pc = (value == NULL) ? step_pc_and_read_pc(frame, (branch1 << 8) | branch2) : step_pc_and_read_pc(frame, 3);
+    frame->pc = (value == NULL) ? step_pc_and_read_pc(frame, (short)((branch1 << 8) | branch2)) : step_pc_and_read_pc(frame, 3);
 }
 
 void ifnonnull(SerialHeap *heap, Thread *thread, Frame *frame) {
     Object *object = pop_object(frame->operand_stack);
     u1 branch1 = step_pc1_and_read_code_no_submit(frame);
     u1 branch2 = step_pc2_and_read_code_no_submit(frame);
-    frame->pc = (NULL != object) ? step_pc_and_read_pc(frame, (branch1 << 8) | branch2) : step_pc_and_read_pc(frame, 3);
+    frame->pc = (NULL != object) ? step_pc_and_read_pc(frame, (short)((branch1 << 8) | branch2)) : step_pc_and_read_pc(frame, 3);
 }
 
 void goto_w(SerialHeap *heap, Thread *thread, Frame *frame) {}

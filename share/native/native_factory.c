@@ -73,6 +73,9 @@ void init_native_factory()
     //Double
     put_map(&native_pool, "java/lang/Double.doubleToRawLongBits(D)J", java_lang_Double_doubleToRawLongBits_9D0J);
     put_map(&native_pool, "java/lang/Double.longBitsToDouble(J)D", java_lang_Double_longBitsToDouble_9J0D);
+
+    //FileInputStream
+    put_map(&native_pool, "java/io/FileInputStream.initIDs()V", java_io_FileInputStream_initIDs_90V);
 }
 
 NativeMethod find_native(char *class_name, char *method_name, char *method_desc)
