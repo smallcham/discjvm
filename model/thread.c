@@ -228,9 +228,9 @@ void print_local_variables(Frame *frame)
                             memcpy(str, (char*)array->objects, array->length);
                             str[array->length] = '\0';
                             if (str[0] == '\n') {
-                                printf("[%d-> \"%s\"],", i, str);
-                            } else {
                                 printf("[%d-> \"\\n\"],", i);
+                            } else {
+                                printf("[%d-> \"%s\"],", i, str);
                             }
                             free(str);
                         }

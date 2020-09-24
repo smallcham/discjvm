@@ -1909,3 +1909,18 @@ void run(Thread *thread, SerialHeap *heap) {
         exec(instructions[read_code(frame)], heap, thread, frame);
     } while (!is_empty_stack(thread->vm_stack));
 }
+
+void single_invoke(SerialHeap *heap, ClassFile *class, char *method_name, char *method_desc, Stack *params)
+{
+    printf_warn("\t\t\t[SINGLE-INVOKE-IN] %s.%s%s", class->class_name, method_name, method_desc);
+    Thread thread = create_thread(100, 100);
+    MethodInfo *method = find_method_with_desc(&thread, heap, class, method_name, method_desc);
+    Frame *frame = create_vm_frame_by_method_with_push(&thread, class, method, get_method_code(class->constant_pool, *method));
+    int size = params->size;
+    Slot **slots = pop_slot_with_num(params, params->size);
+    for (int i = 0; i < size; i++) {
+        set_localvar_with_slot(frame, i, slots[i]);
+    }
+    run(&thread, heap);
+    printf_warn("\t\t\t[SINGLE-INVOKE-ESC] %s.%s%s", class->class_name, method_name, method_desc);
+}

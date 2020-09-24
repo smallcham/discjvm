@@ -15,16 +15,27 @@ void java_lang_System_initProperties_9Ljava_util_Properties10Ljava_util_Properti
     Object *object = frame->local_variables[0]->object_value;
     push_object(frame->operand_stack, object);
 
-    MethodInfo *method = find_method_with_desc(thread, heap, object->class, "setProperty", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Object;");
+//    MethodInfo *method = find_method_with_desc(thread, heap, object->class, "setProperty", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Object;");
     char **_keys = keys(&VM_OPTS);
     for (int i = 0; i < VM_OPTS->size; i++) {
-        push_object(frame->operand_stack, object);
-        create_string_object_without_back(thread, heap, frame, _keys[i]);
-        create_string_object_without_back(thread, heap, frame, get_map(&VM_OPTS, _keys[i]));
-        Frame *new_frame = create_vm_frame_by_method(thread, object->class, method, get_method_code(object->class->constant_pool, *method));
-        add_params_and_plus1(frame, new_frame, method);
-        new_frame->pop_hook = (PopHook)pop_return_hook_;
-        push_stack(thread->vm_stack, new_frame);
+//        push_object(frame->operand_stack, object);
+//        create_string_object_without_back(thread, heap, frame, _keys[i]);
+//        create_string_object_without_back(thread, heap, frame, get_map(&VM_OPTS, _keys[i]));
+//        Frame *new_frame = create_vm_frame_by_method(thread, object->class, method, get_method_code(object->class->constant_pool, *method));
+//        add_params_and_plus1(frame, new_frame, method);
+//        new_frame->pop_hook = (PopHook)pop_return_hook_;
+//        push_stack(thread->vm_stack, new_frame);
+
+        Stack *params = create_unlimit_stack();
+        push_slot(params, create_object_slot_set_object(heap, object));
+        push_slot(params, create_str_slot_set_str(thread, heap, _keys[i]));
+        push_slot(params, create_str_slot_set_str(thread, heap, get_map(&VM_OPTS, _keys[i])));
+        single_invoke(heap, object->class, "setProperty", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Object;", params);
+
+//        Stack *params2 = create_unlimit_stack();
+//        push_slot(params2, create_object_slot_set_object(heap, object));
+//        push_slot(params2, create_str_slot_set_str(thread, heap, _keys[i]));
+//        single_invoke(heap, object->class, "getProperty", "(Ljava/lang/String;)Ljava/lang/String;", params2);
     }
     free(_keys);
 }

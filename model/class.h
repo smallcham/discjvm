@@ -262,6 +262,10 @@ int class_is_string(ClassFile *class);
 
 int is_static(u2 access_flag);
 
+int is_final(u2 access_flags);
+
+int is_native(u2 access_flag);
+
 int is_primitive_desc(char *desc);
 
 int is_object_by_name(char *name);

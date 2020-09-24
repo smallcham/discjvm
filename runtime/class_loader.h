@@ -155,4 +155,6 @@ int is_impl_interface(ClassFile *this, ClassFile *interface);
 
 MethodInfo *find_interface_method_iter_super_with_desc(Thread *thread, SerialHeap *heap, ClassFile **class, char *name, char *desc);
 
+Slot *create_str_slot_set_str(Thread *thread, SerialHeap *heap, char *str);
+
 #endif //DISCJVM_CLASS_LOADER_H

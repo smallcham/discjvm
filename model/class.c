@@ -159,3 +159,13 @@ int is_static(u2 access_flags)
 {
     return 0 != (access_flags & ACC_STATIC);
 }
+
+int is_final(u2 access_flags)
+{
+    return 0 != (access_flags & ACC_FINAL);
+}
+
+int is_native(u2 access_flag)
+{
+    return 0 != (access_flag & ACC_NATIVE);
+}

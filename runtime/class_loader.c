@@ -466,14 +466,10 @@ void do_invokestatic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2
         init_class(thread, heap, class);
         return;
     }
-    if (strcmp(method_name_info.bytes, "ofEntries") == 0) {
-        printf("111");
-    }
-
     printf("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class_name_info.bytes, name_and_type_info.name_index, method_name_info.bytes, name_and_type_info.descriptor_index, method_desc_info.bytes);
     MethodInfo *method = find_method_with_desc(thread, heap, class, method_name_info.bytes, method_desc_info.bytes);
     if (NULL == method) exit(-1);
-    if ((method->access_flags & ACC_NATIVE) != 0) {
+    if (is_native(method->access_flags)) {
         create_c_frame_and_invoke_add_params(thread, heap, frame, class->class_name, method);
     } else {
         create_vm_frame_by_method_add_params(thread, class, frame, method, get_method_code(class->constant_pool, *method));
@@ -499,7 +495,7 @@ void do_invokeinterface_by_index(Thread *thread, SerialHeap *heap, Frame *frame,
     class = object->class;
     MethodInfo *method = find_interface_method_iter_super_with_desc(thread, heap, &class, method_name, method_desc);
     if (NULL == method) exit(-1);
-    if ((method->access_flags & ACC_NATIVE) != 0) {
+    if (is_native(method->access_flags)) {
         create_c_frame_and_invoke_add_params_plus1(thread, heap, frame, class->class_name, method);
     } else {
         create_vm_frame_by_method_add_params_plus1(thread, class, frame, method, get_method_code(class->constant_pool, *method));
@@ -518,7 +514,7 @@ void do_invokespecial_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
     printf("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class_name_info.bytes, name_and_type_info.name_index, method_name_info.bytes, name_and_type_info.descriptor_index, method_desc_info.bytes);
     MethodInfo *method = find_method_iter_super_with_desc(thread, heap, &class, method_name_info.bytes, method_desc_info.bytes);
     if (NULL == method) exit(-1);
-    if ((method->access_flags & ACC_NATIVE) != 0) {
+    if (is_native(method->access_flags)) {
         create_c_frame_and_invoke_add_params_plus1(thread, heap, frame, class->class_name, method);
     } else {
         create_vm_frame_by_method_add_params_plus1(thread, class, frame, method, get_method_code(class->constant_pool, *method));
@@ -543,10 +539,9 @@ void do_invokevirtual_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
     }
     Object *object = slots[0]->object_value;
     class = object->class;
-
     MethodInfo *method = find_method_iter_super_with_desc(thread, heap, &class, method_name_info.bytes, method_desc_info.bytes);
     if (NULL == method) exit(-1);
-    if ((method->access_flags & ACC_NATIVE) != 0) {
+    if (is_native(method->access_flags)) {
         create_c_frame_and_invoke_add_params_plus1(thread, heap, frame, class->class_name, method);
     } else {
         create_vm_frame_by_method_add_params_plus1(thread, class, frame, method, get_method_code(class->constant_pool, *method));
@@ -608,11 +603,11 @@ FieldInfo *get_field_by_name_and_desc_(ClassFile *class, char *name, char *desc,
         for (int i = 0; i < class->fields_count; i++) {
             if (strcmp(class->fields[i].name, name) == 0 && strcmp(class->fields[i].desc, desc) == 0) {
                 if (_static) {
-                    if ((class->fields[i].access_flags & ACC_STATIC) > 0) {
+                    if (is_static(class->fields[i].access_flags)) {
                         return &class->fields[i];
                     }
                 } else {
-                    if ((class->fields[i].access_flags & ACC_STATIC) == 0) {
+                    if (!is_static(class->fields[i].access_flags)) {
                         return &class->fields[i];
                     }
                 }
@@ -996,7 +991,7 @@ ClassFile *load_class_by_class_info_index(Thread *thread, SerialHeap *heap, Cons
 
 ClassFile *get_super_class(Thread *thread, SerialHeap *heap, ClassFile *class)
 {
-    if (class->super_class_index == 0 || 0 != (class->access_flags & ACC_INTERFACE)) return NULL;
+    if (class->super_class_index == 0 || is_interface(class)) return NULL;
     return load_class_by_class_info(thread, heap, class->constant_pool, *(CONSTANT_Class_info*)class->constant_pool[class->super_class_index].info);
 }
 
@@ -1023,7 +1018,7 @@ void set_class_inited_by_frame(Thread *thread, SerialHeap *heap, Frame *frame, F
 void init_static_fields(ClassFile *class)
 {
     for (int i = 0; i < class->fields_count; i++) {
-        if (0 == (class->fields[i].access_flags & ACC_FINAL) || 0 == (class->fields[i].access_flags & ACC_STATIC)) {
+        if (!is_final(class->fields[i].access_flags) || !is_static(class->fields[i].access_flags)) {
             continue;
         }
         for (int j = 0; j < class->fields[i].attributes_count; j++) {
@@ -1413,4 +1408,12 @@ Slot *create_object_slot_set_object(SerialHeap *heap, void *object)
     Slot *slot = create_slot();
     slot->object_value = object;
     return slot;
+}
+
+Slot *create_str_slot_set_str(Thread *thread, SerialHeap *heap, char *str)
+{
+    ClassFile *class = load_class(thread, heap, "java/lang/String");
+    Object *object = malloc_object(heap, class);
+    put_str_field(thread, heap, object, str);
+    return create_object_slot_set_object(heap, object);
 }
