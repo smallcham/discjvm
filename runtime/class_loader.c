@@ -588,12 +588,15 @@ void get_static_field_to_opstack_by_index(Thread *thread, SerialHeap *heap, Fram
         init_class(thread, heap, class);
         return;
     }
-    FieldInfo *field = get_static_field_by_name_and_desc(class, field_name_info.bytes, field_desc_info.bytes);
+//    FieldInfo *field = get_static_field_by_name_and_desc(class, field_name_info.bytes, field_desc_info.bytes);
+    Slot *slot = get_static_field_slot_by_name_and_desc(class, field_name_info.bytes, field_desc_info.bytes);
     if (str_start_with(field_desc_info.bytes, "D") ||
         str_start_with(field_desc_info.bytes, "J")) {
-        push_long(frame->operand_stack, class->static_fields[field->offset].value);
+        push_long(frame->operand_stack, slot->value);
+//        push_long(frame->operand_stack, class->static_fields[field->offset].value);
     } else {
-        push_slot(frame->operand_stack, &class->static_fields[field->offset]);
+        push_slot(frame->operand_stack, slot);
+//        push_slot(frame->operand_stack, &class->static_fields[field->offset]);
     }
 }
 
@@ -664,6 +667,22 @@ void *get_field_object_value_by_name_and_desc(Object *object, char *name, char *
 FieldInfo *get_static_field_by_name_and_desc(ClassFile *class, char *name, char *desc)
 {
     return get_field_by_name_and_desc_(class, name, desc, 1);
+}
+
+Slot *get_static_field_slot_by_name_and_desc(ClassFile *class, char *name, char *desc)
+{
+    while (NULL != class) {
+        for (int i = 0; i < class->fields_count; i++) {
+            if (strcmp(class->fields[i].name, name) == 0 && strcmp(class->fields[i].desc, desc) == 0) {
+                if (is_static(class->fields[i].access_flags)) {
+                    return &class->static_fields[class->fields[i].offset];
+                }
+            }
+        }
+        if (NULL != class->super_class) class = class->super_class;
+        else return NULL;
+    }
+    return NULL;
 }
 
 void put_field_by_name_and_desc(Object *object, char *name, char *desc, Slot *value)

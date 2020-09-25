@@ -24,6 +24,7 @@
 #include "java/io/FileInputStream.h"
 #include "java/io/FileDescriptor.h"
 #include "java/io/FileOutputStream.h"
+#include "jdk/internal/misc/Signal.h"
 
 typedef void (*NativeMethod)(Thread *, SerialHeap *, Frame *);
 

@@ -28,6 +28,7 @@ void init_native_factory()
     put_map(&native_pool, "java/lang/System.nanoTime()J", java_lang_System_nanoTime_90J);
     put_map(&native_pool, "java/lang/System.setIn0(Ljava/io/InputStream;)V", java_lang_System_setIn0_9Ljava_io_InputStream10V);
     put_map(&native_pool, "java/lang/System.setOut0(Ljava/io/PrintStream;)V", java_lang_System_setOut0_9Ljava_io_PrintStream10V);
+    put_map(&native_pool, "java/lang/System.setErr0(Ljava/io/PrintStream;)V", java_lang_System_setErr0_9Ljava_io_PrintStream10V);
 
     //Thread
     put_map(&native_pool, "java/lang/Thread.registerNatives()V", java_lang_Thread_registerNatives_90V);
@@ -87,6 +88,9 @@ void init_native_factory()
 
     //FileOutputStream
     put_map(&native_pool, "java/io/FileOutputStream.initIDs()V", java_io_FileOutputStream_initIDs_90V);
+
+    //Signal
+    put_map(&native_pool, "jdk/internal/misc/Signal.findSignal0(Ljava/lang/String;)I", jdk_internal_misc_Signal_findSignal0_9Ljava_lang_String10I);
 }
 
 NativeMethod find_native(char *class_name, char *method_name, char *method_desc)

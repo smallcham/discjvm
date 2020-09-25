@@ -20,4 +20,6 @@ void java_lang_System_setIn0_9Ljava_io_InputStream10V(Thread *thread, SerialHeap
 
 void java_lang_System_setOut0_9Ljava_io_PrintStream10V(Thread *thread, SerialHeap *heap, Frame *frame);
 
+void java_lang_System_setErr0_9Ljava_io_PrintStream10V(Thread *thread, SerialHeap *heap, Frame *frame);
+
 #endif //DISCJVM_CLASS_H

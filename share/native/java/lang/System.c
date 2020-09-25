@@ -96,3 +96,9 @@ void java_lang_System_setOut0_9Ljava_io_PrintStream10V(Thread *thread, SerialHea
     Object *out = get_ref_localvar(frame, 0);
     put_static_field_by_name_and_desc(frame->class, "out", "Ljava/io/PrintStream;", out);
 }
+
+void java_lang_System_setErr0_9Ljava_io_PrintStream10V(Thread *thread, SerialHeap *heap, Frame *frame)
+{
+    Object *err = get_ref_localvar(frame, 0);
+    put_static_field_by_name_and_desc(frame->class, "err", "Ljava/io/PrintStream;", err);
+}
