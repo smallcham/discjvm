@@ -884,10 +884,33 @@ void ddiv(SerialHeap *heap, Thread *thread, Frame *frame) {
     step_pc_1(frame);
 }
 
-void irem(SerialHeap *heap, Thread *thread, Frame *frame) {}
-void lrem(SerialHeap *heap, Thread *thread, Frame *frame) {}
-void frem(SerialHeap *heap, Thread *thread, Frame *frame) {}
-void j_drem(SerialHeap *heap, Thread *thread, Frame *frame) {}
+void irem(SerialHeap *heap, Thread *thread, Frame *frame) {
+    int value2 = pop_int(frame->operand_stack);
+    int value1 = pop_int(frame->operand_stack);
+    push_int(frame->operand_stack, value1 - (value1 / value2) * value2);
+    step_pc_1(frame);
+}
+
+void lrem(SerialHeap *heap, Thread *thread, Frame *frame) {
+    long value2 = pop_long(frame->operand_stack);
+    long value1 = pop_long(frame->operand_stack);
+    push_long(frame->operand_stack, value1 - (value1 / value2) * value2);
+    step_pc_1(frame);
+}
+
+void frem(SerialHeap *heap, Thread *thread, Frame *frame) {
+    float value2 = pop_float(frame->operand_stack);
+    float value1 = pop_float(frame->operand_stack);
+    push_float(frame->operand_stack, value1 - (value1 / value2) * value2);
+    step_pc_1(frame);
+}
+
+void j_drem(SerialHeap *heap, Thread *thread, Frame *frame) {
+    double value2 = pop_double(frame->operand_stack);
+    double value1 = pop_double(frame->operand_stack);
+    push_double(frame->operand_stack, value1 - (value1 / value2) * value2);
+    step_pc_1(frame);
+}
 
 void ineg(SerialHeap *heap, Thread *thread, Frame *frame) {
     push_int(frame->operand_stack, -pop_int(frame->operand_stack));

@@ -88,4 +88,6 @@ void print_stack(Stack *stack);
 
 void free_stack(Stack **stack);
 
+void *get_stack_offset(Stack *stack, int offset);
+
 #endif //DISCJVM_STACK_H

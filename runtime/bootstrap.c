@@ -79,16 +79,15 @@ HashMap **init_vm_opts()
     put_map(&VM_OPTS, "os.version",  "");
     put_map(&VM_OPTS, "file.separator", "/");
     put_map(&VM_OPTS, "file.encoding", "UTF-8");
+    put_map(&VM_OPTS, "sun.jnu.encoding", "UTF-8");
+    put_map(&VM_OPTS, "sun.stdout.encoding", "UTF-8");
+    put_map(&VM_OPTS, "sun.stderr.encoding", "UTF-8");
     put_map(&VM_OPTS, "path.separator", ":");
     put_map(&VM_OPTS, "line.separator", "\n");
     put_map(&VM_OPTS, "user.name", "");
     put_map(&VM_OPTS, "user.home", "");
-    put_map(&VM_OPTS, "user.dir", ".");
-
-//    put_map(&VM_OPTS, "user.country", "CN");
-//    put_map(&VM_OPTS, "file.encoding", "UTF-8");
-//    put_map(&VM_OPTS, "sun.stdout.encoding", "UTF-8");
-//    put_map(&VM_OPTS, "sun.stderr.encoding", "UTF-8");
+    put_map(&VM_OPTS, "user.dir", "/home");
+    put_map(&VM_OPTS, "user.country", "CN");
     return &VM_OPTS;
 }
 

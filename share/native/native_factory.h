@@ -25,6 +25,8 @@
 #include "java/io/FileDescriptor.h"
 #include "java/io/FileOutputStream.h"
 #include "jdk/internal/misc/Signal.h"
+#include "java/io/UnixFileSystem.h"
+#include "jdk/internal/reflect/Reflection.h"
 
 typedef void (*NativeMethod)(Thread *, SerialHeap *, Frame *);
 

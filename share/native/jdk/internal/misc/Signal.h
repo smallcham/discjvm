@@ -10,4 +10,6 @@
 
 void jdk_internal_misc_Signal_findSignal0_9Ljava_lang_String10I(Thread *thread, SerialHeap *heap, Frame *frame);
 
+void jdk_internal_misc_Signal_handle0_9IJ0J(Thread *thread, SerialHeap *heap, Frame *frame);
+
 #endif //DISCJVM_SIGNAL_H

@@ -213,3 +213,15 @@ void jdk_internal_misc_Unsafe_getIntVolatile_9Ljava_lang_Object1J0I(Thread *thre
     u8 offset = get_long_localvar(frame, 2);
     push_int(frame->operand_stack, this->fields[offset].value);
 }
+
+void jdk_internal_misc_Unsafe_ensureClassInitialized0_9Ljava_lang_Class10V(Thread *thread, SerialHeap *heap, Frame *frame)
+{
+    Object *class = get_ref_localvar(frame, 1);
+    if (NULL == class) {
+        printf_err("jdk_internal_misc_Unsafe_ensureClassInitialized0_9Ljava_lang_Class10V: clazz must not be NULL");
+        exit(-1);
+    }
+    if (!class_is_not_init(class->raw_class)) {
+        init_class(thread, heap, class->raw_class);
+    }
+}

@@ -191,6 +191,16 @@ Slot *get_slot(Stack *stack)
     return get_stack(stack);
 }
 
+void *get_stack_offset(Stack *stack, int offset)
+{
+    Entry *temp = (Entry *) stack->tail;
+    for (int i = 0; i < offset; i++) {
+        if (NULL == temp) return NULL;
+        temp = (Entry*)temp->prev;
+    }
+    return NULL == temp ? NULL : temp->value;
+}
+
 char* find_in_stack(Stack *stack, char* value)
 {
     while (!is_empty_stack(stack))

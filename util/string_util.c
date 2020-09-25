@@ -11,7 +11,8 @@ int str_end_with(char *source, char *pattern)
     if (source_len < pattern_len) return 0;
     unsigned long k = source_len - 1;
     int count = 0;
-    for (unsigned long i = (pattern_len - 1); i >= 0; i--, k-- )
+    int idx = (int)(pattern_len - 1);
+    for (int i = idx; i >= 0; i--, k-- )
     {
         if (source[k] != pattern[i]) return 0;
         count ++;
