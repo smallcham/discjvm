@@ -26,6 +26,8 @@ void init_native_factory()
     put_map(&native_pool, "java/lang/System.initProperties(Ljava/util/Properties;)Ljava/util/Properties;", java_lang_System_initProperties_9Ljava_util_Properties10Ljava_util_Properties1);
     put_map(&native_pool, "java/lang/System.arraycopy(Ljava/lang/Object;ILjava/lang/Object;II)V", java_lang_System_arraycopy_9Ljava_lang_Object1ILjava_lang_Object1II0V);
     put_map(&native_pool, "java/lang/System.nanoTime()J", java_lang_System_nanoTime_90J);
+    put_map(&native_pool, "java/lang/System.setIn0(Ljava/io/InputStream;)V", java_lang_System_setIn0_9Ljava_io_InputStream10V);
+    put_map(&native_pool, "java/lang/System.setOut0(Ljava/io/PrintStream;)V", java_lang_System_setOut0_9Ljava_io_PrintStream10V);
 
     //Thread
     put_map(&native_pool, "java/lang/Thread.registerNatives()V", java_lang_Thread_registerNatives_90V);
@@ -46,6 +48,7 @@ void init_native_factory()
     put_map(&native_pool, "jdk/internal/misc/Unsafe.compareAndSetObject(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z", jdk_internal_misc_Unsafe_compareAndSetObject_9Ljava_lang_Object1JLjava_lang_Object1Ljava_lang_Object10Z);
     put_map(&native_pool, "jdk/internal/misc/Unsafe.compareAndSetLong(Ljava/lang/Object;JJJ)Z", jdk_internal_misc_Unsafe_compareAndSetLong_9Ljava_lang_Object1JJJ0Z);
     put_map(&native_pool, "jdk/internal/misc/Unsafe.putObjectVolatile(Ljava/lang/Object;JLjava/lang/Object;)V", jdk_internal_misc_Unsafe_putObjectVolatile_9Ljava_lang_Object1JLjava_lang_Object10V);
+    put_map(&native_pool, "jdk/internal/misc/Unsafe.getIntVolatile(Ljava/lang/Object;J)I", jdk_internal_misc_Unsafe_getIntVolatile_9Ljava_lang_Object1J0I);
 
     //ClassLoader
     put_map(&native_pool, "java/lang/ClassLoader.registerNatives()V", java_lang_ClassLoader_registerNatives_90V);
@@ -76,6 +79,14 @@ void init_native_factory()
 
     //FileInputStream
     put_map(&native_pool, "java/io/FileInputStream.initIDs()V", java_io_FileInputStream_initIDs_90V);
+
+    //FileDescriptor
+    put_map(&native_pool, "java/io/FileDescriptor.initIDs()V", java_io_FileDescriptor_initIDs_90V);
+    put_map(&native_pool, "java/io/FileDescriptor.getHandle(I)J", java_io_FileDescriptor_getHandle_9I0J);
+    put_map(&native_pool, "java/io/FileDescriptor.getAppend(I)Z", java_io_FileDescriptor_getAppend_9I0Z);
+
+    //FileOutputStream
+    put_map(&native_pool, "java/io/FileOutputStream.initIDs()V", java_io_FileOutputStream_initIDs_90V);
 }
 
 NativeMethod find_native(char *class_name, char *method_name, char *method_desc)

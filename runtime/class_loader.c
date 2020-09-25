@@ -697,6 +697,12 @@ void put_object_value_field_by_name_and_desc(Object *object, char *name, char *d
     object->fields[field->offset].object_value = value;
 }
 
+void put_static_field_by_name_and_desc(ClassFile *class, char *name, char *desc, void *value)
+{
+    FieldInfo *field = get_static_field_by_name_and_desc(class, name, desc);
+    class->static_fields[field->offset].object_value = value;
+}
+
 void put_field(Thread *thread, SerialHeap *heap, Frame *frame, CONSTANT_Fieldref_info field_ref_info)
 {
     CONSTANT_NameAndType_info name_and_type_info = *(CONSTANT_NameAndType_info*)frame->constant_pool[field_ref_info.name_and_type_index].info;
@@ -1383,7 +1389,7 @@ int is_parent(ClassFile *this, ClassFile *super)
             else return 0;
         }
         if (temp == super) return 1;
-        temp = this->super_class;
+        temp = temp->super_class;
     }
 }
 

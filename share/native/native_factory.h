@@ -22,6 +22,8 @@
 #include "java/lang/Float.h"
 #include "java/lang/Double.h"
 #include "java/io/FileInputStream.h"
+#include "java/io/FileDescriptor.h"
+#include "java/io/FileOutputStream.h"
 
 typedef void (*NativeMethod)(Thread *, SerialHeap *, Frame *);
 

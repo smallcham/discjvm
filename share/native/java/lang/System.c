@@ -84,3 +84,15 @@ void pop_return_hook_(Thread *thread, SerialHeap *heap, Frame *frame, Frame *nex
 {
     if (NULL != next_frame) pop_slot(next_frame->operand_stack);
 }
+
+void java_lang_System_setIn0_9Ljava_io_InputStream10V(Thread *thread, SerialHeap *heap, Frame *frame)
+{
+    Object *in = get_ref_localvar(frame, 0);
+    put_static_field_by_name_and_desc(frame->class, "in", "Ljava/io/InputStream;", in);
+}
+
+void java_lang_System_setOut0_9Ljava_io_PrintStream10V(Thread *thread, SerialHeap *heap, Frame *frame)
+{
+    Object *out = get_ref_localvar(frame, 0);
+    put_static_field_by_name_and_desc(frame->class, "out", "Ljava/io/PrintStream;", out);
+}

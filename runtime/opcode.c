@@ -1351,7 +1351,7 @@ void athrow(SerialHeap *heap, Thread *thread, Frame *frame) {
     printf_err("throw %s", exception->raw_class->class_name);
     printf_err("athrow not complete");
     pop_frame(thread, heap);
-//    exit(-1);
+    exit(-1);
 }
 
 void checkcast(SerialHeap *heap, Thread *thread, Frame *frame) {

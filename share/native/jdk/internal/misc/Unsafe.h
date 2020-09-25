@@ -35,4 +35,6 @@ void jdk_internal_misc_Unsafe_getObjectVolatile_9Ljava_lang_Object1J0Ljava_lang_
 
 void jdk_internal_misc_Unsafe_putObjectVolatile_9Ljava_lang_Object1JLjava_lang_Object10V(Thread *thread, SerialHeap *heap, Frame *frame);
 
+void jdk_internal_misc_Unsafe_getIntVolatile_9Ljava_lang_Object1J0I(Thread *thread, SerialHeap *heap, Frame *frame);
+
 #endif //DISCJVM_UNSAFE_H

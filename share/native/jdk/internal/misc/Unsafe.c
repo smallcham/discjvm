@@ -206,3 +206,10 @@ void jdk_internal_misc_Unsafe_putObjectVolatile_9Ljava_lang_Object1JLjava_lang_O
     long *p = object + offset;
     *p = value;
 }
+
+void jdk_internal_misc_Unsafe_getIntVolatile_9Ljava_lang_Object1J0I(Thread *thread, SerialHeap *heap, Frame *frame)
+{
+    Object *this = get_ref_localvar(frame, 1);
+    u8 offset = get_long_localvar(frame, 2);
+    push_int(frame->operand_stack, this->fields[offset].value);
+}

@@ -16,4 +16,8 @@ void java_lang_System_arraycopy_9Ljava_lang_Object1ILjava_lang_Object1II0V(Threa
 
 void java_lang_System_nanoTime_90J(Thread *thread, SerialHeap *heap, Frame *frame);
 
+void java_lang_System_setIn0_9Ljava_io_InputStream10V(Thread *thread, SerialHeap *heap, Frame *frame);
+
+void java_lang_System_setOut0_9Ljava_io_PrintStream10V(Thread *thread, SerialHeap *heap, Frame *frame);
+
 #endif //DISCJVM_CLASS_H

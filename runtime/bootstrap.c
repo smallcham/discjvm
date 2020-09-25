@@ -78,6 +78,7 @@ HashMap **init_vm_opts()
     put_map(&VM_OPTS, "os.arch", "amd64");
     put_map(&VM_OPTS, "os.version",  "");
     put_map(&VM_OPTS, "file.separator", "/");
+    put_map(&VM_OPTS, "file.encoding", "UTF-8");
     put_map(&VM_OPTS, "path.separator", ":");
     put_map(&VM_OPTS, "line.separator", "\n");
     put_map(&VM_OPTS, "user.name", "");
