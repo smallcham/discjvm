@@ -11,7 +11,11 @@
 #include "../model/base_type.h"
 #include "zip.h"
 
+#define JNI_LIB_PREFIX "lib"
+#define JNI_LIB_SUFFIX ".so"
+
 extern char *JAVA_HOME;
+
 
 u1 *load_from_jmod(char *jmod_name, char *name);
 

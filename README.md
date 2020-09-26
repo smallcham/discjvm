@@ -14,3 +14,6 @@
 # look like the store type of the long type push to stack cause next error 
 
 # if_icmpge set to 19742
+
+# File.getName return a name ".", is not right
+# point to ClassLoader.c findBuiltinLib and System.c mapLibraryName

@@ -102,3 +102,16 @@ void java_lang_System_setErr0_9Ljava_io_PrintStream10V(Thread *thread, SerialHea
     Object *err = get_ref_localvar(frame, 0);
     put_static_field_by_name_and_desc(frame->class, "err", "Ljava/io/PrintStream;", err);
 }
+
+void java_lang_System_mapLibraryName_9Ljava_lang_String10Ljava_lang_String1(Thread *thread, SerialHeap *heap, Frame *frame)
+{
+    char *libname = get_str_field_value_by_object(get_ref_localvar(frame, 0));
+    if (strlen(libname) > 240) {
+        printf_err("java_lang_System_mapLibraryName_9Ljava_lang_String10Ljava_lang_String1: name too long");
+        exit(-1);
+    }
+    char *chars = malloc(strlen(JNI_LIB_PREFIX) + strlen(JNI_LIB_SUFFIX) + strlen(libname) + 1);
+    sprintf(chars, "%s%s%s", JNI_LIB_PREFIX, libname, JNI_LIB_SUFFIX);
+    push_slot(frame->operand_stack, create_str_slot_set_str(thread, heap, chars));
+    free(chars);
+}

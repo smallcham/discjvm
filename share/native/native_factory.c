@@ -30,6 +30,7 @@ void init_native_factory()
     put_map(&native_pool, "java/lang/System.setIn0(Ljava/io/InputStream;)V", java_lang_System_setIn0_9Ljava_io_InputStream10V);
     put_map(&native_pool, "java/lang/System.setOut0(Ljava/io/PrintStream;)V", java_lang_System_setOut0_9Ljava_io_PrintStream10V);
     put_map(&native_pool, "java/lang/System.setErr0(Ljava/io/PrintStream;)V", java_lang_System_setErr0_9Ljava_io_PrintStream10V);
+    put_map(&native_pool, "java/lang/System.mapLibraryName(Ljava/lang/String;)Ljava/lang/String;", java_lang_System_mapLibraryName_9Ljava_lang_String10Ljava_lang_String1);
 
     //Thread
     put_map(&native_pool, "java/lang/Thread.registerNatives()V", java_lang_Thread_registerNatives_90V);
@@ -55,6 +56,7 @@ void init_native_factory()
 
     //ClassLoader
     put_map(&native_pool, "java/lang/ClassLoader.registerNatives()V", java_lang_ClassLoader_registerNatives_90V);
+    put_map(&native_pool, "java/lang/ClassLoader.findBuiltinLib(Ljava/lang/String;)Ljava/lang/String;", java_lang_ClassLoader_findBuiltinLib_9Ljava_lang_String10Ljava_lang_String1);
 
     //Runtime
     put_map(&native_pool, "java/lang/Runtime.registerNatives()V", java_lang_Runtime_registerNatives_90V);
