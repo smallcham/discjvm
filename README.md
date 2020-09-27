@@ -17,3 +17,6 @@
 
 # File.getName return a name ".", is not right
 # point to ClassLoader.c findBuiltinLib and System.c mapLibraryName
+
+# File( fs.resolve(parent, child) ) has some problem, set point to 99913 and find it.
+# look like native method System.arraycopy is wrong, point at 100526

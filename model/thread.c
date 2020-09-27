@@ -235,7 +235,15 @@ void print_local_variables(Frame *frame)
                             free(str);
                         }
                     } else {
-                        printf("[%d-> %s],", i, obj->class->class_name);
+                        if (strcmp(obj->class->class_name, "[B") == 0) {
+                            Array *array = value->object_value;
+                            char *str = malloc(array->length + 1);
+                            memcpy(str, (char*)array->objects, array->length);
+                            str[array->length] = '\0';
+                            printf("[%d-> \"%s\"],", i, str);
+                        } else {
+                            printf("[%d-> %s],", i, obj->class->class_name);
+                        }
                     }
                 }
                 else printf("[%d-> NULL-OBJECT(%p)],", i, obj);

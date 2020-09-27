@@ -304,7 +304,15 @@ void print_stack(Stack *stack)
                         free(str);
                     }
                 } else {
-                    printf("%s", obj->class->class_name);
+                    if (strcmp(obj->class->class_name, "[B") == 0) {
+                        Array *array = value->object_value;
+                        char *str = malloc(array->length + 1);
+                        memcpy(str, (char*)array->objects, array->length);
+                        str[array->length] = '\0';
+                        printf("\"%s\"", str);
+                    } else {
+                        printf("%s", obj->class->class_name);
+                    }
                 }
             }
             else printf("NULL-OBJECT(%p)", obj);

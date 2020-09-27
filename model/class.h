@@ -223,6 +223,9 @@ typedef struct {
 
 char *JAVA_HOME;
 char *CLASS_PATH;
+char *USER_NAME;
+char *USER_HOME;
+char *USER_DIR;
 HashMap *VM_OPTS;
 Slot *NULL_SLOT;
 

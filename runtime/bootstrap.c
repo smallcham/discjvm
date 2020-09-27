@@ -2,6 +2,7 @@
 // Created by wangzhanzhi on 2020/7/9.
 //
 
+#include <pwd.h>
 #include "bootstrap.h"
 
 //void init_lib(Thread *thread, SerialHeap *heap)
@@ -74,6 +75,8 @@ HashMap **init_vm_opts()
     put_map(&VM_OPTS, "java.home", JAVA_HOME);
     put_map(&VM_OPTS, "java.class.version", "55.0");
     put_map(&VM_OPTS, "java.class.path", CLASS_PATH);
+    put_map(&VM_OPTS, "java.library.path", CLASS_PATH);
+    put_map(&VM_OPTS, "sun.boot.library.path", CLASS_PATH);
     put_map(&VM_OPTS, "os.name", "linux");
     put_map(&VM_OPTS, "os.arch", "amd64");
     put_map(&VM_OPTS, "os.version",  "");
@@ -84,9 +87,9 @@ HashMap **init_vm_opts()
     put_map(&VM_OPTS, "sun.stderr.encoding", "UTF-8");
     put_map(&VM_OPTS, "path.separator", ":");
     put_map(&VM_OPTS, "line.separator", "\n");
-    put_map(&VM_OPTS, "user.name", "");
-    put_map(&VM_OPTS, "user.home", "");
-    put_map(&VM_OPTS, "user.dir", "/home");
+    put_map(&VM_OPTS, "user.name", USER_NAME);
+    put_map(&VM_OPTS, "user.home", USER_HOME);
+    put_map(&VM_OPTS, "user.dir", USER_DIR);
     put_map(&VM_OPTS, "user.country", "CN");
     return &VM_OPTS;
 }
@@ -96,6 +99,11 @@ void start_vm(char *class_path)
     JAVA_HOME = getenv("JAVA_HOME");
     CLASS_PATH = getenv("CLASSPATH");
     NULL_SLOT = create_slot_by_size(1);
+    struct passwd *pwd = getpwuid(getuid());
+    USER_NAME = pwd->pw_name;
+    USER_HOME = pwd->pw_dir;
+    USER_DIR = malloc(1000);
+    getcwd(USER_DIR, 1000);
     VM_OPTS = *init_vm_opts();
 
     char *base_lib[] = {

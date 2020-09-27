@@ -110,8 +110,7 @@ void java_lang_System_mapLibraryName_9Ljava_lang_String10Ljava_lang_String1(Thre
         printf_err("java_lang_System_mapLibraryName_9Ljava_lang_String10Ljava_lang_String1: name too long");
         exit(-1);
     }
-    char *chars = malloc(strlen(JNI_LIB_PREFIX) + strlen(JNI_LIB_SUFFIX) + strlen(libname) + 1);
+    char chars[256];
     sprintf(chars, "%s%s%s", JNI_LIB_PREFIX, libname, JNI_LIB_SUFFIX);
     push_slot(frame->operand_stack, create_str_slot_set_str(thread, heap, chars));
-    free(chars);
 }
