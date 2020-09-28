@@ -31,6 +31,7 @@ void init_native_factory()
     put_map(&native_pool, "java/lang/System.setOut0(Ljava/io/PrintStream;)V", java_lang_System_setOut0_9Ljava_io_PrintStream10V);
     put_map(&native_pool, "java/lang/System.setErr0(Ljava/io/PrintStream;)V", java_lang_System_setErr0_9Ljava_io_PrintStream10V);
     put_map(&native_pool, "java/lang/System.mapLibraryName(Ljava/lang/String;)Ljava/lang/String;", java_lang_System_mapLibraryName_9Ljava_lang_String10Ljava_lang_String1);
+    put_map(&native_pool, "java/lang/System.currentTimeMillis()J", java_lang_System_currentTimeMillis_90J);
 
     //Thread
     put_map(&native_pool, "java/lang/Thread.registerNatives()V", java_lang_Thread_registerNatives_90V);
@@ -100,6 +101,8 @@ void init_native_factory()
 
     //UnixFileSystem
     put_map(&native_pool, "java/io/UnixFileSystem.initIDs()V", java_io_UnixFileSystem_initIDs_90V);
+    put_map(&native_pool, "java/io/UnixFileSystem.getBooleanAttributes0(Ljava/io/File;)I", java_io_UnixFileSystem_getBooleanAttributes0_9Ljava_io_File10I);
+    put_map(&native_pool, "java/io/UnixFileSystem.canonicalize0(Ljava/lang/String;)Ljava/lang/String;", java_io_UnixFileSystem_canonicalize0_9Ljava_lang_String10Ljava_lang_String1);
 
     //Reflection
     put_map(&native_pool, "jdk/internal/reflect/Reflection.getCallerClass()Ljava/lang/Class;", jdk_internal_reflect_Reflection_getCallerClass_90Ljava_lang_Class1);

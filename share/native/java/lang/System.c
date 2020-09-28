@@ -76,7 +76,7 @@ void java_lang_System_nanoTime_90J(Thread *thread, SerialHeap *heap, Frame *fram
     struct timespec spec;
     clock_gettime(CLOCK_REALTIME, &spec);
     long sec = spec.tv_sec;
-    push_long(frame->operand_stack, 1000 * sec + spec.tv_nsec / 1000);
+    push_long(frame->operand_stack, 1000 * sec + spec.tv_nsec);
 }
 
 //添加frame弹出钩子, 用以消除setProperty方法areturn指令返回的值
@@ -113,4 +113,12 @@ void java_lang_System_mapLibraryName_9Ljava_lang_String10Ljava_lang_String1(Thre
     char chars[256];
     sprintf(chars, "%s%s%s", JNI_LIB_PREFIX, libname, JNI_LIB_SUFFIX);
     push_slot(frame->operand_stack, create_str_slot_set_str(thread, heap, chars));
+}
+
+void java_lang_System_currentTimeMillis_90J(Thread *thread, SerialHeap *heap, Frame *frame)
+{
+    struct timespec spec;
+    clock_gettime(CLOCK_REALTIME, &spec);
+    long sec = spec.tv_sec;
+    push_long(frame->operand_stack, (1000 * sec + spec.tv_nsec / 1000));
 }

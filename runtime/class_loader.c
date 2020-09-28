@@ -467,8 +467,12 @@ void do_invokestatic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2
         return;
     }
     printf("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class_name_info.bytes, name_and_type_info.name_index, method_name_info.bytes, name_and_type_info.descriptor_index, method_desc_info.bytes);
-    MethodInfo *method = find_method_with_desc(thread, heap, class, method_name_info.bytes, method_desc_info.bytes);
-    if (NULL == method) exit(-1);
+//    MethodInfo *method = find_method_with_desc(thread, heap, class, method_name_info.bytes, method_desc_info.bytes);
+    MethodInfo *method = find_interface_method_iter_super_with_desc(thread, heap, &class, method_name_info.bytes, method_desc_info.bytes);
+    if (NULL == method) {
+        printf_err("method [%s] not found", method_name_info.bytes);
+        exit(-1);
+    }
     if (is_native(method->access_flags)) {
         create_c_frame_and_invoke_add_params(thread, heap, frame, class->class_name, method);
     } else {
@@ -494,7 +498,10 @@ void do_invokeinterface_by_index(Thread *thread, SerialHeap *heap, Frame *frame,
     Object *object = slots[0]->object_value;
     class = object->class;
     MethodInfo *method = find_interface_method_iter_super_with_desc(thread, heap, &class, method_name, method_desc);
-    if (NULL == method) exit(-1);
+    if (NULL == method) {
+        printf_err("method [%s] not found", method_name);
+        exit(-1);
+    }
     if (is_native(method->access_flags)) {
         create_c_frame_and_invoke_add_params_plus1(thread, heap, frame, class->class_name, method);
     } else {
@@ -513,7 +520,10 @@ void do_invokespecial_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
     ClassFile *class = load_class(thread, heap, class_name_info.bytes);
     printf("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class_name_info.bytes, name_and_type_info.name_index, method_name_info.bytes, name_and_type_info.descriptor_index, method_desc_info.bytes);
     MethodInfo *method = find_method_iter_super_with_desc(thread, heap, &class, method_name_info.bytes, method_desc_info.bytes);
-    if (NULL == method) exit(-1);
+    if (NULL == method) {
+        printf_err("method [%s] not found", method_name_info.bytes);
+        exit(-1);
+    }
     if (is_native(method->access_flags)) {
         create_c_frame_and_invoke_add_params_plus1(thread, heap, frame, class->class_name, method);
     } else {
@@ -540,7 +550,10 @@ void do_invokevirtual_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
     Object *object = slots[0]->object_value;
     class = object->class;
     MethodInfo *method = find_method_iter_super_with_desc(thread, heap, &class, method_name_info.bytes, method_desc_info.bytes);
-    if (NULL == method) exit(-1);
+    if (NULL == method) {
+        printf_err("method [%s] not found", method_name_info.bytes);
+        exit(-1);
+    }
     if (is_native(method->access_flags)) {
         create_c_frame_and_invoke_add_params_plus1(thread, heap, frame, class->class_name, method);
     } else {

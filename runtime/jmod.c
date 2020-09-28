@@ -14,7 +14,10 @@ u1 *load_from_jmod(char *jmod_name, char *name)
     memset(file_path, 0, size);
     sprintf(file_path, "%s/jmods/%s", JAVA_HOME, jmod_name);
     FILE *fp = fopen(file_path, "rb");
-    if (NULL == fp) exit(-1);
+    if (NULL == fp) {
+        printf_err("Class [%s] not found", name);
+        exit(-1);
+    }
     fseek(fp, 0, SEEK_END);
     long f_size = ftell(fp);
     fclose(fp);

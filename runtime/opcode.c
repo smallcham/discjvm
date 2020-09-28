@@ -614,7 +614,7 @@ void xastore_(SerialHeap *heap, Thread *thread, Frame *frame, char desc) {
         printf_err("throw NULLPointerException");
         exit(-1);
     }
-    int index = pop_int(frame->operand_stack);
+    int index = pop_int(frame->operand_stack) - 1;
     Array *ref = pop_object(frame->operand_stack);
     switch (desc) {
         case 'Z': case 'I': {
@@ -1364,7 +1364,10 @@ void anewarray(SerialHeap *heap, Thread *thread, Frame *frame) {
 void arraylength(SerialHeap *heap, Thread *thread, Frame *frame) {
     Slot *slot = pop_slot(frame->operand_stack);
     Array *array = slot->object_value;
-    if (NULL == array) exit(-1);
+    if (NULL == array) {
+        printf_err("op:arraylength, array is NULL");
+        exit(-1);
+    }
     push_int(frame->operand_stack, array->length);
     step_pc_1(frame);
 }
@@ -1913,7 +1916,7 @@ long count = 0;
 
 void exec(Operator operator, SerialHeap *heap, Thread *thread, Frame *frame)
 {
-    printf("\t\t\t[%ld] - %s.%s%s\t\t\t#%d %s:\n", count++, frame->class->class_name, frame->method->name, frame->method->desc, frame->pc, instructions_desc[read_code(frame)]);
+    printf("\t\t\t[%ld - %d] - %s.%s%s\t\t\t#%d %s:\n", count++, frame->pc, frame->class->class_name, frame->method->name, frame->method->desc, frame->pc, instructions_desc[read_code(frame)]);
     frame->count = count;
     operator(heap, thread, frame);
     Frame *_frame = get_stack(thread->vm_stack);
@@ -1923,14 +1926,6 @@ void exec(Operator operator, SerialHeap *heap, Thread *thread, Frame *frame)
         printf("\t\t\t\t[localvars.%s.%s]", _frame->class->class_name, _frame->method->name);
         print_local_variables(_frame);
     }
-}
-
-void run(Thread *thread, SerialHeap *heap) {
-    if (NULL == get_stack(thread->vm_stack)) return;
-    do {
-        Frame *frame = get_stack(thread->vm_stack);
-        exec(instructions[read_code(frame)], heap, thread, frame);
-    } while (!is_empty_stack(thread->vm_stack));
 }
 
 void single_invoke(SerialHeap *heap, ClassFile *class, char *method_name, char *method_desc, Stack *params)
@@ -1946,4 +1941,12 @@ void single_invoke(SerialHeap *heap, ClassFile *class, char *method_name, char *
     }
     run(&thread, heap);
     printf_warn("\t\t\t[SINGLE-INVOKE-ESC] %s.%s%s", class->class_name, method_name, method_desc);
+}
+
+void run(Thread *thread, SerialHeap *heap) {
+    if (NULL == get_stack(thread->vm_stack)) return;
+    do {
+        Frame *frame = get_stack(thread->vm_stack);
+        exec(instructions[read_code(frame)], heap, thread, frame);
+    } while (!is_empty_stack(thread->vm_stack));
 }
