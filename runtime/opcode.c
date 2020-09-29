@@ -661,39 +661,69 @@ void xastore_(SerialHeap *heap, Thread *thread, Frame *frame, char desc) {
         printf_err("throw NULLPointerException");
         exit(-1);
     }
-    int index = pop_int(frame->operand_stack) - 1;
+    int index = pop_int(frame->operand_stack);
     Array *ref = pop_object(frame->operand_stack);
     switch (desc) {
         case 'Z': case 'I': {
-            int *objects = (int*)ref->objects;
-            objects[index] = value->value;
+            int *objects = (int*)ref->objects + index;
+            *objects = value->value;
             break;
         }
         case 'C': case 'B': {
-            char *objects = (char*)ref->objects;
-            objects[index] = value->value;
+            char *objects = (char*)ref->objects + index;
+            *objects = value->value;
             break;
         }
         case 'F': {
-            float *objects = (float*)ref->objects;
-            objects[index] = value->value;
+            float *objects = (float*)ref->objects + index;
+            *objects = value->value;
             break;
         }
         case 'D': {
-            double *objects = (double*)ref->objects;
-            objects[index] = value->value;
+            double *objects = (double*)ref->objects + index;
+            *objects = value->value;
             break;
         }
         case 'S': {
-            short *objects = (short*)ref->objects;
-            objects[index] = value->value;
+            short *objects = (short*)ref->objects + index;
+            *objects = value->value;
             break;
         }
         case 'J': {
-            long *objects = (long*)ref->objects;
-            objects[index] = value->value;
+            long *objects = (long*)ref->objects + index;
+            *objects = value->value;
             break;
         }
+//        case 'Z': case 'I': {
+//            int *objects = (int*)ref->objects;
+//            objects[index] = value->value;
+//            break;
+//        }
+//        case 'C': case 'B': {
+//            char *objects = (char*)ref->objects;
+//            objects[index] = value->value;
+//            break;
+//        }
+//        case 'F': {
+//            float *objects = (float*)ref->objects;
+//            objects[index] = value->value;
+//            break;
+//        }
+//        case 'D': {
+//            double *objects = (double*)ref->objects;
+//            objects[index] = value->value;
+//            break;
+//        }
+//        case 'S': {
+//            short *objects = (short*)ref->objects;
+//            objects[index] = value->value;
+//            break;
+//        }
+//        case 'J': {
+//            long *objects = (long*)ref->objects;
+//            objects[index] = value->value;
+//            break;
+//        }
     }
 }
 
@@ -1385,7 +1415,12 @@ void invokeinterface(SerialHeap *heap, Thread *thread, Frame *frame) {
     step_pc(frame, 1);
 }
 
-void invokedynamic(SerialHeap *heap, Thread *thread, Frame *frame) {}
+void invokedynamic(SerialHeap *heap, Thread *thread, Frame *frame) {
+    u1 byte1 = step_pc1_and_read_code(frame);
+    u1 byte2 = step_pc1_and_read_code(frame);
+    do_invokestatic_by_index(thread, heap, frame, (byte1 << 8) | byte2);
+    step_pc(frame, 1);
+}
 
 void new(SerialHeap *heap, Thread *thread, Frame *frame) {
     u1 byte1 = step_pc1_and_read_code(frame);

@@ -95,6 +95,7 @@ void init_native_factory()
 
     //FileOutputStream
     put_map(&native_pool, "java/io/FileOutputStream.initIDs()V", java_io_FileOutputStream_initIDs_90V);
+    put_map(&native_pool, "java/io/FileOutputStream.writeBytes([BIIZ)V", java_io_FileOutputStream_writeBytes_9BsIIZ0V);
 
     //Signal
     put_map(&native_pool, "jdk/internal/misc/Signal.findSignal0(Ljava/lang/String;)I", jdk_internal_misc_Signal_findSignal0_9Ljava_lang_String10I);

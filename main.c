@@ -29,5 +29,6 @@ int main(int argc, char *argv[]) {
 //    *p = c;
 
 //  printf("%p, %p,  %s\n", &a, p, a.b );
+    printf_succ("\t\t\t************RUN SUCCESS!**************");
     return 0;
 }

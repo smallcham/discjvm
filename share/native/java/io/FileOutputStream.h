@@ -10,4 +10,6 @@
 
 void java_io_FileOutputStream_initIDs_90V(Thread *thread, SerialHeap *heap, Frame *frame);
 
+void java_io_FileOutputStream_writeBytes_9BsIIZ0V(Thread *thread, SerialHeap *heap, Frame *frame);
+
 #endif //DISCJVM_FILEOUTPUTSTREAM_H
