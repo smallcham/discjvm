@@ -58,6 +58,7 @@ void init_native_factory()
     //ClassLoader
     put_map(&native_pool, "java/lang/ClassLoader.registerNatives()V", java_lang_ClassLoader_registerNatives_90V);
     put_map(&native_pool, "java/lang/ClassLoader.findBuiltinLib(Ljava/lang/String;)Ljava/lang/String;", java_lang_ClassLoader_findBuiltinLib_9Ljava_lang_String10Ljava_lang_String1);
+    put_map(&native_pool, "java/lang/ClassLoader$NativeLibrary.load0(Ljava/lang/String;Z)Z", java_lang_ClassLoader$NativeLibrary_load0_9Ljava_lang_String1Z0Z);
 
     //Runtime
     put_map(&native_pool, "java/lang/Runtime.registerNatives()V", java_lang_Runtime_registerNatives_90V);

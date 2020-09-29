@@ -23,3 +23,19 @@ void java_lang_ClassLoader_findBuiltinLib_9Ljava_lang_String10Ljava_lang_String1
 //    free(libname);
     push_slot(frame->operand_stack, NULL_SLOT);
 }
+
+void java_lang_ClassLoader$NativeLibrary_load0_9Ljava_lang_String1Z0Z(Thread *thread, SerialHeap *heap, Frame *frame)
+{
+    int loader = 0;
+    const char *name = get_str_field_value_by_object(get_ref_localvar(frame, 1));
+    int is_builtin = get_localvar(frame, 2);
+    void *handle = dlopen(name, RTLD_LAZY);
+    char* err = dlerror();
+    if (NULL == handle) {
+        printf_err("[%s], dlopen get handle is null[%s].", name, err);
+    } else {
+        loader = 1;
+        dlclose(handle);
+    }
+    push_int(frame->operand_stack, loader);
+}

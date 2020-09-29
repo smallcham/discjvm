@@ -436,10 +436,41 @@ void aload_3(SerialHeap *heap, Thread *thread, Frame *frame) {
     step_pc_1(frame);
 }
 
-void iaload(SerialHeap *heap, Thread *thread, Frame *frame) {}
-void laload(SerialHeap *heap, Thread *thread, Frame *frame) {}
-void faload(SerialHeap *heap, Thread *thread, Frame *frame) {}
-void daload(SerialHeap *heap, Thread *thread, Frame *frame) {}
+void iaload(SerialHeap *heap, Thread *thread, Frame *frame) {
+    int index = pop_int(frame->operand_stack);
+    Slot *slot = pop_slot(frame->operand_stack);
+    Array *array = slot->object_value;
+    int *value = (int*)array->objects;
+    push_int(frame->operand_stack, (int)(value[index]));
+    step_pc_1(frame);
+}
+
+void laload(SerialHeap *heap, Thread *thread, Frame *frame) {
+    int index = pop_int(frame->operand_stack);
+    Slot *slot = pop_slot(frame->operand_stack);
+    Array *array = slot->object_value;
+    long *value = (long*)array->objects;
+    push_long(frame->operand_stack, (long)(value[index]));
+    step_pc_1(frame);
+}
+
+void faload(SerialHeap *heap, Thread *thread, Frame *frame) {
+    int index = pop_int(frame->operand_stack);
+    Slot *slot = pop_slot(frame->operand_stack);
+    Array *array = slot->object_value;
+    float *value = (float*)array->objects;
+    push_float(frame->operand_stack, (float)(value[index]));
+    step_pc_1(frame);
+}
+
+void daload(SerialHeap *heap, Thread *thread, Frame *frame) {
+    int index = pop_int(frame->operand_stack);
+    Slot *slot = pop_slot(frame->operand_stack);
+    Array *array = slot->object_value;
+    double *value = (double*)array->objects;
+    push_double(frame->operand_stack, (double)(value[index]));
+    step_pc_1(frame);
+}
 
 void aaload(SerialHeap *heap, Thread *thread, Frame *frame) {
     int index = pop_int(frame->operand_stack);
@@ -457,8 +488,24 @@ void baload(SerialHeap *heap, Thread *thread, Frame *frame) {
     step_pc_1(frame);
 }
 
-void caload(SerialHeap *heap, Thread *thread, Frame *frame) {}
-void saload(SerialHeap *heap, Thread *thread, Frame *frame) {}
+void caload(SerialHeap *heap, Thread *thread, Frame *frame) {
+    int index = pop_int(frame->operand_stack);
+    Slot *slot = pop_slot(frame->operand_stack);
+    Array *array = slot->object_value;
+    char *value = (char*)array->objects;
+    push_int(frame->operand_stack, (int)(value[index]));
+    step_pc_1(frame);
+}
+
+void saload(SerialHeap *heap, Thread *thread, Frame *frame) {
+    int index = pop_int(frame->operand_stack);
+    Slot *slot = pop_slot(frame->operand_stack);
+    Array *array = slot->object_value;
+    short *value = (short*)array->objects;
+    push_int(frame->operand_stack, (int)(value[index]));
+    step_pc_1(frame);
+}
+
 void istore(SerialHeap *heap, Thread *thread, Frame *frame) {
     frame->local_variables[step_pc1_and_read_code(frame)]->value = pop_int(frame->operand_stack);
     step_pc_1(frame);
