@@ -452,6 +452,16 @@ u4 parse_method_param_count(CONSTANT_Utf8_info method_desc)
     return count;
 }
 
+void do_invokedynamic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
+{
+    CONSTANT_Dynamic_info dynamic_info = *(CONSTANT_Dynamic_info*)frame->constant_pool[index].info;
+    dynamic_info.bootstrap_method_attr_index;
+    BootstrapMethods *methods = get_bootstrap_methods(frame->constant_pool, frame->class);
+    CONSTANT_NameAndType_info name_and_type_info = *(CONSTANT_NameAndType_info*)frame->constant_pool[dynamic_info.name_and_type_index].info;
+    u1 *method_name = get_utf8_bytes(frame->constant_pool, name_and_type_info.name_index);
+    u1 *method_desc = get_utf8_bytes(frame->constant_pool, name_and_type_info.descriptor_index);
+}
+
 void do_invokestatic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
 {
     CONSTANT_Methodref_info method_ref_info = *(CONSTANT_Methodref_info*)frame->constant_pool[index].info;
@@ -1217,6 +1227,33 @@ CodeAttribute *get_method_code(ConstantPool *pool, MethodInfo method) {
         }
     }
     return code_attribute;
+}
+
+BootstrapMethods *get_bootstrap_methods(ConstantPool *pool, ClassFile *class)
+{
+    for (int i = 0; i < class->attributes_count; i++) {
+        if (strcmp(get_utf8_bytes(pool, class->attributes[i].attribute_name_index), "BootstrapMethods") != 0) continue;
+        BootstrapMethods *bootstrap_methods = (BootstrapMethods*)malloc(sizeof(BootstrapMethods));
+        u1 *bytes = class->attributes[i].info;
+        bootstrap_methods->attribute_name_index = class->attributes[i].attribute_name_index;
+        bootstrap_methods->attribute_length = class->attributes[i].attribute_name_index;
+        bootstrap_methods->num_bootstrap_methods = l2b_2(*(u2*)bytes);
+        bytes += sizeof(u2);
+        bootstrap_methods->methods = malloc(sizeof(BootstrapMethodInfo) * bootstrap_methods->num_bootstrap_methods);
+        for (int j = 0; j < bootstrap_methods->num_bootstrap_methods; j++) {
+            bootstrap_methods->methods[j].bootstrap_method_ref = l2b_2(*(u2*)bytes);
+            bytes += sizeof(u2);
+            bootstrap_methods->methods[j].num_bootstrap_arguments = l2b_2(*(u2*)bytes);
+            bytes += sizeof(u2);
+            bootstrap_methods->methods[j].bootstrap_arguments = malloc(sizeof(u2) * bootstrap_methods->methods[j].num_bootstrap_arguments);
+            for (int k = 0; k < bootstrap_methods->methods[j].num_bootstrap_arguments; k++) {
+                bootstrap_methods->methods[j].bootstrap_arguments[k] = l2b_2(*(u2*)bytes);
+                bytes += sizeof(u2);
+            }
+        }
+        return bootstrap_methods;
+    }
+    return NULL;
 }
 
 void print_class_info(ClassFile class)

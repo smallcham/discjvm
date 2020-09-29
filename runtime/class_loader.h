@@ -53,6 +53,8 @@ void create_null_object(Thread *thread, SerialHeap *heap, Frame *frame);
 
 void create_object(Thread *thread, SerialHeap *heap, Frame *frame, u2 index);
 
+void do_invokedynamic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index);
+
 void do_invokestatic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index);
 
 void do_invokespecial_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index);
@@ -160,5 +162,7 @@ MethodInfo *find_interface_method_iter_super_with_desc(Thread *thread, SerialHea
 Slot *create_str_slot_set_str(Thread *thread, SerialHeap *heap, char *str);
 
 void put_static_field_by_name_and_desc(ClassFile *class, char *name, char *desc, void *value);
+
+BootstrapMethods *get_bootstrap_methods(ConstantPool *pool, ClassFile *class);
 
 #endif //DISCJVM_CLASS_LOADER_H

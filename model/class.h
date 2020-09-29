@@ -153,6 +153,19 @@ typedef struct {
 } InnerClassesAttribute;
 
 typedef struct {
+    u2 bootstrap_method_ref;
+    u2 num_bootstrap_arguments;
+    u2 *bootstrap_arguments;
+} BootstrapMethodInfo;
+
+typedef struct {
+    u2 attribute_name_index;
+    u4 attribute_length;
+    u2 num_bootstrap_methods;
+    BootstrapMethodInfo *methods;
+} BootstrapMethods;
+
+typedef struct {
     u8 value;
     void *object_value;
 } Slot;

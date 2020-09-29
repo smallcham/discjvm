@@ -22,3 +22,5 @@
 # look like native method System.arraycopy is wrong, point at 100526
 
 # AccessController_doPrivileged need a return value
+
+# compete invokedynamic instruction, don't forget initPhase2 and 3
