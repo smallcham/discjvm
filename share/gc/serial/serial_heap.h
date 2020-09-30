@@ -36,4 +36,6 @@ Array *malloc_array_by_type_size(SerialHeap *heap, ClassFile *class, int length,
 
 void put_class_to_cache(HashMap **pool, ClassFile *class);
 
+char *primitive_to_name(char *name);
+
 #endif //DISCJVM_SERIAL_HEAP_H

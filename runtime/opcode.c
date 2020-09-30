@@ -694,36 +694,6 @@ void xastore_(SerialHeap *heap, Thread *thread, Frame *frame, char desc) {
             *objects = value->value;
             break;
         }
-//        case 'Z': case 'I': {
-//            int *objects = (int*)ref->objects;
-//            objects[index] = value->value;
-//            break;
-//        }
-//        case 'C': case 'B': {
-//            char *objects = (char*)ref->objects;
-//            objects[index] = value->value;
-//            break;
-//        }
-//        case 'F': {
-//            float *objects = (float*)ref->objects;
-//            objects[index] = value->value;
-//            break;
-//        }
-//        case 'D': {
-//            double *objects = (double*)ref->objects;
-//            objects[index] = value->value;
-//            break;
-//        }
-//        case 'S': {
-//            short *objects = (short*)ref->objects;
-//            objects[index] = value->value;
-//            break;
-//        }
-//        case 'J': {
-//            long *objects = (long*)ref->objects;
-//            objects[index] = value->value;
-//            break;
-//        }
     }
 }
 
@@ -847,7 +817,13 @@ void dup2_x2(SerialHeap *heap, Thread *thread, Frame *frame) {
     step_pc_1(frame);
 }
 
-void swap(SerialHeap *heap, Thread *thread, Frame *frame) {}
+void swap(SerialHeap *heap, Thread *thread, Frame *frame) {
+    Slot *value1 = pop_slot(frame->operand_stack);
+    Slot *value2 = pop_slot(frame->operand_stack);
+    push_slot(frame->operand_stack, value1);
+    push_slot(frame->operand_stack, value2);
+    step_pc_1(frame);
+}
 
 void iadd(SerialHeap *heap, Thread *thread, Frame *frame) {
     int value2 = pop_int(frame->operand_stack);
@@ -1313,9 +1289,33 @@ void j_goto(SerialHeap *heap, Thread *thread, Frame *frame) {
     frame->pc = step_pc_and_read_pc(frame, (short)(branch1 << 8) | branch2);
 }
 
-void jsr(SerialHeap *heap, Thread *thread, Frame *frame) {}
-void ret(SerialHeap *heap, Thread *thread, Frame *frame) {}
-void tableswitch(SerialHeap *heap, Thread *thread, Frame *frame) {}
+void jsr(SerialHeap *heap, Thread *thread, Frame *frame) {
+    u1 branch1 = step_pc1_and_read_code(frame);
+    u1 branch2 = step_pc1_and_read_code(frame);
+    short address = (short)(branch1 << 8) | branch2;
+    push_int(frame->operand_stack, address);
+    frame->pc = address;
+}
+
+void ret(SerialHeap *heap, Thread *thread, Frame *frame) {
+    u1 index = step_pc1_and_read_code(frame);
+    frame->pc = frame->local_variables[index]->value;
+}
+
+void tableswitch(SerialHeap *heap, Thread *thread, Frame *frame) {
+//    step_pc(frame, 3);
+//    int index = pop_int(frame->operand_stack);
+//    int default_offset = step_pc1_and_read_code(frame) | step_pc1_and_read_code(frame) | step_pc1_and_read_code(frame) | step_pc1_and_read_code(frame);
+//    int lower = step_pc1_and_read_code(frame) | step_pc1_and_read_code(frame) | step_pc1_and_read_code(frame) | step_pc1_and_read_code(frame);
+//    int higher = step_pc1_and_read_code(frame) | step_pc1_and_read_code(frame) | step_pc1_and_read_code(frame) | step_pc1_and_read_code(frame);
+//    int offset = higher - lower + 1;
+//    if (index < lower || index > higher) {
+//
+//    } else {
+//        index - lower
+//    }
+}
+
 void lookupswitch(SerialHeap *heap, Thread *thread, Frame *frame) {}
 
 void ireturn(SerialHeap *heap, Thread *thread, Frame *frame) {
@@ -1538,8 +1538,25 @@ void ifnonnull(SerialHeap *heap, Thread *thread, Frame *frame) {
     frame->pc = (NULL != object) ? step_pc_and_read_pc(frame, (short)((branch1 << 8) | branch2)) : step_pc_and_read_pc(frame, 3);
 }
 
-void goto_w(SerialHeap *heap, Thread *thread, Frame *frame) {}
-void jsr_w(SerialHeap *heap, Thread *thread, Frame *frame) {}
+void goto_w(SerialHeap *heap, Thread *thread, Frame *frame) {
+    u1 branch1 = step_pc1_and_read_code_no_submit(frame);
+    u1 branch2 = step_pc2_and_read_code_no_submit(frame);
+    u1 branch3 = step_pc2_and_read_code_no_submit(frame);
+    u1 branch4 = step_pc2_and_read_code_no_submit(frame);
+    frame->pc = step_pc_and_read_pc(frame, (int)((branch1 << 24) | (branch2 << 16) | (branch3 << 8) | branch4));
+}
+
+void jsr_w(SerialHeap *heap, Thread *thread, Frame *frame) {
+    u1 branch1 = step_pc1_and_read_code(frame);
+    u1 branch2 = step_pc1_and_read_code(frame);
+    u1 branch3 = step_pc1_and_read_code(frame);
+    u1 branch4 = step_pc1_and_read_code(frame);
+    int address = (branch1 << 24) | (branch2 << 16) | (branch3 << 8) | branch4;
+    push_int(frame->operand_stack, address);
+    frame->pc = address;
+}
+
+//Reserved Opcodes
 void breakpoint(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void impdep1(SerialHeap *heap, Thread *thread, Frame *frame) {}
 void impdep2(SerialHeap *heap, Thread *thread, Frame *frame) {}
@@ -1985,7 +2002,7 @@ void init_instructions_desc()
 
 Frame *pop_frame(Thread *thread, SerialHeap *heap)
 {
-    printf("\t\t\t\t[framestack]");
+    printf_debug("\t\t\t\t[framestack]");
     Frame *frame = pop_stack(thread->vm_stack);
     if (NULL != frame->pop_hook) {
         printf_warn("[INVOKE-HOOK]");
@@ -1999,14 +2016,14 @@ long count = 0;
 
 void exec(Operator operator, SerialHeap *heap, Thread *thread, Frame *frame)
 {
-    printf("\t\t\t[%ld - %d] - %s.%s%s\t\t\t#%d %s:\n", count++, frame->pc, frame->class->class_name, frame->method->name, frame->method->desc, frame->pc, instructions_desc[read_code(frame)]);
+    printf_debug("\t\t\t[%ld - %d] - %s.%s%s\t\t\t#%d %s:\n", count++, frame->pc, frame->class->class_name, frame->method->name, frame->method->desc, frame->pc, instructions_desc[read_code(frame)]);
     frame->count = count;
     operator(heap, thread, frame);
     Frame *_frame = get_stack(thread->vm_stack);
     if (NULL != _frame && NULL != _frame->class) {
-        printf("\t\t\t\t[opstack.%s.%s]", _frame->class->class_name, _frame->method->name);
+        printf_debug("\t\t\t\t[opstack.%s.%s]", _frame->class->class_name, _frame->method->name);
         print_stack(_frame->operand_stack);
-        printf("\t\t\t\t[localvars.%s.%s]", _frame->class->class_name, _frame->method->name);
+        printf_debug("\t\t\t\t[localvars.%s.%s]", _frame->class->class_name, _frame->method->name);
         print_local_variables(_frame);
     }
 }

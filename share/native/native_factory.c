@@ -127,7 +127,7 @@ void invoke_native(Thread *thread, SerialHeap *heap)
 {
     if (NULL == get_stack(thread->c_stack)) return;
     do {
-        printf("\t\t\t\t[nativestack]");
+        printf_debug("\t\t\t\t[nativestack]");
         Frame *frame = pop_stack(thread->c_stack);
         NativeMethod method = frame->native_method;
         method(thread, heap, frame);
@@ -138,9 +138,9 @@ void invoke_native(Thread *thread, SerialHeap *heap)
 
 void print_native_log(Frame *frame, MethodInfo *method)
 {
-    printf("\t\t\t\t[opstack.%s.%s]", frame->class->class_name, frame->method->name);
+    printf_debug("\t\t\t\t[opstack.%s.%s]", frame->class->class_name, frame->method->name);
     print_stack(frame->operand_stack);
-    printf("\t\t\t\t[localvars.%s.%s]", frame->class->class_name, frame->method->name);
+    printf_debug("\t\t\t\t[localvars.%s.%s]", frame->class->class_name, frame->method->name);
     print_local_variables(frame);
     printf_warn("[**ESC-NATIVE] %s.%s.%s\n", frame->class->class_name, method->name, method->desc);
 }

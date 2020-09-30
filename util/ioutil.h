@@ -8,6 +8,16 @@
 #include <stdio.h>
 #include <zconf.h>
 
+#define LOG_DEBUG   0
+#define LOG_SUCCESS 0
+#define LOG_WARN    1
+#define LOG_INFO    2
+#define LOG_ERROR   4
+
+int LOG_LEVEL;
+
+void printf_debug(const char *format, ...);
+
 void printf_err(const char *format, ...);
 
 void printf_warn(const char *format, ...);

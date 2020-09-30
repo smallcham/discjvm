@@ -30,7 +30,11 @@ public class Hello {
     public static void main(String[] args) {
 //         System.out.println(1);
         for (int i = 0; i < 100; i++) {
-            System.out.println("woshi dashabi : " + i);
+            System.out.println(i);
         }
+        int a = 100;
+        int b = 300;
+        System.out.println(a + b);
+        System.out.println("Hello World!");
 	}
 }

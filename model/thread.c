@@ -110,7 +110,7 @@ LocalVariableTableAttribute *get_local_variable(ConstantPool *pool, CodeAttribut
 void add_params_and_plus1(Frame *frame, Frame *new_frame, MethodInfo *method)
 {
     int count = method->params_count + 1;
-    printf("\t\t\t\t[addparams(%d)]\n", count);
+    printf_debug("\t\t\t\t[addparams(%d)]\n", count);
     Slot **slots = pop_slot_with_num(frame->operand_stack, count);
     for (int i = 0; i < count; i++) {
         new_frame->local_variables[i] = slots[i];
@@ -123,7 +123,7 @@ void add_params(Frame *frame, Frame *new_frame, MethodInfo *method)
 //    LocalVariableTableAttribute *local_variable_table = get_local_variable(new_frame->constant_pool, code);
 //    if (NULL == local_variable_table) return;
     if (method->params_count == 0) return;
-    printf("\t\t\t\t[addparams(%d)]\n", method->params_count);
+    printf_debug("\t\t\t\t[addparams(%d)]\n", method->params_count);
     Slot **slots = pop_slot_with_num(frame->operand_stack, method->params_count);
     for (int i = 0; i < method->params_count; i++) {
         new_frame->local_variables[i] = slots[i];
@@ -212,7 +212,7 @@ void *set_ref_localvar(Frame *frame, int index, void *object_value)
 
 void print_local_variables(Frame *frame)
 {
-    printf("\t\t\t<");
+    printf_debug("\t\t\t<");
     for (int i = 0; i < frame->code_info->max_locals; i++) {
         Slot *value = frame->local_variables[i];
         if (NULL != value) {
@@ -222,15 +222,15 @@ void print_local_variables(Frame *frame)
                     if (object_is_string(obj)) {
                         Array *array = obj->fields->object_value;
                         if (NULL == array) {
-                            printf("[NULL-STR]");
+                            printf_debug("[NULL-STR]");
                         } else {
                             char *str = malloc(array->length + 1);
                             memcpy(str, (char*)array->objects, array->length);
                             str[array->length] = '\0';
                             if (str[0] == '\n') {
-                                printf("[%d-> \"\\n\"],", i);
+                                printf_debug("[%d-> \"\\n\"],", i);
                             } else {
-                                printf("[%d-> \"%s\"],", i, str);
+                                printf_debug("[%d-> \"%s\"],", i, str);
                             }
                             free(str);
                         }
@@ -240,21 +240,21 @@ void print_local_variables(Frame *frame)
                             char *str = malloc(array->length + 1);
                             memcpy(str, (char*)array->objects, array->length);
                             str[array->length] = '\0';
-                            printf("[%d-> \"%s\"],", i, str);
+                            printf_debug("[%d-> \"%s\"],", i, str);
                         } else {
-                            printf("[%d-> %s],", i, obj->class->class_name);
+                            printf_debug("[%d-> %s],", i, obj->class->class_name);
                         }
                     }
                 }
-                else printf("[%d-> NULL-OBJECT(%p)],", i, obj);
+                else printf_debug("[%d-> NULL-OBJECT(%p)],", i, obj);
             } else {
-                printf("[%d-> %ld],", i, (long)value->value);
+                printf_debug("[%d-> %ld],", i, (long)value->value);
             }
         } else {
-            printf("[NULL]");
+            printf_debug("[NULL]");
         }
 
     }
-    printf(">");
-    printf("\n\n");
+    printf_debug(">");
+    printf_debug("\n\n");
 }

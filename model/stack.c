@@ -60,7 +60,7 @@ int push_stack(Stack *stack, void *value)
         stack->tail = next;
     }
     stack->size ++;
-    printf("\t\t\t\tpush ↓\n");
+    printf_debug("\t\t\t\tpush ↓\n");
     return 0;
 }
 
@@ -170,7 +170,7 @@ void* pop_stack(Stack *stack)
     stack->tail->next = NULL;
     stack->size--;
     if (stack->size == 0) stack->head = NULL;
-    printf("\t\t\t\tpop ↑\n");
+    printf_debug("\t\t\t\tpop ↑\n");
     return value;
 }
 
@@ -263,10 +263,10 @@ void free_stack(Stack **stack)
 
 void print_stack(Stack *stack)
 {
-    printf("[size: %d, max: %d]", stack->size, stack->max_size);
-    printf("\t\t\t");
+    printf_debug("[size: %d, max: %d]", stack->size, stack->max_size);
+    printf_debug("\t\t\t");
     if (NULL == stack || stack->size == 0 || NULL == stack->tail) {
-        printf("-> ...\n\n");
+        printf_debug("-> ...\n\n");
         return;
     }
     Entry *next = malloc(sizeof(Entry));
@@ -281,7 +281,7 @@ void print_stack(Stack *stack)
 //    }
 //    Entry *next = malloc(sizeof(Entry));
 //    memcpy(next, temp, sizeof(Entry));
-    printf("-> ");
+    printf_debug("-> ");
     for  (int i = 0; i < stack->size; i++) {
         if (NULL == next || NULL == next->value || NULL == next->prev) break;
         Slot *value = next->value;
@@ -291,15 +291,15 @@ void print_stack(Stack *stack)
                 if (object_is_string(obj)) {
                     Array *array = obj->fields->object_value;
                     if (NULL == array) {
-                        printf("[NULL-STR]");
+                        printf_debug("[NULL-STR]");
                     } else {
                         char *str = malloc(array->length + 1);
                         memcpy(str, (char*)array->objects, array->length);
                         str[array->length] = '\0';
                         if (str[0] == '\n') {
-                            printf("\"\\n\"");
+                            printf_debug("\"\\n\"");
                         } else {
-                            printf("\"%s\"", str);
+                            printf_debug("\"%s\"", str);
                         }
                         free(str);
                     }
@@ -309,19 +309,19 @@ void print_stack(Stack *stack)
                         char *str = malloc(array->length + 1);
                         memcpy(str, (char*)array->objects, array->length);
                         str[array->length] = '\0';
-                        printf("\"%s\"", str);
+                        printf_debug("\"%s\"", str);
                     } else {
-                        printf("%s", obj->class->class_name);
+                        printf_debug("%s", obj->class->class_name);
                     }
                 }
             }
-            else printf("NULL-OBJECT(%p)", obj);
+            else printf_debug("NULL-OBJECT(%p)", obj);
         } else {
-            printf("%ld", (long)value->value);
+            printf_debug("%ld", (long)value->value);
         }
-        printf(", ");
+        printf_debug(", ");
         memcpy(next, next->prev, sizeof(Entry));
     }
-    printf("\n");
+    printf_debug("\n");
     free(next);
 }

@@ -137,3 +137,17 @@ char *primitive_to_full_name(char *name)
     if (strcmp(name, "char") == 0) return "java/lang/Character";
     return name;
 }
+
+char *primitive_to_name(char *name)
+{
+    if (strcmp(name, "Z") == 0) return "boolean";
+    if (strcmp(name, "I") == 0) return "int";
+    if (strcmp(name, "C") == 0) return "char";
+    if (strcmp(name, "B") == 0) return "byte";
+    if (strcmp(name, "F") == 0) return "float";
+    if (strcmp(name, "D") == 0) return "double";
+    if (strcmp(name, "S") == 0) return "short";
+    if (strcmp(name, "J") == 0) return "long";
+    if (strcmp(name, "V") == 0) return "void";
+    return name;
+}

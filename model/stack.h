@@ -10,6 +10,7 @@
 #include <string.h>
 #include "stack.h"
 #include "class.h"
+#include "../util/ioutil.h"
 
 typedef struct {
     void *value;

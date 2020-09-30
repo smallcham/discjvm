@@ -167,4 +167,14 @@ void put_static_field_by_name_and_desc(ClassFile *class, char *name, char *desc,
 
 BootstrapMethods *get_bootstrap_methods(ConstantPool *pool, ClassFile *class);
 
+Object *new_object_by_desc(Thread *thread, SerialHeap *heap, Frame *frame, Object *this, char *class_name, char *desc, Stack *params);
+
+Object *new_object(Thread *thread, SerialHeap *heap, Frame *frame, Object *this, char *class_name, Stack *params);
+
+Object *get_rtype(Thread *thread, SerialHeap *heap, char *desc);
+
+Array *get_ptypes(Thread *thread, SerialHeap *heap, char *desc, int params_count);
+
+u4 parse_method_param_count_by_desc(char *desc, int length);
+
 #endif //DISCJVM_CLASS_LOADER_H

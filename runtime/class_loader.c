@@ -320,6 +320,90 @@ ClassFile *load_class_by_bytes(Thread *thread, SerialHeap *heap, u1 *bytes)
     return class;
 }
 
+Object *get_rtype(Thread *thread, SerialHeap *heap, char *desc)
+{
+    int offset = 0;
+    int length = strlen(desc);
+    for (int i = 0; i < length; i++) {
+        if (desc[i] == ')') {
+            offset = i + 1;
+            break;
+        }
+    }
+    int size = length - offset;
+    char rtype[size + 1];
+    ClassFile *class;
+    if (desc[offset] == 'L') {
+        memcpy(rtype, desc + offset + 1, size - 1);
+        rtype[size - 2] = '\0';
+        class = load_class(thread, heap, rtype);
+    } else {
+        memcpy(rtype, desc + offset, size);
+        rtype[size] = '\0';
+        class = load_primitive_class(thread, heap, primitive_to_name(rtype));
+    }
+    return class->class_object;
+}
+
+Array *get_ptypes(Thread *thread, SerialHeap *heap, char *desc, int params_count)
+{
+    int length = strlen(desc);
+    Array *ptypes = malloc_array(heap, load_class(thread, heap, "java/lang/Class"), params_count);
+    if (params_count == 0) return ptypes;
+    u4 count = 0;
+    int idx = 0;
+    for (int i = 0; i < length; i++) {
+        if (desc[i] == '(') {
+            idx = i + 1;
+            break;
+        }
+    }
+    int is_array = 0;
+    for (int j = idx; j < length; j++) {
+        switch (desc[j]) {
+            case ')': break;
+            case 'B': case 'C': case 'I': case 'S': case 'Z': case 'F': case 'D': case 'J':
+                if (is_array) {
+                    char name[3];
+                    name[0] = '[';
+                    name[1] = desc[j];
+                    name[2] = '\0';
+                    ptypes->objects[count++] = load_primitive_class(thread, heap, name)->class_object;
+                    is_array = 0;
+                } else {
+                    ptypes->objects[count++] = load_primitive_class(thread, heap, primitive_to_name(desc))->class_object;
+                }
+                continue;
+            case '[': {
+                is_array = 1;
+                continue;
+            }
+            case 'L': {
+                int offset = j + 1;
+                for (int k = j + 1; k < length; k++) {
+                    j = k;
+                    if (desc[k] == ';') {
+                        break;
+                    } else if (desc[k] == ')') {
+                        j = k - 1;
+                        break;
+                    }
+                }
+                int size = j - offset + (is_array ? 2 : 1);
+                char name[size];
+                name[0] = '[';
+                memcpy(name, desc + offset + 1, j - offset);
+                name[size] = '\0';
+                ptypes->objects[count++] = is_array ? load_primitive_class(thread, heap, name)->class_object : load_class(thread, heap, name)->class_object;
+                is_array = is_array - is_array;
+                continue;
+            }
+        }
+        break;
+    }
+    return ptypes;
+}
+
 Object *get_bootstrap_class_loader(Thread *thread, SerialHeap *heap)
 {
     if (NULL == bootstrap_class_loader) {
@@ -414,16 +498,21 @@ u1 *get_class_name_by_index(ConstantPool *pool, u2 index)
 
 u4 parse_method_param_count(CONSTANT_Utf8_info method_desc)
 {
+    return parse_method_param_count_by_desc(method_desc.bytes, method_desc.length);
+}
+
+u4 parse_method_param_count_by_desc(char *desc, int length)
+{
     u4 count = 0;
     int idx = 0;
-    for (int i = 0; i < method_desc.length; i++) {
-        if (method_desc.bytes[i] == '(') {
+    for (int i = 0; i < length; i++) {
+        if (desc[i] == '(') {
             idx = i + 1;
             break;
         }
     }
-    for (int j = idx; j < method_desc.length; j++) {
-        switch (method_desc.bytes[j]) {
+    for (int j = idx; j < length; j++) {
+        switch (desc[j]) {
             case ')': break;
             case 'B': case 'C': case 'I': case 'S': case 'Z': case 'F':
                 count ++;
@@ -435,11 +524,11 @@ u4 parse_method_param_count(CONSTANT_Utf8_info method_desc)
                 continue;
             }
             case 'L': {
-                for (int k = j + 1; k < method_desc.length; k++) {
+                for (int k = j + 1; k < length; k++) {
                     j = k;
-                    if (method_desc.bytes[k] == ';') {
+                    if (desc[k] == ';') {
                         break;
-                    } else if (method_desc.bytes[k] == ')') {
+                    } else if (desc[k] == ')') {
                         j = k - 1;
                         break;
                     }
@@ -453,8 +542,14 @@ u4 parse_method_param_count(CONSTANT_Utf8_info method_desc)
     return count;
 }
 
+
+
 void do_invokedynamic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
 {
+    //TODO not complete
+    printf_err("invokedynamic not complete");
+    exit(-1);
+
     CONSTANT_Dynamic_info dynamic_info = *(CONSTANT_Dynamic_info*)frame->constant_pool[index].info;
     CONSTANT_NameAndType_info name_and_type_info = *(CONSTANT_NameAndType_info*)frame->constant_pool[dynamic_info.bootstrap_method_attr_index].info;
     u1 *name = get_utf8_bytes(frame->constant_pool, name_and_type_info.name_index);
@@ -499,6 +594,9 @@ void do_invokedynamic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
         }
     }
 
+    Slot *lookup = create_slot();
+    Slot *method_type = create_slot();
+
     switch (method_handle.reference_kind) {
         case REF_getField: case REF_getStatic: case REF_putField: case REF_putStatic: {
             CONSTANT_Fieldref_info field_ref = *(CONSTANT_Fieldref_info*)frame->constant_pool[method_handle.reference_index].info;
@@ -520,16 +618,18 @@ void do_invokedynamic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
                 printf_err("method idx [%s] not found", method_ref.name_and_type_index);
                 exit(-1);
             }
-            Slot **slots = pop_slot_with_num(frame->operand_stack, method->params_count + 1);
-            for (int i = 0; i < method->params_count + 1; i++) {
+            push_slot(frame->operand_stack, method_type);
+            push_slot(frame->operand_stack, create_str_slot_set_str(thread, heap, method->name));
+            push_slot(frame->operand_stack, lookup);
+            Slot **slots = pop_slot_with_num(frame->operand_stack, method->params_count + method_info.num_bootstrap_arguments);
+            for (int i = 0; i < method->params_count + method_info.num_bootstrap_arguments; i++) {
                 push_slot(frame->operand_stack, slots[i]);
             }
-            Object *object = slots[0]->object_value;
-            ClassFile *class = object->class;
+            ClassFile *class = method->class;
             if (is_native(method->access_flags)) {
-                create_c_frame_and_invoke_add_params_plus1(thread, heap, frame, class->class_name, method);
+                create_c_frame_and_invoke_add_params(thread, heap, frame, class->class_name, method);
             } else {
-                create_vm_frame_by_method_add_params_plus1(thread, class, frame, method, get_method_code(class->constant_pool, *method));
+                create_vm_frame_by_method_add_params(thread, method->class, frame, method, get_method_code(class->constant_pool, *method));
             }
             break;
         }
@@ -538,6 +638,15 @@ void do_invokedynamic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
             break;
         }
     }
+
+    Stack *params = create_stack(1);
+    push_object(params, frame->class->class_object);
+    lookup->object_value = new_object_by_desc(thread, heap, frame, frame->class->class_object, "java/lang/invoke/MethodHandles$Lookup", "(Ljava/lang/Class;)V", params);
+    params = create_stack(2);
+    push_object(params, frame->class->class_object);
+    push_object(params, get_rtype(thread, heap, desc));
+    push_object(params, get_ptypes(thread, heap, desc, parse_method_param_count_by_desc(desc, strlen(desc))));
+    method_type->object_value = new_object_by_desc(thread, heap, frame, frame->class->class_object, "java/lang/invoke/MethodType", "(Ljava/lang/Class;[Ljava/lang/Class;)V", params);
 }
 
 void do_invokestatic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
@@ -554,8 +663,7 @@ void do_invokestatic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2
         init_class(thread, heap, class);
         return;
     }
-    printf("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class_name_info.bytes, name_and_type_info.name_index, method_name_info.bytes, name_and_type_info.descriptor_index, method_desc_info.bytes);
-//    MethodInfo *method = find_method_with_desc(thread, heap, class, method_name_info.bytes, method_desc_info.bytes);
+    printf_debug("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class_name_info.bytes, name_and_type_info.name_index, method_name_info.bytes, name_and_type_info.descriptor_index, method_desc_info.bytes);
     MethodInfo *method = find_interface_method_iter_super_with_desc(thread, heap, &class, method_name_info.bytes, method_desc_info.bytes);
     if (NULL == method) {
         printf_err("method [%s] not found", method_name_info.bytes);
@@ -577,7 +685,7 @@ void do_invokeinterface_by_index(Thread *thread, SerialHeap *heap, Frame *frame,
     u1 *method_name = get_utf8_bytes(frame->constant_pool, name_and_type_info.name_index);
     u1 *method_desc = get_utf8_bytes(frame->constant_pool, name_and_type_info.descriptor_index);
     ClassFile *class = load_class(thread, heap, class_name);
-    printf("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class_name, name_and_type_info.name_index, method_name, name_and_type_info.descriptor_index, method_desc);
+    printf_debug("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class_name, name_and_type_info.name_index, method_name, name_and_type_info.descriptor_index, method_desc);
     int params_count = parse_method_param_count(*(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info);
     Slot **slots = pop_slot_with_num(frame->operand_stack, params_count + 1);
     for (int i = 0; i < params_count + 1; i++) {
@@ -606,7 +714,7 @@ void do_invokespecial_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
     CONSTANT_Utf8_info method_name_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.name_index].info;
     CONSTANT_Utf8_info method_desc_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info;
     ClassFile *class = load_class(thread, heap, class_name_info.bytes);
-    printf("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class_name_info.bytes, name_and_type_info.name_index, method_name_info.bytes, name_and_type_info.descriptor_index, method_desc_info.bytes);
+    printf_debug("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class_name_info.bytes, name_and_type_info.name_index, method_name_info.bytes, name_and_type_info.descriptor_index, method_desc_info.bytes);
     MethodInfo *method = find_method_iter_super_with_desc(thread, heap, &class, method_name_info.bytes, method_desc_info.bytes);
     if (NULL == method) {
         printf_err("method [%s] not found", method_name_info.bytes);
@@ -628,7 +736,7 @@ void do_invokevirtual_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
     CONSTANT_Utf8_info method_name_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.name_index].info;
     CONSTANT_Utf8_info method_desc_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info;
     ClassFile *class = load_class(thread, heap, class_name_info.bytes);
-    printf("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class->class_name, name_and_type_info.name_index, method_name_info.bytes, name_and_type_info.descriptor_index, method_desc_info.bytes);
+    printf_debug("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class->class_name, name_and_type_info.name_index, method_name_info.bytes, name_and_type_info.descriptor_index, method_desc_info.bytes);
 
     int params_count = parse_method_param_count(*(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info);
     Slot **slots = pop_slot_with_num(frame->operand_stack, params_count + 1);
@@ -658,7 +766,7 @@ void get_field_to_opstack_by_index(Thread *thread, SerialHeap *heap, Frame *fram
     CONSTANT_Utf8_info field_name_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.name_index].info;
     CONSTANT_Utf8_info field_desc_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info;
     ClassFile *class = load_class(thread, heap, class_name_info.bytes);
-    printf("\t\t\t\t:%s.%s->%s\n", class_name_info.bytes, field_name_info.bytes, field_desc_info.bytes);
+    printf_debug("\t\t\t\t:%s.%s->%s\n", class_name_info.bytes, field_name_info.bytes, field_desc_info.bytes);
     if (class_is_not_init(class)) {
         back_pc(frame, 3);
         init_class(thread, heap, class);
@@ -683,7 +791,7 @@ void get_static_field_to_opstack_by_index(Thread *thread, SerialHeap *heap, Fram
     CONSTANT_Utf8_info field_name_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.name_index].info;
     CONSTANT_Utf8_info field_desc_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info;
     ClassFile *class = load_class(thread, heap, class_name_info.bytes);
-    printf("\t\t\t\t:%s.%s->%s\n", class_name_info.bytes, field_name_info.bytes, field_desc_info.bytes);
+    printf_debug("\t\t\t\t:%s.%s->%s\n", class_name_info.bytes, field_name_info.bytes, field_desc_info.bytes);
     if (class_is_not_init(class)) {
         back_pc(frame, 3);
         init_class(thread, heap, class);
@@ -830,7 +938,7 @@ void put_field(Thread *thread, SerialHeap *heap, Frame *frame, CONSTANT_Fieldref
     CONSTANT_Utf8_info field_desc_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info;
     CONSTANT_Class_info class_info = *(CONSTANT_Class_info*)frame->constant_pool[field_ref_info.class_index].info;
     CONSTANT_Utf8_info class_name_info = *(CONSTANT_Utf8_info*)frame->constant_pool[class_info.name_index].info;
-    printf("\t\t\t\t:%s.%s = %s\n", class_name_info.bytes, field_name_info.bytes, field_desc_info.bytes);
+    printf_debug("\t\t\t\t:%s.%s = %s\n", class_name_info.bytes, field_name_info.bytes, field_desc_info.bytes);
     ClassFile *class = load_class(thread, heap, class_name_info.bytes);
     if (class_is_not_init(class)) {
         back_pc(frame, 3);
@@ -857,7 +965,7 @@ void put_static_field(Thread *thread, SerialHeap *heap, Frame *frame, CONSTANT_F
     CONSTANT_Utf8_info field_desc_info = *(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info;
     CONSTANT_Class_info class_info = *(CONSTANT_Class_info*)frame->constant_pool[field_ref_info.class_index].info;
     CONSTANT_Utf8_info class_name_info = *(CONSTANT_Utf8_info*)frame->constant_pool[class_info.name_index].info;
-    printf("\t\t\t\t:%s.%s = %s\n", class_name_info.bytes, field_name_info.bytes, field_desc_info.bytes);
+    printf_debug("\t\t\t\t:%s.%s = %s\n", class_name_info.bytes, field_name_info.bytes, field_desc_info.bytes);
     ClassFile *class = load_class(thread, heap, class_name_info.bytes);
     if (class_is_not_init(class)) {
         back_pc(frame, 3);
@@ -1200,7 +1308,7 @@ void init_fields(ClassFile *class)
 void init_class(Thread *thread, SerialHeap *heap, ClassFile *class)
 {
     if (class_is_inited(class)) return;
-    printf("\t\t\t\t-> jump <clinit> - %s\n", class->class_name);
+    printf_debug("\t\t\t\t-> jump <clinit> - %s\n", class->class_name);
     class->init_state = CLASS_IN_INIT;
     ClassFile *_class = load_class(thread, heap, "java/lang/Class");
     if (class_is_not_init(_class)) {
@@ -1231,9 +1339,31 @@ void init_class(Thread *thread, SerialHeap *heap, ClassFile *class)
     }
 }
 
+Object *new_object(Thread *thread, SerialHeap *heap, Frame *frame, Object *this, char *class_name, Stack *params)
+{
+    return new_object_by_desc(thread, heap, frame, this, class_name, "()V", params);
+}
+
+Object *new_object_by_desc(Thread *thread, SerialHeap *heap, Frame *frame, Object *this, char *class_name, char *desc, Stack *params)
+{
+    if (NULL != params && params->size > 0) {
+        int size = params->size;
+        push_object(frame->operand_stack, this);
+        for (int i = 0; i < size; i++) {
+            push_slot(frame->operand_stack, pop_slot(params));
+        }
+    }
+    ClassFile *class = load_class(thread, heap, class_name);
+    Object *object = malloc_object(heap, class);
+    MethodInfo *init_method = find_method_with_desc(thread, heap, class, "<init>", desc);
+    create_vm_frame_by_method_add_params_plus1(thread, class, frame, init_method, get_method_code(class->constant_pool, *init_method));
+    init_class(thread, heap, class);
+    return object;
+}
+
 void clinit_class_and_exec(Thread *thread, SerialHeap *heap, ClassFile *class)
 {
-    printf("[clinit] - %s\n", class->class_name);
+    printf_debug("[clinit] - %s\n", class->class_name);
     init_class(thread, heap, class);
     run(thread, heap);
 }
