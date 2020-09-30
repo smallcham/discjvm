@@ -160,10 +160,10 @@ ClassFile *load_class_by_bytes(Thread *thread, SerialHeap *heap, u1 *bytes)
                         sizeof(CONSTANT_MethodHandle_info));
                 constant_methodhandle_info->tag = class->constant_pool[i].tag;
                 class_file += sizeof(u1);
-                constant_methodhandle_info->reference_index = l2b_2(*(u2 *) class_file);
-                class_file += sizeof(u2);
                 constant_methodhandle_info->reference_kind = *(u1 *) class_file;
                 class_file += sizeof(u1);
+                constant_methodhandle_info->reference_index = l2b_2(*(u2 *) class_file);
+                class_file += sizeof(u2);
                 class->constant_pool[i].info = constant_methodhandle_info;
                 continue;
             }
@@ -285,6 +285,7 @@ ClassFile *load_class_by_bytes(Thread *thread, SerialHeap *heap, u1 *bytes)
                 class->methods[i].attributes = (AttributeInfo *) malloc(
                         class->methods[i].attributes_count * sizeof(AttributeInfo));
                 for (int j = 0; j < class->methods[i].attributes_count; j++) {
+                    class->methods[i].class = class;
                     class->methods[i].attributes[j].attribute_name_index = l2b_2(*(u2 *) class_file);
                     class_file += sizeof(u2);
                     class->methods[i].attributes[j].attribute_length = l2b_4(*(u4 *) class_file);
@@ -455,11 +456,88 @@ u4 parse_method_param_count(CONSTANT_Utf8_info method_desc)
 void do_invokedynamic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
 {
     CONSTANT_Dynamic_info dynamic_info = *(CONSTANT_Dynamic_info*)frame->constant_pool[index].info;
-    dynamic_info.bootstrap_method_attr_index;
+    CONSTANT_NameAndType_info name_and_type_info = *(CONSTANT_NameAndType_info*)frame->constant_pool[dynamic_info.bootstrap_method_attr_index].info;
+    u1 *name = get_utf8_bytes(frame->constant_pool, name_and_type_info.name_index);
+    u1 *desc = get_utf8_bytes(frame->constant_pool, name_and_type_info.descriptor_index);
     BootstrapMethods *methods = get_bootstrap_methods(frame->constant_pool, frame->class);
-    CONSTANT_NameAndType_info name_and_type_info = *(CONSTANT_NameAndType_info*)frame->constant_pool[dynamic_info.name_and_type_index].info;
-    u1 *method_name = get_utf8_bytes(frame->constant_pool, name_and_type_info.name_index);
-    u1 *method_desc = get_utf8_bytes(frame->constant_pool, name_and_type_info.descriptor_index);
+    BootstrapMethodInfo method_info = methods->methods[dynamic_info.name_and_type_index];
+    CONSTANT_MethodHandle_info method_handle = *(CONSTANT_MethodHandle_info*)frame->constant_pool[method_info.bootstrap_method_ref].info;
+
+    for (int i = 0; i < method_info.num_bootstrap_arguments; i++) {
+        u2 _index = method_info.bootstrap_arguments[i];
+        switch (frame->constant_pool[method_info.bootstrap_arguments[i]].tag) {
+            case CONSTANT_String: {
+                char *str = get_str_from_string_index(frame->constant_pool, _index);
+                create_string_object_without_back(thread, heap, frame, str);
+                break;
+            }
+            case CONSTANT_Class: {
+                CONSTANT_Class_info class_info = *(CONSTANT_Class_info *) frame->constant_pool[_index].info;
+                u1 *class_name = get_utf8_bytes(frame->constant_pool, class_info.name_index);
+                push_object(frame->operand_stack, load_class(thread, heap, class_name)->class_object);
+                break;
+            }
+            case CONSTANT_InterfaceMethodref: {
+                CONSTANT_InterfaceMethodref_info info = *(CONSTANT_InterfaceMethodref_info *) frame->constant_pool[_index].info;
+                create_object_with_backpc(thread, heap, frame, info.class_index, 5);
+                break;
+            }
+            case CONSTANT_MethodType: {
+                create_object_with_class_name_and_backpc(thread, heap, frame, "java/lang/invoke/MethodType", 5);
+                break;
+            }
+            case CONSTANT_MethodHandle:
+                create_object_with_class_name_and_backpc(thread, heap, frame, "java/lang/invoke/MethodHandle", 5);
+                break;
+            case CONSTANT_Integer:
+                push_int(frame->operand_stack, get_u4_value_from_index(frame->constant_pool, _index));
+                break;
+            case CONSTANT_Float: {
+                push_float_by_u4(frame->operand_stack, get_u4_value_from_index(frame->constant_pool, _index));
+                break;
+            }
+        }
+    }
+
+    switch (method_handle.reference_kind) {
+        case REF_getField: case REF_getStatic: case REF_putField: case REF_putStatic: {
+            CONSTANT_Fieldref_info field_ref = *(CONSTANT_Fieldref_info*)frame->constant_pool[method_handle.reference_index].info;
+            break;
+        }
+        case REF_invokeVirtual: case REF_newInvokeSpecial: {
+            CONSTANT_Methodref_info method_ref = *(CONSTANT_Methodref_info*)frame->constant_pool[method_handle.reference_index].info;
+            MethodInfo *method = get_method_info_by_ref(thread, heap, frame->constant_pool, method_ref);
+            if (NULL == method) {
+                printf_err("method idx [%s] not found", method_ref.name_and_type_index);
+                exit(-1);
+            }
+            break;
+        }
+        case REF_invokeStatic: case REF_invokeSpecial: {
+            CONSTANT_Methodref_info method_ref = *(CONSTANT_Methodref_info*)frame->constant_pool[method_handle.reference_index].info;
+            MethodInfo *method = get_method_info_by_ref(thread, heap, frame->constant_pool, method_ref);
+            if (NULL == method) {
+                printf_err("method idx [%s] not found", method_ref.name_and_type_index);
+                exit(-1);
+            }
+            Slot **slots = pop_slot_with_num(frame->operand_stack, method->params_count + 1);
+            for (int i = 0; i < method->params_count + 1; i++) {
+                push_slot(frame->operand_stack, slots[i]);
+            }
+            Object *object = slots[0]->object_value;
+            ClassFile *class = object->class;
+            if (is_native(method->access_flags)) {
+                create_c_frame_and_invoke_add_params_plus1(thread, heap, frame, class->class_name, method);
+            } else {
+                create_vm_frame_by_method_add_params_plus1(thread, class, frame, method, get_method_code(class->constant_pool, *method));
+            }
+            break;
+        }
+        case REF_invokeInterface: {
+            CONSTANT_InterfaceMethodref_info interface_info = *(CONSTANT_InterfaceMethodref_info*)frame->constant_pool[method_handle.reference_index].info;
+            break;
+        }
+    }
 }
 
 void do_invokestatic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
@@ -1177,7 +1255,18 @@ u1* get_class_bytes(char *path)
     return class_file;
 }
 
-CodeAttribute *get_method_code(ConstantPool *pool, MethodInfo method) {
+MethodInfo *get_method_info_by_ref(Thread *thread, SerialHeap *heap, ConstantPool *pool, CONSTANT_Methodref_info ref)
+{
+    CONSTANT_NameAndType_info name_and_type = *(CONSTANT_NameAndType_info*)pool[ref.name_and_type_index].info;
+    u1 *method_name = get_utf8_bytes(pool, name_and_type.name_index);
+    u1 *method_desc = get_utf8_bytes(pool, name_and_type.descriptor_index);
+    CONSTANT_Class_info class_info = *(CONSTANT_Class_info*)pool[ref.class_index].info;
+    ClassFile *class = load_class(thread, heap, get_utf8_bytes(pool, class_info.name_index));
+    return find_method_iter_super_with_desc(thread, heap, &class, method_name, method_desc);
+}
+
+CodeAttribute *get_method_code(ConstantPool *pool, MethodInfo method)
+{
     if (method.attributes_count == 0) return NULL;
     int index = -1;
     for (int i = 0; i < method.attributes_count; i++) {

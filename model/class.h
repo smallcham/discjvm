@@ -61,6 +61,7 @@ typedef struct {
     u4 params_count;
     u1 *name;
     u1 *desc;
+    void *class;
     AttributeInfo *attributes;
 } MethodInfo;
 

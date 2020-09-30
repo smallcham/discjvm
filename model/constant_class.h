@@ -39,6 +39,16 @@
 #define ACC_PROTECTED       0x0004
 #define ACC_STATIC          0x0008
 
+#define REF_getField 1
+#define REF_getStatic 2
+#define REF_putField 3
+#define REF_putStatic 4
+#define REF_invokeVirtual 5
+#define REF_invokeStatic 6
+#define REF_invokeSpecial 7
+#define REF_newInvokeSpecial 8
+#define REF_invokeInterface 9
+
 typedef struct {
     u1 tag;
     u2 name_index;

@@ -79,6 +79,8 @@ void clinit_class_and_exec(Thread *thread, SerialHeap *heap, ClassFile *class);
 
 void print_class_info(ClassFile class);
 
+MethodInfo *get_method_info_by_ref(Thread *thread, SerialHeap *heap, ConstantPool *pool, CONSTANT_Methodref_info ref);
+
 CodeAttribute *get_method_code(ConstantPool *pool, MethodInfo method);
 
 void create_string_object(Thread *thread, SerialHeap *heap, Frame *frame, char *str);
