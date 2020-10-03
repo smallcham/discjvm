@@ -9,18 +9,21 @@ Frame *create_c_frame(Thread *thread, SerialHeap *heap, Frame *frame, char *clas
 void init_native_factory()
 {
     //函数名 '左括号' 替换为 '9', '右括号' 替换为 '0', '/' 替换为 '_', ';' 替换为 '1'
-    native_pool = create_map();
+    native_pool = create_map(999);
     //Object
     put_map(&native_pool, "java/lang/Object.registerNatives()V", java_lang_Object_registerNatives_90V);
     put_map(&native_pool, "java/lang/Object.getClass()Ljava/lang/Class;", java_lang_Object_getClass_90Ljava_lang_Class);
     put_map(&native_pool, "java/lang/Object.hashCode()I", java_lang_Object_hashCode_90I);
     put_map(&native_pool, "java/lang/Object.notifyAll()V", java_lang_Object_notifyAll_90V);
+    put_map(&native_pool, "java/lang/Object.clone()Ljava/lang/Object;", java_lang_Object_clone_90Ljava_lang_Object1);
 
     //Class
     put_map(&native_pool, "java/lang/Class.registerNatives()V", java_lang_Class_registerNatives_90V);
     put_map(&native_pool, "java/lang/Class.getPrimitiveClass(Ljava/lang/String;)Ljava/lang/Class;", java_lang_Class_getPrimitiveClass_9Ljava_lang_String10Ljava_lang_Class);
     put_map(&native_pool, "java/lang/Class.desiredAssertionStatus0(Ljava/lang/Class;)Z", java_lang_Class_desiredAssertionStatus0_9Ljava_lang_Class10Z);
     put_map(&native_pool, "java/lang/Class.isArray()Z", java_lang_Class_isArray_90Z);
+    put_map(&native_pool, "java/lang/Class.initClassName()Ljava/lang/String;", java_lang_Class_initClassName_90Ljava_lang_String1);
+    put_map(&native_pool, "java/lang/Class.forName0(Ljava/lang/String;ZLjava/lang/ClassLoader;Ljava/lang/Class;)Ljava/lang/Class;", java_lang_Class_forName0_9Ljava_lang_String1ZLjava_lang_ClassLoader1Ljava_lang_Class10Ljava_lang_Class1);
 
     //System
     put_map(&native_pool, "java/lang/System.registerNatives()V", java_lang_System_registerNatives_90V);
@@ -32,11 +35,14 @@ void init_native_factory()
     put_map(&native_pool, "java/lang/System.setErr0(Ljava/io/PrintStream;)V", java_lang_System_setErr0_9Ljava_io_PrintStream10V);
     put_map(&native_pool, "java/lang/System.mapLibraryName(Ljava/lang/String;)Ljava/lang/String;", java_lang_System_mapLibraryName_9Ljava_lang_String10Ljava_lang_String1);
     put_map(&native_pool, "java/lang/System.currentTimeMillis()J", java_lang_System_currentTimeMillis_90J);
+    put_map(&native_pool, "java/lang/System.identityHashCode(Ljava/lang/Object;)I", java_lang_System_identityHashCode_9Ljava_lang_Object10I);
 
     //Thread
     put_map(&native_pool, "java/lang/Thread.registerNatives()V", java_lang_Thread_registerNatives_90V);
     put_map(&native_pool, "java/lang/Thread.currentThread()Ljava/lang/Thread;", java_lang_Thread_currentThread_90Ljava_lang_Thread1);
     put_map(&native_pool, "java/lang/Thread.setPriority0(I)V", java_lang_Thread_setPriority0_9I0V);
+    put_map(&native_pool, "java/lang/Thread.isAlive()Z", java_lang_Thread_isAlive_90Z);
+    put_map(&native_pool, "java/lang/Thread.start0()V", java_lang_Thread_start0_90V);
 
     //Unsafe
     put_map(&native_pool, "jdk/internal/misc/Unsafe.registerNatives()V", jdk_internal_misc_Unsafe_registerNatives_90V);
@@ -54,6 +60,8 @@ void init_native_factory()
     put_map(&native_pool, "jdk/internal/misc/Unsafe.putObjectVolatile(Ljava/lang/Object;JLjava/lang/Object;)V", jdk_internal_misc_Unsafe_putObjectVolatile_9Ljava_lang_Object1JLjava_lang_Object10V);
     put_map(&native_pool, "jdk/internal/misc/Unsafe.getIntVolatile(Ljava/lang/Object;J)I", jdk_internal_misc_Unsafe_getIntVolatile_9Ljava_lang_Object1J0I);
     put_map(&native_pool, "jdk/internal/misc/Unsafe.ensureClassInitialized0(Ljava/lang/Class;)V", jdk_internal_misc_Unsafe_ensureClassInitialized0_9Ljava_lang_Class10V);
+    put_map(&native_pool, "jdk/internal/misc/Unsafe.allocateMemory0(J)J", jdk_internal_misc_Unsafe_allocateMemory0_9J0J);
+    put_map(&native_pool, "jdk/internal/misc/Unsafe.getObject(Ljava/lang/Object;J)Ljava/lang/Object;", jdk_internal_misc_Unsafe_getObject_9Ljava_lang_Object1J0Ljava_lang_Object1);
 
     //ClassLoader
     put_map(&native_pool, "java/lang/ClassLoader.registerNatives()V", java_lang_ClassLoader_registerNatives_90V);
@@ -108,6 +116,10 @@ void init_native_factory()
 
     //Reflection
     put_map(&native_pool, "jdk/internal/reflect/Reflection.getCallerClass()Ljava/lang/Class;", jdk_internal_reflect_Reflection_getCallerClass_90Ljava_lang_Class1);
+
+    //UnixNativeDispatcher
+    put_map(&native_pool, "sun/nio/fs/UnixNativeDispatcher.init()I", sun_nio_fs_UnixNativeDispatcher_init_90I);
+    put_map(&native_pool, "sun/nio/fs/UnixNativeDispatcher.getcwd()[B", sun_nio_fs_UnixNativeDispatcher_getcwd_90Bs);
 }
 
 NativeMethod find_native(char *class_name, char *method_name, char *method_desc)

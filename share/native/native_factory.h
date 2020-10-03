@@ -27,6 +27,7 @@
 #include "jdk/internal/misc/Signal.h"
 #include "java/io/UnixFileSystem.h"
 #include "jdk/internal/reflect/Reflection.h"
+#include "sun/nio/fs/UnixNativeDispatcher.h"
 
 typedef void (*NativeMethod)(Thread *, SerialHeap *, Frame *);
 

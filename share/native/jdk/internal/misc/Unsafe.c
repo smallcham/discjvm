@@ -225,3 +225,23 @@ void jdk_internal_misc_Unsafe_ensureClassInitialized0_9Ljava_lang_Class10V(Threa
         init_class(thread, heap, class->raw_class);
     }
 }
+
+void jdk_internal_misc_Unsafe_allocateMemory0_9J0J(Thread *thread, SerialHeap *heap, Frame *frame)
+{
+    long bytes = get_long_localvar(frame, 1);
+    long addr = (long) malloc(bytes);
+    push_long(frame->operand_stack, addr);
+}
+
+
+/**
+ * Fetches a reference value from a given Java variable.
+ * @see #getInt(Object, long)
+ * public native Object getObject(Object o, long offset);
+ */
+void jdk_internal_misc_Unsafe_getObject_9Ljava_lang_Object1J0Ljava_lang_Object1(Thread *thread, SerialHeap *heap, Frame *frame)
+{
+    Object *object = get_ref_localvar(frame, 1);
+    long offset = get_long_localvar(frame, 2);
+    push_object(frame->operand_stack, object->fields[offset].object_value);
+}

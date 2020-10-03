@@ -177,4 +177,6 @@ Array *get_ptypes(Thread *thread, SerialHeap *heap, char *desc, int params_count
 
 u4 parse_method_param_count_by_desc(char *desc, int length);
 
+char *get_str_field_value_by_object_and_name(Object *object, char *name);
+
 #endif //DISCJVM_CLASS_LOADER_H

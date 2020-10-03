@@ -39,4 +39,8 @@ void jdk_internal_misc_Unsafe_getIntVolatile_9Ljava_lang_Object1J0I(Thread *thre
 
 void jdk_internal_misc_Unsafe_ensureClassInitialized0_9Ljava_lang_Class10V(Thread *thread, SerialHeap *heap, Frame *frame);
 
+void jdk_internal_misc_Unsafe_allocateMemory0_9J0J(Thread *thread, SerialHeap *heap, Frame *frame);
+
+void jdk_internal_misc_Unsafe_getObject_9Ljava_lang_Object1J0Ljava_lang_Object1(Thread *thread, SerialHeap *heap, Frame *frame);
+
 #endif //DISCJVM_UNSAFE_H

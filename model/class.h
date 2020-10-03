@@ -205,35 +205,25 @@ typedef struct {
 } ClassFile;
 
 typedef struct {
+    void *owner;
+    pthread_mutex_t *lock;
+    int count;
+} Monitor;
+
+typedef struct {
     ClassFile *class;
     ClassFile *raw_class;
+    Monitor *monitor;
     Slot *fields;
 } Object;
 
 typedef struct {
     ClassFile *class;
     ClassFile *raw_class;
+    Monitor *monitor;
     u4 length;
     void *objects[];
 } Array;
-
-//typedef struct{
-//    u2 *class_name;
-//    u2 access_flags;
-//    struct Class *super_class_index;
-//    u2 interfaces_count;
-//    struct Class *interfaces;
-//    u2 fields_count;
-//    u2 constant_pool_count;
-//    ConstantPool *constant_pool;
-//    Slot *runtime_constant_pool;
-//    Slot *fields;
-//    u2 methods_count;
-//    MethodInfo *methods;
-//    u2 attributes_count;
-//    AttributeInfo *attributes;
-//    u1 init_state;
-//} Class;
 
 char *JAVA_HOME;
 char *CLASS_PATH;

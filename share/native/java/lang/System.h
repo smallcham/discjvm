@@ -26,4 +26,6 @@ void java_lang_System_mapLibraryName_9Ljava_lang_String10Ljava_lang_String1(Thre
 
 void java_lang_System_currentTimeMillis_90J(Thread *thread, SerialHeap *heap, Frame *frame);
 
+void java_lang_System_identityHashCode_9Ljava_lang_Object10I(Thread *thread, SerialHeap *heap, Frame *frame);
+
 #endif //DISCJVM_CLASS_H

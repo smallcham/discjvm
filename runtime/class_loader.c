@@ -843,15 +843,26 @@ char *get_str_field_value_by_object(Object *object)
     return str;
 }
 
+char *get_str_field_value_by_object_and_name(Object *object, char *name)
+{
+    FieldInfo *field = get_field_by_name_and_desc(object->raw_class, name, "[B");
+    Array *array = object->fields[field->offset].object_value;
+    if (NULL == array) return NULL;
+    char *str = malloc(array->length + 1);
+    memcpy(str, (char*)array->objects, array->length);
+    str[array->length] = '\0';
+    return str;
+}
+
 u8 get_field_value_by_name_and_desc(Object *object, char *name, char *desc)
 {
-    FieldInfo *field = get_field_by_name_and_desc(object->class, name, desc);
+    FieldInfo *field = get_field_by_name_and_desc(object->raw_class, name, desc);
     return object->fields[field->offset].value;
 }
 
 void *get_field_object_value_by_name_and_desc(Object *object, char *name, char *desc)
 {
-    FieldInfo *field = get_field_by_name_and_desc(object->class, name, desc);
+    FieldInfo *field = get_field_by_name_and_desc(object->raw_class, name, desc);
     return object->fields[field->offset].object_value;
 }
 

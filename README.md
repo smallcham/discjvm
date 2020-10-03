@@ -24,3 +24,9 @@
 # AccessController_doPrivileged need a return value
 
 # compete invokedynamic instruction, don't forget initPhase2 and 3
+
+# LD_LIBRARY_PATH=/usr/lib/jvm/java-11-openjdk-amd64/lib/server
+
+# Object.clone not complete
+# Thread.isAlive not complete
+# Thread.start0 not complete, need lock

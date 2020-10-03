@@ -9,6 +9,7 @@
 #include "stdio.h"
 #include "../../../model/hash_map.h"
 #include "../../../model/class.h"
+#include "../../native/java/lang/Thread.h"
 
 typedef struct {
     HashMap *class_pool;

@@ -29,6 +29,8 @@ void init_primitives(Thread *thread, SerialHeap *heap)
 HashMap **init_vm_opts()
 {
     VM_OPTS = create_map_by_size((int)(20 * 1.3) + 1);
+    char *lib_path = malloc(strlen(JAVA_HOME) + 4);
+    sprintf(lib_path, "%s/lib", JAVA_HOME);
     put_map(&VM_OPTS, "java.version", "1.11.0");
     put_map(&VM_OPTS, "java.version.data", "2019");
     put_map(&VM_OPTS, "java.vendor", "discjvm");
@@ -38,7 +40,7 @@ HashMap **init_vm_opts()
     put_map(&VM_OPTS, "java.class.version", "55.0");
     put_map(&VM_OPTS, "java.class.path", CLASS_PATH);
     put_map(&VM_OPTS, "java.library.path", CLASS_PATH);
-    put_map(&VM_OPTS, "sun.boot.library.path", CLASS_PATH);
+    put_map(&VM_OPTS, "sun.boot.library.path", lib_path);
     put_map(&VM_OPTS, "os.name", "linux");
     put_map(&VM_OPTS, "os.arch", "amd64");
     put_map(&VM_OPTS, "os.version",  "");
@@ -75,13 +77,16 @@ void start_vm(char *class_path)
             "java/lang/Class",
             "java/lang/ThreadGroup",
             "java/lang/Thread",
+            "sun/nio/fs/UnixFileAttributes",
+            "sun/nio/fs/UnixFileStoreAttributes",
+            "sun/nio/fs/UnixMountEntry"
     };
     SerialHeap *heap = init_gc();
     init_instructions();
     init_native_factory();
     init_instructions_desc();
     Thread thread = create_thread(100, 100);
-    init_lib_by_names(&thread, heap, base_lib, 5);
+    init_lib_by_names(&thread, heap, base_lib, 8);
     init_primitives(&thread, heap);
 
 

@@ -30,8 +30,6 @@ void del_class_from_cache(HashMap *pool, char *class_full_name)
 
 void put_class_to_cache(HashMap **pool, ClassFile *class)
 {
-//    CONSTANT_Class_info class_info = *(CONSTANT_Class_info*)class->constant_pool[class->this_class].info;
-//    CONSTANT_Utf8_info name_info = *(CONSTANT_Utf8_info*)class->constant_pool[class_info.name_index].info;
     put_map(pool, class->class_name, class);
 }
 
@@ -42,18 +40,11 @@ Object *malloc_object(SerialHeap *heap, ClassFile *class)
     object->class = class;
     object->raw_class = class;
     object->fields = create_slot_by_size(class->object_fields_count);
-//    object->fields = create_map(class->fields_count * 1.3 + 1);
     return object;
 }
 
 Object *malloc_null_object(SerialHeap *heap)
 {
-//    Object *object = malloc(sizeof(Object));
-//    memset(object, 0, sizeof(Object));
-//    object->class = NULL;
-//    object->raw_class = NULL;
-//    object->fields = NULL;
-//    return object;
     return NULL;
 }
 

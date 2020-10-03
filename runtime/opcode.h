@@ -10,6 +10,11 @@
 #include "../runtime/class_loader.h"
 #include "../share/gc/serial/serial_heap.h"
 
+typedef struct {
+    Thread *thread;
+    SerialHeap *heap;
+} Env;
+
 typedef void (*Operator)(SerialHeap *heap, Thread *, Frame *);
 
 Operator instructions[0x100];
@@ -63,5 +68,7 @@ void init_instructions_desc();
 void run(Thread *thread, SerialHeap *heap);
 
 void single_invoke(SerialHeap *heap, ClassFile *class, char *method_name, char *method_desc, Stack *params);
+
+void run_by_env(Env env);
 
 #endif //DISCJVM_OPCODE_H

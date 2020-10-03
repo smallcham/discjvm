@@ -24,3 +24,10 @@ void java_lang_Object_notifyAll_90V(Thread *thread, SerialHeap *heap, Frame *fra
 {
     //TODO
 }
+
+void java_lang_Object_clone_90Ljava_lang_Object1(Thread *thread, SerialHeap *heap, Frame *frame)
+{
+    //TODO
+    Object *this = get_localvar_this(frame);
+    push_object(frame->operand_stack, this);
+}

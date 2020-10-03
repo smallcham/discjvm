@@ -670,7 +670,7 @@ void xastore_(SerialHeap *heap, Thread *thread, Frame *frame, char desc) {
             break;
         }
         case 'C': case 'B': {
-            char *objects = (char*)ref->objects + index;
+            char *objects = (char*)ref->objects + index - 1;
             *objects = value->value;
             break;
         }
@@ -1511,7 +1511,18 @@ void instanceof(SerialHeap *heap, Thread *thread, Frame *frame) {
 }
 
 void monitorenter(SerialHeap *heap, Thread *thread, Frame *frame) {
-    pop_slot(frame->operand_stack);
+    Object *object = pop_object(frame->operand_stack);
+    if (NULL == object) {
+        printf_err("NULLPointerException");
+        exit(-1);
+    }
+    if (object->monitor->owner == thread->jthread) {
+        object->monitor->count ++;
+    } else {
+        while (object->monitor->count > 0) {
+            pthread_mutex_lock(object->monitor->lock);
+        }
+    }
     step_pc_1(frame);
 }
 
@@ -2049,4 +2060,8 @@ void run(Thread *thread, SerialHeap *heap) {
         Frame *frame = get_stack(thread->vm_stack);
         exec(instructions[read_code(frame)], heap, thread, frame);
     } while (!is_empty_stack(thread->vm_stack));
+}
+
+void run_by_env(Env env) {
+    run(env.thread, env.heap);
 }

@@ -16,4 +16,8 @@ void java_lang_Class_desiredAssertionStatus0_9Ljava_lang_Class10Z(Thread *thread
 
 void java_lang_Class_isArray_90Z(Thread *thread, SerialHeap *heap, Frame *frame);
 
+void java_lang_Class_initClassName_90Ljava_lang_String1(Thread *thread, SerialHeap *heap, Frame *frame);
+
+void java_lang_Class_forName0_9Ljava_lang_String1ZLjava_lang_ClassLoader1Ljava_lang_Class10Ljava_lang_Class1(Thread *thread, SerialHeap *heap, Frame *frame);
+
 #endif //DISCJVM_CLASS_H

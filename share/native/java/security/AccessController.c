@@ -37,7 +37,6 @@ void java_security_AccessController_getStackAccessControlContext_90Ljava_securit
   */
 void java_security_AccessController_doPrivileged_9Ljava_security_PrivilegedAction10Ljava_lang_Object1(Thread *thread, SerialHeap *heap, Frame *frame)
 {
-   //TODO
    Object *action = get_ref_localvar(frame, 0);
    ClassFile *class = action->raw_class;
 
