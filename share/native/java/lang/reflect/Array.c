@@ -15,7 +15,7 @@ void java_lang_reflect_Array_newArray_9Ljava_lang_Class1I0Ljava_lang_Object1(Thr
     ClassFile *class = this->raw_class;
     char *_arr_name = malloc(strlen(class->class_name) + 2);
     sprintf(_arr_name, "[L%s", class->class_name);
-    Array *arr = malloc_array(heap, load_primitive_class(thread, heap, _arr_name), length);
+    Array *arr = malloc_array(thread, heap, load_primitive_class(thread, heap, _arr_name), length);
     free(_arr_name);
     push_object(frame->operand_stack, arr);
     if (NULL != class->class_object) {

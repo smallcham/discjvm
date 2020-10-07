@@ -207,6 +207,7 @@ typedef struct {
 typedef struct {
     void *owner;
     pthread_mutex_t *lock;
+    pthread_cond_t *cond;
     int count;
 } Monitor;
 
@@ -230,6 +231,8 @@ char *CLASS_PATH;
 char *USER_NAME;
 char *USER_HOME;
 char *USER_DIR;
+int VM_STACK_SIZE;
+int C_STACK_SIZE;
 HashMap *VM_OPTS;
 Slot *NULL_SLOT;
 

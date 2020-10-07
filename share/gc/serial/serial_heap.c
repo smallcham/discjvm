@@ -33,24 +33,25 @@ void put_class_to_cache(HashMap **pool, ClassFile *class)
     put_map(pool, class->class_name, class);
 }
 
-Object *malloc_object(SerialHeap *heap, ClassFile *class)
+Object *malloc_object(Thread *thread, SerialHeap *heap, ClassFile *class)
 {
     Object *object = malloc(sizeof(Object));
     memset(object, 0, sizeof(Object));
     object->class = class;
     object->raw_class = class;
     object->fields = create_slot_by_size(class->object_fields_count);
+    object->monitor = create_monitor(NULL);
     return object;
 }
 
-Object *malloc_null_object(SerialHeap *heap)
+Object *malloc_null_object(Thread *thread, SerialHeap *heap)
 {
     return NULL;
 }
 
-Array *malloc_array(SerialHeap *heap, ClassFile *class, int length)
+Array *malloc_array(Thread *thread, SerialHeap *heap, ClassFile *class, int length)
 {
-    Array *array = malloc_array_by_type_size(heap, class, length, sizeof(Object));
+    Array *array = malloc_array_by_type_size(thread, heap, class, length, sizeof(Object));
     Object **objects = (Object **) array->objects;
     for (int i = 0; i < length; i++) {
         objects[i] = NULL;
@@ -58,19 +59,20 @@ Array *malloc_array(SerialHeap *heap, ClassFile *class, int length)
     return array;
 }
 
-Array *malloc_array_by_type_size(SerialHeap *heap, ClassFile *class, int length, int type_size)
+Array *malloc_array_by_type_size(Thread *thread, SerialHeap *heap, ClassFile *class, int length, int type_size)
 {
     Array *array = malloc(sizeof(Array) + type_size * length);
     memset(array, 0, sizeof(Array) + type_size * length);
+    array->monitor = create_monitor(NULL);
     array->length = length;
     array->class = class;
     array->raw_class = class;
     return array;
 }
 
-void copy_object(SerialHeap *heap, Object **t, Object *s)
+void copy_object(Thread *thread, SerialHeap *heap, Object **t, Object *s)
 {
-    *t = (Object*)malloc_object(heap, s->raw_class);
+    *t = (Object*)malloc_object(thread, heap, s->raw_class);
     (*t)->class = s->class;
     (*t)->raw_class = s->raw_class;
     for (int i = 0; i < s->raw_class->fields_count; i++) {
@@ -83,12 +85,12 @@ void copy_object(SerialHeap *heap, Object **t, Object *s)
                     (*t)->fields[field.offset].object_value = NULL;
                     continue;
                 }
-                Array *t_array = malloc_array(heap, s_array->raw_class, s_array->length);
+                Array *t_array = malloc_array(thread, heap, s_array->raw_class, s_array->length);
                 for (int j = 0; j < s_array->length; j++) {
                     Object *s_obj = s_array->objects[j];
                     if (NULL == s_obj) continue;
                     Object *t_obj;
-                    copy_object(heap, &t_obj, s_obj);
+                    copy_object(thread, heap, &t_obj, s_obj);
                     t_array->objects[j] = t_obj;
                 }
                 (*t)->fields[field.offset].object_value = t_array;
@@ -96,7 +98,7 @@ void copy_object(SerialHeap *heap, Object **t, Object *s)
                 int type_size = primitive_size(field.desc);
                 Array *array = s->fields[field.offset].object_value;
                 if (NULL != array) {
-                    Array *new_array = malloc_array_by_type_size(heap, array->raw_class, array->length, type_size);
+                    Array *new_array = malloc_array_by_type_size(thread, heap, array->raw_class, array->length, type_size);
                     memcpy(new_array->objects, array->objects, type_size * array->length);
                     (*t)->fields[field.offset].object_value = new_array;
                 }
@@ -104,7 +106,7 @@ void copy_object(SerialHeap *heap, Object **t, Object *s)
         } else {
             if (is_object_by_name(field.desc)) {
                 if (NULL != s->fields[field.offset].object_value) {
-                    copy_object(heap, &((*t)->fields[field.offset].object_value), s->fields[field.offset].object_value);
+                    copy_object(thread, heap, &((*t)->fields[field.offset].object_value), s->fields[field.offset].object_value);
                 } else {
                     continue;
                 }

@@ -73,7 +73,7 @@ void sun_nio_fs_UnixNativeDispatcher_getcwd_90Bs(Thread *thread, SerialHeap *hea
         printf_err("throwUnixException");
         exit(-1);
     } else {
-        Array *array = malloc_array_by_type_size(heap, load_primitive_class(thread, heap, "[B"), strlen(buf), sizeof(char));
+        Array *array = malloc_array_by_type_size(thread, heap, load_primitive_class(thread, heap, "[B"), strlen(buf), sizeof(char));
         char *str = (char *) array->objects;
         for (int i = 0; i < array->length; i++) {
             str[i] = buf[i];

@@ -33,6 +33,12 @@ void put_field(Thread *thread, SerialHeap *heap, Frame *frame, CONSTANT_Fieldref
 
 void put_str_field(Thread *thread, SerialHeap *heap, Object *object, char *str);
 
+CONSTANT_Utf8_info *get_utf8_info_from_string_index(ConstantPool *constant_pool, u2 index);
+
+void put_str_field_with_length(Thread *thread, SerialHeap *heap, Object *object, char *str, int length);
+
+void create_string_object_with_length(Thread *thread, SerialHeap *heap, Frame *frame, char *str, int length);
+
 void put_field_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index);
 
 char *get_str_from_string_index(ConstantPool *constant_pool, u2 index);
@@ -151,7 +157,7 @@ void create_object_with_class_name_and_backpc(Thread *thread, SerialHeap *heap, 
 
 int is_instance_of(ClassFile *source, ClassFile *target);
 
-Slot *create_object_slot(SerialHeap *heap, ClassFile *class);
+Slot *create_object_slot(Thread *thread, SerialHeap *heap, ClassFile *class);
 
 Slot *create_object_slot_set_object(SerialHeap *heap, void *object);
 
@@ -178,5 +184,9 @@ Array *get_ptypes(Thread *thread, SerialHeap *heap, char *desc, int params_count
 u4 parse_method_param_count_by_desc(char *desc, int length);
 
 char *get_str_field_value_by_object_and_name(Object *object, char *name);
+
+ExceptionsAttribute *get_exception_handle(ConstantPool *pool, MethodInfo *method, ClassFile *class);
+
+ClassFile *get_class_by_attr_index(Thread *thread, SerialHeap *heap, ConstantPool *pool, u2 index);
 
 #endif //DISCJVM_CLASS_LOADER_H

@@ -66,12 +66,18 @@ Frame *create_vm_frame_by_method_add_hook(Thread* thread, ClassFile *class, Meth
     return frame;
 }
 
-Thread create_thread(int vm_stack_size, int c_stack_size)
+Thread *create_thread(int vm_stack_size, int c_stack_size)
 {
-    int len = sizeof(Stack);
-    Thread thread = { malloc(len), malloc(len) };
-    thread.vm_stack = create_stack(vm_stack_size);
-    thread.c_stack = create_stack(c_stack_size);
+    Thread *thread = malloc(sizeof(Thread));
+    thread->vm_stack = create_stack(vm_stack_size);
+    thread->c_stack = create_stack(c_stack_size);
+    return thread;
+}
+
+Thread *create_thread_with_jthread(int vm_stack_size, int c_stack_size, Object *jthread)
+{
+    Thread *thread = create_thread(vm_stack_size, c_stack_size);
+    thread->jthread = jthread;
     return thread;
 }
 
@@ -120,31 +126,11 @@ void add_params_and_plus1(Frame *frame, Frame *new_frame, MethodInfo *method)
 
 void add_params(Frame *frame, Frame *new_frame, MethodInfo *method)
 {
-//    LocalVariableTableAttribute *local_variable_table = get_local_variable(new_frame->constant_pool, code);
-//    if (NULL == local_variable_table) return;
     if (method->params_count == 0) return;
     printf_debug("\t\t\t\t[addparams(%d)]\n", method->params_count);
     Slot **slots = pop_slot_with_num(frame->operand_stack, method->params_count);
     for (int i = 0; i < method->params_count; i++) {
         new_frame->local_variables[i] = slots[i];
-//        switch (local_variable_table->local_variable_table[i].desc[0]) {
-//            case 'B': case 'C':case 'I':case 'S':case 'Z':
-//                //Int
-//                new_frame->local_variables[local_variable_table->local_variable_table[i].index]->value = pop_int(frame->operand_stack);
-//            case 'F':
-//                //Float
-//                new_frame->local_variables[local_variable_table->local_variable_table[i].index]->value = pop_float(frame->operand_stack);
-//            case 'D': case 'J': {
-//                //Long
-//                int value2 = pop_int(frame->operand_stack);
-//                int value1 = pop_int(frame->operand_stack);
-//                new_frame->local_variables[local_variable_table->local_variable_table[i].index]->value = value1;
-//                new_frame->local_variables[local_variable_table->local_variable_table[i].index + 1]->value = value2;
-//            }
-//            case 'L': case '[':
-//                //Object | Array
-//                new_frame->local_variable[local_variable_table->local_variable_table[i].index]->object_value = pop_stack(frame->operand_stack);
-//        }
     }
     free(slots);
 }

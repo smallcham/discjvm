@@ -200,11 +200,16 @@ void jdk_internal_misc_Unsafe_getObjectVolatile_9Ljava_lang_Object1J0Ljava_lang_
      */
 void jdk_internal_misc_Unsafe_putObjectVolatile_9Ljava_lang_Object1JLjava_lang_Object10V(Thread *thread, SerialHeap *heap, Frame *frame)
 {
-    void *object = get_ref_localvar(frame, 1);
+//    void *object = get_ref_localvar(frame, 1);
+//    u8 offset = get_long_localvar(frame, 2);
+//    Object *value = get_ref_localvar(frame, 4);
+//    long *p = object + offset;
+//    *p = value;
+
+    Object *object = get_ref_localvar(frame, 1);
     u8 offset = get_long_localvar(frame, 2);
     Object *value = get_ref_localvar(frame, 4);
-    long *p = object + offset;
-    *p = value;
+    object->fields[offset].object_value = value;
 }
 
 void jdk_internal_misc_Unsafe_getIntVolatile_9Ljava_lang_Object1J0I(Thread *thread, SerialHeap *heap, Frame *frame)
@@ -244,4 +249,12 @@ void jdk_internal_misc_Unsafe_getObject_9Ljava_lang_Object1J0Ljava_lang_Object1(
     Object *object = get_ref_localvar(frame, 1);
     long offset = get_long_localvar(frame, 2);
     push_object(frame->operand_stack, object->fields[offset].object_value);
+}
+
+void jdk_internal_misc_Unsafe_putObject_9Ljava_lang_Object1JLjava_lang_Object10V(Thread *thread, SerialHeap *heap, Frame *frame)
+{
+    Object *object = get_ref_localvar(frame, 1);
+    u8 offset = get_long_localvar(frame, 2);
+    Object *value = get_ref_localvar(frame, 4);
+    object->fields[offset].object_value = value;
 }

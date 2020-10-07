@@ -15,7 +15,9 @@ void java_lang_Thread_currentThread_90Ljava_lang_Thread1(Thread *thread, SerialH
 
 void java_lang_Thread_setPriority0_9I0V(Thread *thread, SerialHeap *heap, Frame *frame)
 {
-    //TODO in jdk11 source "src/java.base/share/native/libjava/Thread.c" call -> jvm.cpp:2925:JVM_SetThreadPriority
+    Object *this = get_localvar_this(frame);
+    int priority = get_localvar(frame, 1);
+    put_value_field_by_name_and_desc(this, "priority", "I", priority);
 }
 
 /**
@@ -29,8 +31,8 @@ void java_lang_Thread_isAlive_90Z(Thread *thread, SerialHeap *heap, Frame *frame
 {
     //TODO
     Object *this = get_localvar_this(frame);
-    int alive = 0;
-//    int alive = !is_empty_stack(thread->vm_stack) && NULL != this && NULL != this->raw_class;
+    Thread *_thread = this->monitor->owner;
+    int alive = NULL != this && NULL != this->raw_class && NULL != this->monitor && NULL != this->monitor->owner && !is_empty_stack(_thread->vm_stack);
     if (alive) {
         printf_err("throw IllegalThreadStateException");
         exit(-1);
@@ -42,13 +44,21 @@ void java_lang_Thread_start0_90V(Thread *thread, SerialHeap *heap, Frame *frame)
 {
     //TODO
     Object *this = get_localvar_this(frame);
-    ClassFile *class = this->raw_class;
+    ClassFile *class = this->class;
 
-    Thread new_thread = create_thread(100, 100);
-    MethodInfo *method = find_method_with_desc(&new_thread, heap, class, "run", "()V");
-    create_vm_frame_by_method_add_params_plus1(&new_thread, class, frame, method, get_method_code(class->constant_pool, *method));
-    Env env = {&new_thread, heap};
-    pthread_t new_pthread;
+    Thread *new_thread = create_thread_with_jthread(VM_STACK_SIZE, C_STACK_SIZE, this);
+    MethodInfo *method = find_method_with_desc(new_thread, heap, class, "run", "()V");
+    push_object(frame->operand_stack, this);
+    create_vm_frame_by_method_add_params_plus1(new_thread, class, frame, method, get_method_code(class->constant_pool, *method));
+    Env *env = malloc(sizeof(Env));
+    env->thread = new_thread;
+    env->heap = heap;
+    pthread_t *new_pthread = malloc(sizeof(pthread_t));
+    this->monitor->owner = new_thread;
     int ret;
-    ret = pthread_create(&new_pthread, NULL, (void *(*)(void *)) run_by_env, &env);
+    ret = pthread_create(new_pthread, NULL, (void *(*)(void *)) run_by_env, env);
+    if (ret != 0) {
+        printf_err("thread create error!");
+        exit(-1);
+    }
 }

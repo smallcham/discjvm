@@ -69,6 +69,6 @@ void run(Thread *thread, SerialHeap *heap);
 
 void single_invoke(SerialHeap *heap, ClassFile *class, char *method_name, char *method_desc, Stack *params);
 
-void run_by_env(Env env);
+void run_by_env(Env *env);
 
 #endif //DISCJVM_OPCODE_H

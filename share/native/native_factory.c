@@ -16,6 +16,7 @@ void init_native_factory()
     put_map(&native_pool, "java/lang/Object.hashCode()I", java_lang_Object_hashCode_90I);
     put_map(&native_pool, "java/lang/Object.notifyAll()V", java_lang_Object_notifyAll_90V);
     put_map(&native_pool, "java/lang/Object.clone()Ljava/lang/Object;", java_lang_Object_clone_90Ljava_lang_Object1);
+    put_map(&native_pool, "java/lang/Object.wait(J)V", java_lang_Object_wait_9J0V);
 
     //Class
     put_map(&native_pool, "java/lang/Class.registerNatives()V", java_lang_Class_registerNatives_90V);
@@ -62,6 +63,7 @@ void init_native_factory()
     put_map(&native_pool, "jdk/internal/misc/Unsafe.ensureClassInitialized0(Ljava/lang/Class;)V", jdk_internal_misc_Unsafe_ensureClassInitialized0_9Ljava_lang_Class10V);
     put_map(&native_pool, "jdk/internal/misc/Unsafe.allocateMemory0(J)J", jdk_internal_misc_Unsafe_allocateMemory0_9J0J);
     put_map(&native_pool, "jdk/internal/misc/Unsafe.getObject(Ljava/lang/Object;J)Ljava/lang/Object;", jdk_internal_misc_Unsafe_getObject_9Ljava_lang_Object1J0Ljava_lang_Object1);
+    put_map(&native_pool, "jdk/internal/misc/Unsafe.putObject(Ljava/lang/Object;JLjava/lang/Object;)V", jdk_internal_misc_Unsafe_putObject_9Ljava_lang_Object1JLjava_lang_Object10V);
 
     //ClassLoader
     put_map(&native_pool, "java/lang/ClassLoader.registerNatives()V", java_lang_ClassLoader_registerNatives_90V);
@@ -120,6 +122,10 @@ void init_native_factory()
     //UnixNativeDispatcher
     put_map(&native_pool, "sun/nio/fs/UnixNativeDispatcher.init()I", sun_nio_fs_UnixNativeDispatcher_init_90I);
     put_map(&native_pool, "sun/nio/fs/UnixNativeDispatcher.getcwd()[B", sun_nio_fs_UnixNativeDispatcher_getcwd_90Bs);
+
+    //Reference
+    put_map(&native_pool, "java/lang/ref/Reference.waitForReferencePendingList()V", java_lang_ref_Reference_waitForReferencePendingList_90V);
+    put_map(&native_pool, "java/lang/ref/Reference.getAndClearReferencePendingList()Ljava/lang/ref/Reference;", java_lang_ref_Reference_getAndClearReferencePendingList_90Ljava_lang_ref_Reference1);
 }
 
 NativeMethod find_native(char *class_name, char *method_name, char *method_desc)

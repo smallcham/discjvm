@@ -40,7 +40,7 @@ Frame *create_vm_frame_by_method_add_params_plus1(Thread* thread, ClassFile *cla
 
 Frame *create_vm_frame_by_method_add_hook(Thread* thread, ClassFile *class, MethodInfo *method, CodeAttribute *code, PopHook hook);
 
-Thread create_thread(int vm_stack_size, int c_stack_size);
+Thread *create_thread(int vm_stack_size, int c_stack_size);
 
 void free_frame(Frame **frame);
 
@@ -71,5 +71,7 @@ void *set_ref_localvar(Frame *frame, int index, void *object_value);
 void add_params(Frame *frame, Frame *new_frame, MethodInfo *method);
 
 void add_params_and_plus1(Frame *frame, Frame *new_frame, MethodInfo *method);
+
+Thread *create_thread_with_jthread(int vm_stack_size, int c_stack_size, Object *jthread);
 
 #endif //DISCJVM_THREAD_H

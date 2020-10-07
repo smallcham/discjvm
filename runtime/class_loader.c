@@ -148,6 +148,7 @@ ClassFile *load_class_by_bytes(Thread *thread, SerialHeap *heap, u1 *bytes)
                 class_file += sizeof(u1);
                 constant_utf8_info->length = l2b_2(*(u2 *) class_file);
                 class_file += sizeof(u2);
+                constant_utf8_info->bytes = malloc(constant_utf8_info->length);
                 constant_utf8_info->bytes = malloc(constant_utf8_info->length + 1);
                 memcpy(constant_utf8_info->bytes, class_file, constant_utf8_info->length);
                 constant_utf8_info->bytes[constant_utf8_info->length] = '\0';
@@ -348,7 +349,7 @@ Object *get_rtype(Thread *thread, SerialHeap *heap, char *desc)
 Array *get_ptypes(Thread *thread, SerialHeap *heap, char *desc, int params_count)
 {
     int length = strlen(desc);
-    Array *ptypes = malloc_array(heap, load_class(thread, heap, "java/lang/Class"), params_count);
+    Array *ptypes = malloc_array(thread, heap, load_class(thread, heap, "java/lang/Class"), params_count);
     if (params_count == 0) return ptypes;
     u4 count = 0;
     int idx = 0;
@@ -407,7 +408,7 @@ Array *get_ptypes(Thread *thread, SerialHeap *heap, char *desc, int params_count
 Object *get_bootstrap_class_loader(Thread *thread, SerialHeap *heap)
 {
     if (NULL == bootstrap_class_loader) {
-        Object *object = malloc_object(heap, load_class(thread, heap, "java/lang/ClassLoader"));
+        Object *object = malloc_object(thread, heap, load_class(thread, heap, "java/lang/ClassLoader"));
         Slot *name = create_slot();
         name->object_value = "BootstrapLoader";
         put_object_value_field_by_name_and_desc(object, "name", "Ljava/lang/String;", name);
@@ -427,12 +428,12 @@ ClassFile *load_class(Thread *thread, SerialHeap *heap, char *full_class_name)
         return load_primitive_class(thread, heap, full_class_name);
     }
     ClassFile *class = (ClassFile*)malloc(sizeof(ClassFile));
-    class->init_state = CLASS_NOT_INIT;
+//    class->init_state = CLASS_NOT_INIT;
 
     u1 *class_file = get_class_bytes(full_class_name);
     class = load_class_by_bytes(thread, heap, class_file);
 
-    Object *class_object = malloc_object(heap, load_class(thread, heap, "java/lang/Class"));
+    Object *class_object = malloc_object(thread, heap, load_class(thread, heap, "java/lang/Class"));
     class_object->raw_class = class;
     class->class_object = class_object;
 
@@ -468,7 +469,7 @@ ClassFile *load_primitive_class(Thread *thread, SerialHeap *heap, char *primitiv
     class->init_state = CLASS_INITED;
     put_class_to_cache(&heap->class_pool, class);
 
-    Object *class_object = malloc_object(heap, load_class(thread, heap, "java/lang/Class"));
+    Object *class_object = malloc_object(thread, heap, load_class(thread, heap, "java/lang/Class"));
     class_object->raw_class = class;
     class->class_object = class_object;
     return class;
@@ -896,10 +897,15 @@ void put_field_by_name_and_desc(Object *object, char *name, char *desc, Slot *va
 void put_str_field(Thread *thread, SerialHeap *heap, Object *object, char *str)
 {
     u8 len = strlen(str);
+    put_str_field_with_length(thread, heap, object, str, len);
+}
+
+void put_str_field_with_length(Thread *thread, SerialHeap *heap, Object *object, char *str, int length)
+{
     FieldInfo *field = get_field_by_name_and_desc(object->class, "value", "[B");
-    Array *array = malloc_array_by_type_size(heap, load_class(thread, heap, "[B"), len, sizeof(char));
+    Array *array = malloc_array_by_type_size(thread, heap, load_class(thread, heap, "[B"), length, sizeof(char));
     char *_str = (char *) array->objects;
-    for (int i = 0; i < len; i++) {
+    for (int i = 0; i < length; i++) {
         _str[i] = str[i];
     }
     Slot *slot = create_object_slot_set_object(heap, array);
@@ -978,6 +984,12 @@ char *get_str_from_string_index(ConstantPool *constant_pool, u2 index)
 {
     CONSTANT_String_info string_info = *(CONSTANT_String_info*)constant_pool[index].info;
     return get_utf8_bytes(constant_pool, string_info.string_index);
+}
+
+CONSTANT_Utf8_info *get_utf8_info_from_string_index(ConstantPool *constant_pool, u2 index)
+{
+    CONSTANT_String_info string_info = *(CONSTANT_String_info*)constant_pool[index].info;
+    return (CONSTANT_Utf8_info*)constant_pool[string_info.string_index].info;
 }
 
 u4 get_u4_value_from_index(ConstantPool *constant_pool, u2 index)
@@ -1060,7 +1072,7 @@ void create_object_with_backpc(Thread *thread, SerialHeap *heap, Frame *frame, u
         init_class(thread, heap, class);
         return;
     }
-    push_object(frame->operand_stack, malloc_object(heap, class));
+    push_object(frame->operand_stack, malloc_object(thread, heap, class));
 }
 
 void create_object_with_class_name_and_backpc(Thread *thread, SerialHeap *heap, Frame *frame, char *class_name, int back)
@@ -1071,7 +1083,7 @@ void create_object_with_class_name_and_backpc(Thread *thread, SerialHeap *heap, 
         init_class(thread, heap, class);
         return;
     }
-    push_object(frame->operand_stack, malloc_object(heap, class));
+    push_object(frame->operand_stack, malloc_object(thread, heap, class));
 }
 
 void create_object(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
@@ -1118,11 +1130,16 @@ void create_array_by_type(Thread *thread, SerialHeap *heap, Frame *frame, u1 typ
             break;
     }
     ClassFile *class = load_class(thread, heap, desc);
-    Array *array = malloc_array_by_type_size(heap, class, count, type_size);
+    Array *array = malloc_array_by_type_size(thread, heap, class, count, type_size);
     push_object(frame->operand_stack, array);
 }
 
 void create_string_object(Thread *thread, SerialHeap *heap, Frame *frame, char *str)
+{
+    create_string_object_with_length(thread, heap, frame, str, strlen(str));
+}
+
+void create_string_object_with_length(Thread *thread, SerialHeap *heap, Frame *frame, char *str, int length)
 {
     ClassFile *class = load_class(thread, heap, "java/lang/String");
     if (class_is_not_init(class)) {
@@ -1130,15 +1147,15 @@ void create_string_object(Thread *thread, SerialHeap *heap, Frame *frame, char *
         init_class(thread, heap, class);
         return;
     }
-    Object *object = malloc_object(heap, class);
-    put_str_field(thread, heap, object, str);
+    Object *object = malloc_object(thread, heap, class);
+    put_str_field_with_length(thread, heap, object, str, length);
     push_object(frame->operand_stack, object);
 }
 
 void create_string_object_without_back(Thread *thread, SerialHeap *heap, Frame *frame, char *str)
 {
     ClassFile *class = load_class(thread, heap, "java/lang/String");
-    Object *object = malloc_object(heap, class);
+    Object *object = malloc_object(thread, heap, class);
     put_str_field(thread, heap, object, str);
     push_object(frame->operand_stack, object);
 }
@@ -1154,7 +1171,7 @@ void create_array_reference(Thread *thread, SerialHeap *heap, Frame *frame, u2 i
     int count = pop_int(frame->operand_stack);
     char *_arr_name = malloc(strlen(class->class_name) + 2);
     sprintf(_arr_name, "[L%s", class->class_name);
-    Array *arr = malloc_array(heap, load_primitive_class(thread, heap, _arr_name), count);
+    Array *arr = malloc_array(thread, heap, load_primitive_class(thread, heap, _arr_name), count);
     push_object(frame->operand_stack, arr);
 
     if (NULL != class->class_object) {
@@ -1304,7 +1321,7 @@ Object *new_object_by_desc(Thread *thread, SerialHeap *heap, Frame *frame, Objec
         }
     }
     ClassFile *class = load_class(thread, heap, class_name);
-    Object *object = malloc_object(heap, class);
+    Object *object = malloc_object(thread, heap, class);
     MethodInfo *init_method = find_method_with_desc(thread, heap, class, "<init>", desc);
     create_vm_frame_by_method_add_params_plus1(thread, class, frame, init_method, get_method_code(class->constant_pool, *init_method));
     init_class(thread, heap, class);
@@ -1423,6 +1440,32 @@ BootstrapMethods *get_bootstrap_methods(ConstantPool *pool, ClassFile *class)
         return bootstrap_methods;
     }
     return NULL;
+}
+
+ExceptionsAttribute *get_exception_handle(ConstantPool *pool, MethodInfo *method, ClassFile *class)
+{
+    for (int i = 0; i < class->attributes_count; i++) {
+        if (strcmp(get_utf8_bytes(pool, class->attributes[i].attribute_name_index), "Exceptions") != 0) continue;
+        ExceptionsAttribute *exceptions_attribute = (ExceptionsAttribute*)malloc(sizeof(ExceptionsAttribute));
+        u1 *bytes = class->attributes[i].info;
+        exceptions_attribute->attribute_name_index = class->attributes[i].attribute_name_index;
+        exceptions_attribute->attribute_length = class->attributes[i].attribute_name_index;
+        exceptions_attribute->number_of_exceptions = l2b_2(*(u2*)bytes);
+        bytes += sizeof(u2);
+        exceptions_attribute->exception_index_table = malloc(sizeof(u2) * exceptions_attribute->number_of_exceptions);
+        for (int j = 0; j < exceptions_attribute->number_of_exceptions; j++) {
+            exceptions_attribute->exception_index_table[j] = l2b_2(*(u2*)bytes);
+            bytes += sizeof(u2);
+        }
+        return exceptions_attribute;
+    }
+    return NULL;
+}
+
+ClassFile *get_class_by_attr_index(Thread *thread, SerialHeap *heap, ConstantPool *pool, u2 index)
+{
+    CONSTANT_Class_info class_info = *(CONSTANT_Class_info*)pool[index].info;
+    return load_class(thread, heap, get_utf8_bytes(pool, class_info.name_index));
 }
 
 void print_class_info(ClassFile class)
@@ -1640,10 +1683,10 @@ MethodInfo *find_method(Thread *thread, SerialHeap *heap, ClassFile *class, char
     return NULL;
 }
 
-Slot *create_object_slot(SerialHeap *heap, ClassFile *class)
+Slot *create_object_slot(Thread *thread, SerialHeap *heap, ClassFile *class)
 {
     Slot *slot = create_slot();
-    slot->object_value = malloc_object(heap, class);
+    slot->object_value = malloc_object(thread, heap, class);
     return slot;
 }
 
@@ -1657,7 +1700,7 @@ Slot *create_object_slot_set_object(SerialHeap *heap, void *object)
 Slot *create_str_slot_set_str(Thread *thread, SerialHeap *heap, char *str)
 {
     ClassFile *class = load_class(thread, heap, "java/lang/String");
-    Object *object = malloc_object(heap, class);
+    Object *object = malloc_object(thread, heap, class);
     put_str_field(thread, heap, object, str);
     return create_object_slot_set_object(heap, object);
 }

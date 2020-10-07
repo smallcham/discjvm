@@ -10,6 +10,8 @@
 #include "class_loader.h"
 #include "opcode.h"
 
+#define LD_LIBRARY_PATH "LD_LIBRARY_PATH"
+
 void init_lib(Thread *thread, SerialHeap *heap);
 
 void init_lib_by_names(Thread *thread, SerialHeap *heap, char *names[], int count);

@@ -28,6 +28,7 @@
 #include "java/io/UnixFileSystem.h"
 #include "jdk/internal/reflect/Reflection.h"
 #include "sun/nio/fs/UnixNativeDispatcher.h"
+#include "java/lang/ref/Reference.h"
 
 typedef void (*NativeMethod)(Thread *, SerialHeap *, Frame *);
 

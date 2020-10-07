@@ -225,8 +225,8 @@ void ldc(SerialHeap *heap, Thread *thread, Frame *frame) {
     u1 index = step_pc1_and_read_code(frame);
     switch (frame->constant_pool[index].tag) {
         case CONSTANT_String: {
-            char *str = get_str_from_string_index(frame->constant_pool, index);
-            create_string_object(thread, heap, frame, str);
+            CONSTANT_Utf8_info *info = get_utf8_info_from_string_index(frame->constant_pool, index);
+            create_string_object_with_length(thread, heap, frame, info->bytes, info->length);
             break;
         }
         case CONSTANT_Class: {
@@ -265,8 +265,8 @@ void ldc_w(SerialHeap *heap, Thread *thread, Frame *frame) {
     u4 index = (byte1 << 8) | byte2;
     switch (frame->constant_pool[index].tag) {
         case CONSTANT_String: {
-            char *str = get_str_from_string_index(frame->constant_pool, index);
-            create_string_object(thread, heap, frame, str);
+            CONSTANT_Utf8_info *info = get_utf8_info_from_string_index(frame->constant_pool, index);
+            create_string_object_with_length(thread, heap, frame, info->bytes, info->length);
             break;
         }
         case CONSTANT_Class: {
@@ -670,7 +670,7 @@ void xastore_(SerialHeap *heap, Thread *thread, Frame *frame, char desc) {
             break;
         }
         case 'C': case 'B': {
-            char *objects = (char*)ref->objects + index - 1;
+            char *objects = (char*)ref->objects + index;
             *objects = value->value;
             break;
         }
@@ -1459,7 +1459,15 @@ void athrow(SerialHeap *heap, Thread *thread, Frame *frame) {
     Object *exception = pop_object(frame->operand_stack);
     printf_err("throw %s", exception->raw_class->class_name);
     printf_err("athrow not complete");
-    pop_frame(thread, heap);
+    ExceptionsAttribute *exceptions = get_exception_handle(frame->constant_pool, frame->method, exception->raw_class);
+    if (NULL == exceptions) {
+        pop_frame(thread, heap);
+    } else {
+        for(int i = 0; i < exceptions->number_of_exceptions; i++) {
+            ClassFile *class = get_class_by_attr_index(thread, heap, frame->constant_pool, exceptions->exception_index_table[i]);
+            if (class == exception->raw_class) {}
+        }
+    }
     exit(-1);
 }
 
@@ -1516,18 +1524,17 @@ void monitorenter(SerialHeap *heap, Thread *thread, Frame *frame) {
         printf_err("NULLPointerException");
         exit(-1);
     }
-    if (object->monitor->owner == thread->jthread) {
-        object->monitor->count ++;
-    } else {
-        while (object->monitor->count > 0) {
-            pthread_mutex_lock(object->monitor->lock);
-        }
-    }
+    monitor_enter(object->monitor, thread);
     step_pc_1(frame);
 }
 
 void monitorexit(SerialHeap *heap, Thread *thread, Frame *frame) {
-    pop_slot(frame->operand_stack);
+    Object *object = pop_object(frame->operand_stack);
+    if (NULL == object) {
+        printf_err("NULLPointerException");
+        exit(-1);
+    }
+    monitor_exit(object->monitor, thread);
     step_pc_1(frame);
 }
 
@@ -2042,15 +2049,15 @@ void exec(Operator operator, SerialHeap *heap, Thread *thread, Frame *frame)
 void single_invoke(SerialHeap *heap, ClassFile *class, char *method_name, char *method_desc, Stack *params)
 {
     printf_warn("\t\t\t[SINGLE-INVOKE-IN] %s.%s%s", class->class_name, method_name, method_desc);
-    Thread thread = create_thread(100, 100);
-    MethodInfo *method = find_method_with_desc(&thread, heap, class, method_name, method_desc);
-    Frame *frame = create_vm_frame_by_method_with_push(&thread, class, method, get_method_code(class->constant_pool, *method));
+    Thread *thread = create_thread(100, 100);
+    MethodInfo *method = find_method_with_desc(thread, heap, class, method_name, method_desc);
+    Frame *frame = create_vm_frame_by_method_with_push(thread, class, method, get_method_code(class->constant_pool, *method));
     int size = params->size;
     Slot **slots = pop_slot_with_num(params, params->size);
     for (int i = 0; i < size; i++) {
         set_localvar_with_slot(frame, i, slots[i]);
     }
-    run(&thread, heap);
+    run(thread, heap);
     printf_warn("\t\t\t[SINGLE-INVOKE-ESC] %s.%s%s", class->class_name, method_name, method_desc);
 }
 
@@ -2062,6 +2069,6 @@ void run(Thread *thread, SerialHeap *heap) {
     } while (!is_empty_stack(thread->vm_stack));
 }
 
-void run_by_env(Env env) {
-    run(env.thread, env.heap);
+void run_by_env(Env *env) {
+    run(env->thread, env->heap);
 }
