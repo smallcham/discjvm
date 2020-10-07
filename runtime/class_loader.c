@@ -148,7 +148,6 @@ ClassFile *load_class_by_bytes(Thread *thread, SerialHeap *heap, u1 *bytes)
                 class_file += sizeof(u1);
                 constant_utf8_info->length = l2b_2(*(u2 *) class_file);
                 class_file += sizeof(u2);
-                constant_utf8_info->bytes = malloc(constant_utf8_info->length);
                 constant_utf8_info->bytes = malloc(constant_utf8_info->length + 1);
                 memcpy(constant_utf8_info->bytes, class_file, constant_utf8_info->length);
                 constant_utf8_info->bytes[constant_utf8_info->length] = '\0';
