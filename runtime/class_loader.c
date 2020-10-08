@@ -835,12 +835,7 @@ Array *get_str_field_array_value_by_object(Object *object)
 
 char *get_str_field_value_by_object(Object *object)
 {
-    FieldInfo *field = get_field_by_name_and_desc(object->raw_class, "value", "[B");
-    Array *array = object->fields[field->offset].object_value;
-    char *str = malloc(array->length + 1);
-    memcpy(str, (char*)array->objects, array->length);
-    str[array->length] = '\0';
-    return str;
+    return get_str_field_value_by_object_and_name(object, "value");
 }
 
 char *get_str_field_value_by_object_and_name(Object *object, char *name)

@@ -91,4 +91,6 @@ void free_stack(Stack **stack);
 
 void *get_stack_offset(Stack *stack, int offset);
 
+Slot *push_slot_copy(Stack *stack, Slot *slot);
+
 #endif //DISCJVM_STACK_H

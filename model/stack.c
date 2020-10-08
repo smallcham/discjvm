@@ -87,6 +87,14 @@ Slot *push_slot(Stack *stack, Slot *slot)
     return slot;
 }
 
+Slot *push_slot_copy(Stack *stack, Slot *slot)
+{
+    Slot *copy = create_slot_set_value(slot->value);
+    copy->object_value = slot->object_value;
+    push_stack(stack, copy);
+    return copy;
+}
+
 Slot *push_object(Stack *stack, void *object)
 {
     Slot *slot = create_slot();
