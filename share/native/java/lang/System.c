@@ -59,9 +59,8 @@ void java_lang_System_arraycopy_9Ljava_lang_Object1ILjava_lang_Object1II0V(Threa
 void java_lang_System_nanoTime_90J(Thread *thread, SerialHeap *heap, Frame *frame)
 {
     struct timespec spec;
-    clock_gettime(CLOCK_REALTIME, &spec);
-    long sec = spec.tv_sec;
-    push_long(frame->operand_stack, 1000 * sec + spec.tv_nsec);
+    clock_gettime(CLOCK_MONOTONIC, &spec);
+    push_long(frame->operand_stack, spec.tv_sec * (1000 * 1000 * 1000) + spec.tv_nsec);
 }
 
 //添加frame弹出钩子, 用以消除setProperty方法areturn指令返回的值

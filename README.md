@@ -30,3 +30,5 @@
 # Object.clone not complete
 # Thread.isAlive not complete
 # Thread.start0 not complete, need lock
+
+# wait has some problem, may be the key is complete the synchronized invoke method.

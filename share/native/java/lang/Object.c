@@ -86,7 +86,7 @@ void java_lang_Object_wait_9J0V(Thread *thread, SerialHeap *heap, Frame *frame)
         printf_err("throw IllegalArgumentException");
         exit(-1);
     }
-    if (NULL != this->monitor->owner) {
+    if (NULL == this->monitor->owner) {
         printf_err("throw IllegalMonitorStateException");
         exit(-1);
     }
