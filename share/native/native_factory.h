@@ -29,6 +29,8 @@
 #include "jdk/internal/reflect/Reflection.h"
 #include "sun/nio/fs/UnixNativeDispatcher.h"
 #include "java/lang/ref/Reference.h"
+#include "jdk/internal/jimage/NativeImageBuffer.h"
+#include "java/util/concurrent/atomic/AtomicLong.h"
 
 typedef void (*NativeMethod)(Thread *, SerialHeap *, Frame *);
 

@@ -71,6 +71,7 @@ Thread *create_thread(int vm_stack_size, int c_stack_size)
     Thread *thread = malloc(sizeof(Thread));
     thread->vm_stack = create_stack(vm_stack_size);
     thread->c_stack = create_stack(c_stack_size);
+    thread->jthread = NULL;
     return thread;
 }
 
@@ -119,7 +120,8 @@ void add_params_and_plus1(Frame *frame, Frame *new_frame, MethodInfo *method)
     printf_debug("\t\t\t\t[addparams(%d)]\n", count);
     Slot **slots = pop_slot_with_num(frame->operand_stack, count);
     for (int i = 0; i < count; i++) {
-        new_frame->local_variables[i] = slots[i];
+        set_localvar_with_slot_copy(new_frame, i, slots[i]);
+//        new_frame->local_variables[i] = slots[i];
     }
     free(slots);
 }
@@ -130,7 +132,8 @@ void add_params(Frame *frame, Frame *new_frame, MethodInfo *method)
     printf_debug("\t\t\t\t[addparams(%d)]\n", method->params_count);
     Slot **slots = pop_slot_with_num(frame->operand_stack, method->params_count);
     for (int i = 0; i < method->params_count; i++) {
-        new_frame->local_variables[i] = slots[i];
+        set_localvar_with_slot_copy(new_frame, i, slots[i]);
+//        new_frame->local_variables[i] = slots[i];
     }
     free(slots);
 }
@@ -142,7 +145,7 @@ u8 get_long_localvar(Frame *frame, int index)
     return higher | lower;
 }
 
-u4 get_localvar(Frame *frame, int index)
+u8 get_localvar(Frame *frame, int index)
 {
     return frame->local_variables[index]->value;
 }
@@ -175,14 +178,21 @@ void *get_localvar_this(Frame *frame)
     return get_ref_localvar(frame, 0);
 }
 
-void set_localvar(Frame *frame, int index, u4 value)
+void set_localvar(Frame *frame, int index, u8 value)
 {
     frame->local_variables[index]->value = value;
 }
 
 void set_localvar_with_slot(Frame *frame, int index, Slot *value)
 {
-    frame->local_variables[index] = value;
+    frame->local_variables[index]->value = value->value;
+    frame->local_variables[index]->object_value = value->object_value;
+}
+
+void set_localvar_with_slot_copy(Frame *frame, int index, Slot *value)
+{
+    frame->local_variables[index] = create_slot_set_value(value->value);
+    frame->local_variables[index]->object_value = value->object_value;
 }
 
 void set_long_localvar(Frame *frame, int index, u8 value)

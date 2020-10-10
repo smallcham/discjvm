@@ -406,12 +406,13 @@ Array *get_ptypes(Thread *thread, SerialHeap *heap, char *desc, int params_count
 
 Object *get_bootstrap_class_loader(Thread *thread, SerialHeap *heap)
 {
-    if (NULL == bootstrap_class_loader) {
-        Object *object = malloc_object(thread, heap, load_class(thread, heap, "java/lang/ClassLoader"));
+    ClassFile *class = load_class(thread, heap, "java/lang/ClassLoader");
+    if (NULL == bootstrap_class_loader && class_is_inited(class)) {
+        Object *object = malloc_object(thread, heap, class);
         Slot *name = create_slot();
         name->object_value = "BootstrapLoader";
         put_object_value_field_by_name_and_desc(object, "name", "Ljava/lang/String;", name);
-        put_object_value_field_by_name_and_desc(object, "parent", "Ljava/lang/Classloader;", NULL);
+        put_object_value_field_by_name_and_desc(object, "parent", "Ljava/lang/ClassLoader;", NULL);
         bootstrap_class_loader = object;
     }
     return bootstrap_class_loader;
@@ -427,7 +428,6 @@ ClassFile *load_class(Thread *thread, SerialHeap *heap, char *full_class_name)
         return load_primitive_class(thread, heap, full_class_name);
     }
     ClassFile *class = (ClassFile*)malloc(sizeof(ClassFile));
-//    class->init_state = CLASS_NOT_INIT;
 
     u1 *class_file = get_class_bytes(full_class_name);
     class = load_class_by_bytes(thread, heap, class_file);
@@ -435,7 +435,6 @@ ClassFile *load_class(Thread *thread, SerialHeap *heap, char *full_class_name)
     Object *class_object = malloc_object(thread, heap, load_class(thread, heap, "java/lang/Class"));
     class_object->raw_class = class;
     class->class_object = class_object;
-
     return class;
 }
 
@@ -469,6 +468,20 @@ ClassFile *load_primitive_class(Thread *thread, SerialHeap *heap, char *primitiv
     put_class_to_cache(&heap->class_pool, class);
 
     Object *class_object = malloc_object(thread, heap, load_class(thread, heap, "java/lang/Class"));
+    put_object_value_field_by_name_and_desc(class_object, "classLoader", "Ljava/lang/ClassLoader;", get_bootstrap_class_loader(thread, heap));
+    Object *component_type;
+    if (primitive_name[0] == '[' && primitive_name[1] != 'L') {
+        component_type = load_primitive_class(thread, heap, full_primitive_name(primitive_name[1]))->class_object;
+    }
+    else if (primitive_name[1] == 'L') {
+        char _name[strlen(primitive_name) - 1];
+        memcpy(_name, primitive_name + 2, strlen(primitive_name) - 2);
+        _name[strlen(primitive_name) - 2] = '\0';
+        component_type = load_primitive_class(thread, heap, _name)->class_object;
+    } else {
+        component_type = NULL;
+    }
+    put_object_value_field_by_name_and_desc(class_object, "componentType", "Ljava/lang/Class;", component_type);
     class_object->raw_class = class;
     class->class_object = class_object;
     return class;
@@ -654,10 +667,17 @@ void do_invokestatic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2
         printf_err("method [%s] not found", method_name_info.bytes);
         exit(-1);
     }
+    Frame *new_frame;
     if (is_native(method->access_flags)) {
-        create_c_frame_and_invoke_add_params(thread, heap, frame, class->class_name, method);
+        new_frame = create_c_frame_and_invoke_add_params(thread, heap, frame, class->class_name, method);
     } else {
-        create_vm_frame_by_method_add_params(thread, class, frame, method, get_method_code(class->constant_pool, *method));
+        new_frame = create_vm_frame_by_method_add_params(thread, class, frame, method, get_method_code(class->constant_pool, *method));
+    }
+    if (is_synchronized(method->access_flags)) {
+        Object *class_object = class->class_object;
+        new_frame->pop_args = class_object->monitor;
+        new_frame->pop_hook = (PopHook) set_monitor_exit_hook;
+        monitor_enter(class_object->monitor, thread);
     }
 }
 
@@ -683,10 +703,16 @@ void do_invokeinterface_by_index(Thread *thread, SerialHeap *heap, Frame *frame,
         printf_err("method [%s] not found", method_name);
         exit(-1);
     }
+    Frame *new_frame;
     if (is_native(method->access_flags)) {
-        create_c_frame_and_invoke_add_params_plus1(thread, heap, frame, class->class_name, method);
+        new_frame = create_c_frame_and_invoke_add_params_plus1(thread, heap, frame, class->class_name, method);
     } else {
-        create_vm_frame_by_method_add_params_plus1(thread, class, frame, method, get_method_code(class->constant_pool, *method));
+        new_frame = create_vm_frame_by_method_add_params_plus1(thread, class, frame, method, get_method_code(class->constant_pool, *method));
+    }
+    if (is_synchronized(method->access_flags)) {
+        new_frame->pop_args = object->monitor;
+        new_frame->pop_hook = (PopHook) set_monitor_exit_hook;
+        monitor_enter(object->monitor, thread);
     }
 }
 
@@ -701,14 +727,27 @@ void do_invokespecial_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
     ClassFile *class = load_class(thread, heap, class_name_info.bytes);
     printf_debug("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class_name_info.bytes, name_and_type_info.name_index, method_name_info.bytes, name_and_type_info.descriptor_index, method_desc_info.bytes);
     MethodInfo *method = find_method_iter_super_with_desc(thread, heap, &class, method_name_info.bytes, method_desc_info.bytes);
+
+    int params_count = parse_method_param_count(*(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info);
+    Slot **slots = pop_slot_with_num(frame->operand_stack, params_count + 1);
+    for (int i = 0; i < params_count + 1; i++) {
+        push_slot(frame->operand_stack, slots[i]);
+    }
+    Object *object = slots[0]->object_value;
     if (NULL == method) {
         printf_err("method [%s] not found", method_name_info.bytes);
         exit(-1);
     }
+    Frame *new_frame;
     if (is_native(method->access_flags)) {
-        create_c_frame_and_invoke_add_params_plus1(thread, heap, frame, class->class_name, method);
+        new_frame = create_c_frame_and_invoke_add_params_plus1(thread, heap, frame, class->class_name, method);
     } else {
-        create_vm_frame_by_method_add_params_plus1(thread, class, frame, method, get_method_code(class->constant_pool, *method));
+        new_frame = create_vm_frame_by_method_add_params_plus1(thread, class, frame, method, get_method_code(class->constant_pool, *method));
+    }
+    if (is_synchronized(method->access_flags)) {
+        new_frame->pop_args = object->monitor;
+        new_frame->pop_hook = (PopHook) set_monitor_exit_hook;
+        monitor_enter(object->monitor, thread);
     }
 }
 
@@ -735,10 +774,16 @@ void do_invokevirtual_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
         printf_err("method [%s] not found", method_name_info.bytes);
         exit(-1);
     }
+    Frame *new_frame;
     if (is_native(method->access_flags)) {
-        create_c_frame_and_invoke_add_params_plus1(thread, heap, frame, class->class_name, method);
+        new_frame = create_c_frame_and_invoke_add_params_plus1(thread, heap, frame, class->class_name, method);
     } else {
-        create_vm_frame_by_method_add_params_plus1(thread, class, frame, method, get_method_code(class->constant_pool, *method));
+        new_frame = create_vm_frame_by_method_add_params_plus1(thread, class, frame, method, get_method_code(class->constant_pool, *method));
+    }
+    if (is_synchronized(method->access_flags)) {
+        new_frame->pop_args = object->monitor;
+        new_frame->pop_hook = (PopHook) set_monitor_exit_hook;
+        monitor_enter(object->monitor, thread);
     }
 }
 
@@ -1216,6 +1261,11 @@ void set_class_inited_by_frame(Thread *thread, SerialHeap *heap, Frame *frame, F
     frame->class->init_state = CLASS_INITED;
 }
 
+void set_monitor_exit_hook(Thread *thread, SerialHeap *heap, Frame *frame, Frame *next_frame)
+{
+    monitor_exit(frame->pop_args, thread);
+}
+
 void init_static_fields(ClassFile *class)
 {
     for (int i = 0; i < class->fields_count; i++) {
@@ -1293,7 +1343,6 @@ void init_class(Thread *thread, SerialHeap *heap, ClassFile *class)
     MethodInfo *clinit = find_method_with_desc(thread, heap, class, "<clinit>", "()V");
     if (NULL != clinit) {
         CodeAttribute *clinit_code = get_method_code(class->constant_pool, *clinit);
-//        create_vm_frame_by_method(thread, class, clinit, clinit_code);
         create_vm_frame_by_method_add_hook(thread, class, clinit, clinit_code, (PopHook) set_class_inited_by_frame);
     } else {
         class->init_state = CLASS_INITED;

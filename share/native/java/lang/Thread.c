@@ -43,22 +43,23 @@ void java_lang_Thread_isAlive_90Z(Thread *thread, SerialHeap *heap, Frame *frame
 void java_lang_Thread_start0_90V(Thread *thread, SerialHeap *heap, Frame *frame)
 {
     //TODO
-    Object *this = get_localvar_this(frame);
-    ClassFile *class = this->class;
-
-    Thread *new_thread = create_thread_with_jthread(VM_STACK_SIZE, C_STACK_SIZE, this);
-    MethodInfo *method = find_method_with_desc(new_thread, heap, class, "run", "()V");
-    push_object(frame->operand_stack, this);
-    create_vm_frame_by_method_add_params_plus1(new_thread, class, frame, method, get_method_code(class->constant_pool, *method));
-    Env *env = malloc(sizeof(Env));
-    env->thread = new_thread;
-    env->heap = heap;
-    pthread_t *new_pthread = malloc(sizeof(pthread_t));
-    this->monitor->owner = new_thread;
-    int ret;
-    ret = pthread_create(new_pthread, NULL, (void *(*)(void *)) run_by_env, env);
-    if (ret != 0) {
-        printf_err("thread create error!");
-        exit(-1);
-    }
+//    Object *this = get_localvar_this(frame);
+//    ClassFile *class = this->class;
+//
+//    Thread *new_thread = create_thread_with_jthread(VM_STACK_SIZE, C_STACK_SIZE, this);
+//    MethodInfo *method = find_method_with_desc(new_thread, heap, class, "run", "()V");
+//    push_object(frame->operand_stack, this);
+//    create_vm_frame_by_method_add_params_plus1(new_thread, class, frame, method, get_method_code(class->constant_pool, *method));
+//    Env *env = malloc(sizeof(Env));
+//    env->thread = new_thread;
+//    env->heap = heap;
+//    pthread_t *new_pthread = malloc(sizeof(pthread_t));
+//    this->monitor->owner = new_thread;
+//    new_thread->pthread = new_pthread;
+//    int ret;
+//    ret = pthread_create(new_pthread, NULL, (void *(*)(void *)) run_by_env, env);
+//    if (ret != 0) {
+//        printf_err("thread create error!");
+//        exit(-1);
+//    }
 }

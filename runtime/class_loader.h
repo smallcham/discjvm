@@ -81,6 +81,8 @@ int class_is_inited(ClassFile *class);
 
 void set_class_inited_by_frame(Thread *thread, SerialHeap *heap, Frame *frame, Frame *next_frame);
 
+void set_monitor_exit_hook(Thread *thread, SerialHeap *heap, Frame *frame, Frame *next_frame);
+
 void clinit_class_and_exec(Thread *thread, SerialHeap *heap, ClassFile *class);
 
 void print_class_info(ClassFile class);

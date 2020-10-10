@@ -25,6 +25,7 @@ void init_native_factory()
     put_map(&native_pool, "java/lang/Class.isArray()Z", java_lang_Class_isArray_90Z);
     put_map(&native_pool, "java/lang/Class.initClassName()Ljava/lang/String;", java_lang_Class_initClassName_90Ljava_lang_String1);
     put_map(&native_pool, "java/lang/Class.forName0(Ljava/lang/String;ZLjava/lang/ClassLoader;Ljava/lang/Class;)Ljava/lang/Class;", java_lang_Class_forName0_9Ljava_lang_String1ZLjava_lang_ClassLoader1Ljava_lang_Class10Ljava_lang_Class1);
+    put_map(&native_pool, "java/lang/Class.isPrimitive()Z", java_lang_Class_isPrimitive_90Z);
 
     //System
     put_map(&native_pool, "java/lang/System.registerNatives()V", java_lang_System_registerNatives_90V);
@@ -64,6 +65,8 @@ void init_native_factory()
     put_map(&native_pool, "jdk/internal/misc/Unsafe.allocateMemory0(J)J", jdk_internal_misc_Unsafe_allocateMemory0_9J0J);
     put_map(&native_pool, "jdk/internal/misc/Unsafe.getObject(Ljava/lang/Object;J)Ljava/lang/Object;", jdk_internal_misc_Unsafe_getObject_9Ljava_lang_Object1J0Ljava_lang_Object1);
     put_map(&native_pool, "jdk/internal/misc/Unsafe.putObject(Ljava/lang/Object;JLjava/lang/Object;)V", jdk_internal_misc_Unsafe_putObject_9Ljava_lang_Object1JLjava_lang_Object10V);
+    put_map(&native_pool, "jdk/internal/misc/Unsafe.copyMemory0(Ljava/lang/Object;JLjava/lang/Object;JJ)V", jdk_internal_misc_Unsafe_copyMemory0_9Ljava_lang_Object1JLjava_lang_Object1JJ0V);
+    put_map(&native_pool, "jdk/internal/misc/Unsafe.putByte(Ljava/lang/Object;JB)V", jdk_internal_misc_Unsafe_putByte_9Ljava_lang_Object1JB0V);
 
     //ClassLoader
     put_map(&native_pool, "java/lang/ClassLoader.registerNatives()V", java_lang_ClassLoader_registerNatives_90V);
@@ -122,10 +125,17 @@ void init_native_factory()
     //UnixNativeDispatcher
     put_map(&native_pool, "sun/nio/fs/UnixNativeDispatcher.init()I", sun_nio_fs_UnixNativeDispatcher_init_90I);
     put_map(&native_pool, "sun/nio/fs/UnixNativeDispatcher.getcwd()[B", sun_nio_fs_UnixNativeDispatcher_getcwd_90Bs);
+    put_map(&native_pool, "sun/nio/fs/UnixNativeDispatcher.stat1(J)I", sun_nio_fs_UnixNativeDispatcher_stat1_9J0I);
 
     //Reference
     put_map(&native_pool, "java/lang/ref/Reference.waitForReferencePendingList()V", java_lang_ref_Reference_waitForReferencePendingList_90V);
     put_map(&native_pool, "java/lang/ref/Reference.getAndClearReferencePendingList()Ljava/lang/ref/Reference;", java_lang_ref_Reference_getAndClearReferencePendingList_90Ljava_lang_ref_Reference1);
+
+    //NativeImageBuffer
+    put_map(&native_pool, "jdk/internal/jimage/NativeImageBuffer.getNativeMap(Ljava/lang/String;)Ljava/nio/ByteBuffer;", jdk_internal_jimage_NativeImageBuffer_getNativeMap_9Ljava_lang_String10Ljava_nio_ByteBuffer1);
+
+    //AtomicLong
+    put_map(&native_pool, "java/util/concurrent/atomic/AtomicLong.VMSupportsCS8()Z", java_util_concurrent_atomic_AtomicLong_VMSupportsCS8_90Z);
 }
 
 NativeMethod find_native(char *class_name, char *method_name, char *method_desc)
@@ -149,6 +159,10 @@ void invoke_native(Thread *thread, SerialHeap *heap)
         Frame *frame = pop_stack(thread->c_stack);
         NativeMethod method = frame->native_method;
         method(thread, heap, frame);
+        if (NULL != frame->pop_hook) {
+            printf_warn("[INVOKE-NATIVE-HOOK]");
+            frame->pop_hook(thread, heap, frame, get_stack(thread->vm_stack));
+        }
         frame->native_method = NULL;
         free(frame);
     } while (!is_empty_stack(thread->c_stack));

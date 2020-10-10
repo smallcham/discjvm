@@ -81,3 +81,17 @@ void sun_nio_fs_UnixNativeDispatcher_getcwd_90Bs(Thread *thread, SerialHeap *hea
         push_object(frame->operand_stack, array);
     }
 }
+
+void sun_nio_fs_UnixNativeDispatcher_stat1_9J0I(Thread *thread, SerialHeap *heap, Frame *frame)
+{
+    long path_address = get_long_localvar(frame, 0);
+    struct stat s_buf;
+    int errno = stat((const char *) path_address, &s_buf);
+    int rv;
+    if (errno != 0) {
+        rv = 0;
+    } else {
+        rv = s_buf.st_mode;
+    }
+    push_int(frame->operand_stack, rv);
+}

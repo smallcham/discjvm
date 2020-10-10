@@ -32,3 +32,7 @@
 # Thread.start0 not complete, need lock
 
 # wait has some problem, may be the key is complete the synchronized invoke method.
+
+# Unsafe_allocateMemory0 has some problem, maybe. Unsafe_copyMemory0 maybe effect by this.
+
+# use lstore_3 stored the long number not equals with the pushed long number, set pointer to 120826  

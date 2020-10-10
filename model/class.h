@@ -254,6 +254,10 @@ int is_object_array_by_raw(void *raw_class);
 
 int is_primitive_array(void *ref);
 
+char *full_primitive_name(char name);
+
+int is_full_primitive_desc(char *desc);
+
 int is_primitive_array_by_raw(void *raw_class);
 
 int is_object_array_by_desc(char *desc);
@@ -262,7 +266,7 @@ int primitive_size(char *desc);
 
 Slot *create_slot();
 
-Slot *create_slot_set_value(u4 value);
+Slot *create_slot_set_value(u8 value);
 
 Slot *create_slot_by_size(int size);
 
@@ -279,5 +283,7 @@ int is_native(u2 access_flag);
 int is_primitive_desc(char *desc);
 
 int is_object_by_name(char *name);
+
+int is_synchronized(u2 access_flags);
 
 #endif //DISCJVM_CLASS_H

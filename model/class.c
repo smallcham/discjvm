@@ -18,7 +18,7 @@ Slot *create_slot()
     return slot;
 }
 
-Slot *create_slot_set_value(u4 value)
+Slot *create_slot_set_value(u8 value)
 {
     Slot *slot = create_slot();
     slot->value = value;
@@ -83,7 +83,20 @@ int is_object_array_by_raw(void *raw_class)
     return is_array_by_raw(raw_class) && object->raw_class->class_name[1] == 'L';
 }
 
-int is_primitive_desc(char *desc)
+char *full_primitive_name(char name)
+{
+    if (name == 'Z') return "boolean";
+    if (name == 'C') return "char";
+    if (name == 'F') return "float";
+    if (name == 'D') return "double";
+    if (name == 'B') return "byte";
+    if (name == 'S') return "short";
+    if (name == 'I') return "int";
+    if (name == 'J') return "long";
+    return NULL;
+}
+
+int is_full_primitive_desc(char *desc)
 {
     return strcmp(desc, "void") == 0 ||
            strcmp(desc, "boolean") == 0 ||
@@ -93,7 +106,12 @@ int is_primitive_desc(char *desc)
            strcmp(desc, "int") == 0 ||
            strcmp(desc, "long") == 0 ||
            strcmp(desc, "float") == 0 ||
-           strcmp(desc, "double") == 0 ||
+           strcmp(desc, "double") == 0;
+}
+
+int is_primitive_desc(char *desc)
+{
+    return is_full_primitive_desc(desc) ||
            (desc[0] == '[' && (
                    desc[1] == 'Z' ||
                    desc[1] == 'C' ||
@@ -153,6 +171,11 @@ int object_is_string(Object *object)
 int class_is_string(ClassFile *class)
 {
     return NULL != class && strcmp(class->class_name, "java/lang/String") == 0;
+}
+
+int is_synchronized(u2 access_flags)
+{
+    return 0 != (access_flags & ACC_SYNCHRONIZED);
 }
 
 int is_static(u2 access_flags)

@@ -43,8 +43,4 @@ void java_security_AccessController_doPrivileged_9Ljava_security_PrivilegedActio
    push_object(frame->operand_stack, action);
    MethodInfo *method = find_method_with_desc(thread, heap, class, "run", "()Ljava/lang/Object;");
    create_vm_frame_by_method_add_params_plus1(thread, class, frame, method, get_method_code(class->constant_pool, *method));
-
-//    Stack *stack = create_unlimit_stack();
-//    push_object(stack, action);
-//    single_invoke(heap, class, "run", "()Ljava/lang/Object;", stack);
 }

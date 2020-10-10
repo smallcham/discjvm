@@ -4,6 +4,12 @@
 
 #include "Unsafe.h"
 
+void conjoint_jshorts_atomic(short* from, short* to, size_t count);
+void conjoint_jints_atomic(int* from, int* to, size_t count);
+void conjoint_jlongs_atomic(long* from, long* to, size_t count);
+void atomic_copy64(const long *from, long *to);
+void *index_oop_from_field_offset_long(void *p, long field_offset);
+
 void jdk_internal_misc_Unsafe_registerNatives_90V(Thread *thread, SerialHeap *heap, Frame *frame)
 {
 }
@@ -257,4 +263,99 @@ void jdk_internal_misc_Unsafe_putObject_9Ljava_lang_Object1JLjava_lang_Object10V
     u8 offset = get_long_localvar(frame, 2);
     Object *value = get_ref_localvar(frame, 4);
     object->fields[offset].object_value = value;
+}
+
+/**
+ * Sets all bytes in a given block of memory to a copy of another
+ * block.  This provides a <em>single-register</em> addressing mode,
+ * as discussed in {@link #getInt(Object,long)}.
+ *
+ * Equivalent to {@code copyMemory(null, srcAddress, null, destAddress, bytes)}.
+ */
+void jdk_internal_misc_Unsafe_copyMemory0_9Ljava_lang_Object1JLjava_lang_Object1JJ0V(Thread *thread, SerialHeap *heap, Frame *frame)
+{
+    void *src_base = get_ref_localvar(frame, 1);
+    long src_offset = get_long_localvar(frame, 2);
+    void *dest_base = get_ref_localvar(frame, 4);
+    long dest_offset = get_long_localvar(frame, 5);
+    long size = get_long_localvar(frame, 7);
+    void *from = index_oop_from_field_offset_long(src_base, src_offset);
+    long *to = index_oop_from_field_offset_long(dest_base, dest_offset);
+    uintptr_t bits = (uintptr_t) from | (uintptr_t) to | (uintptr_t) size;
+
+    if (bits % sizeof(long) == 0) {
+        conjoint_jlongs_atomic((const long*) from, (long*) to, size / sizeof(long));
+    } else if (bits % sizeof(int) == 0) {
+        conjoint_jints_atomic((const int*) from, (int*) to, size / sizeof(int));
+    } else if (bits % sizeof(short) == 0) {
+        conjoint_jshorts_atomic((const short*) from, (short*) to, size / sizeof(short));
+    } else {
+        (void)memmove((void*)to, (const void*)from, size);
+    }
+}
+
+void jdk_internal_misc_Unsafe_putByte_9Ljava_lang_Object1JB0V(Thread *thread, SerialHeap *heap, Frame *frame)
+{
+    void *object = get_ref_localvar(frame, 1);
+    long offset = get_long_localvar(frame, 2);
+    char byte = get_localvar(frame, 4);
+    char *p = object + offset;
+    *p = byte;
+}
+
+void conjoint_jshorts_atomic(short* from, short* to, size_t count) {
+    if (from > to) {
+        short *end = from + count;
+        while (from < end)
+            *(to++) = *(from++);
+    }
+    else if (from < to) {
+        short *end = from;
+        from += count - 1;
+        to   += count - 1;
+        while (from >= end)
+            *(to--) = *(from--);
+    }
+}
+void conjoint_jints_atomic(int* from, int* to, size_t count) {
+    if (from > to) {
+        int *end = from + count;
+        while (from < end)
+            *(to++) = *(from++);
+    }
+    else if (from < to) {
+        int *end = from;
+        from += count - 1;
+        to   += count - 1;
+        while (from >= end)
+            *(to--) = *(from--);
+    }
+}
+void conjoint_jlongs_atomic(long* from, long* to, size_t count) {
+    if (from > to) {
+        long *end = from + count;
+        while (from < end)
+            atomic_copy64(from++, to++);
+    }
+    else if (from < to) {
+        long *end = from;
+        from += count - 1;
+        to   += count - 1;
+        while (from >= end)
+            atomic_copy64(from--, to--);
+    }
+}
+
+void atomic_copy64(const long *from, long *to)
+{
+    *(long *) to = *(const long *) from;
+}
+
+void *index_oop_from_field_offset_long(void *p, long field_offset)
+{
+    if (sizeof(char*) == sizeof(int)) {   // (this constant folds!)
+        return (char*)p + (int)field_offset;
+    } else {
+        return (char*)p + field_offset;
+    }
 }

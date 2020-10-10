@@ -100,6 +100,7 @@ void java_lang_Object_wait_9J0V(Thread *thread, SerialHeap *heap, Frame *frame)
     abstime.tv_nsec = us * 1000;
 
     pthread_mutex_lock(this->monitor->lock);
+//    pthread_cond_wait(this->monitor->cond, this->monitor->lock);
     pthread_cond_timedwait(this->monitor->cond, this->monitor->lock, &abstime);
     pthread_mutex_unlock(this->monitor->lock);
 }

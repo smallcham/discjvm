@@ -45,4 +45,8 @@ void jdk_internal_misc_Unsafe_getObject_9Ljava_lang_Object1J0Ljava_lang_Object1(
 
 void jdk_internal_misc_Unsafe_putObject_9Ljava_lang_Object1JLjava_lang_Object10V(Thread *thread, SerialHeap *heap, Frame *frame);
 
+void jdk_internal_misc_Unsafe_copyMemory0_9Ljava_lang_Object1JLjava_lang_Object1JJ0V(Thread *thread, SerialHeap *heap, Frame *frame);
+
+void jdk_internal_misc_Unsafe_putByte_9Ljava_lang_Object1JB0V(Thread *thread, SerialHeap *heap, Frame *frame);
+
 #endif //DISCJVM_UNSAFE_H

@@ -21,6 +21,7 @@ typedef struct {
     void *native_method;
     CodeAttribute *code_info;
     PopHook pop_hook;
+    void *pop_args;
     Slot *local_variables[];
 } Frame;
 
@@ -28,6 +29,7 @@ typedef struct {
     Stack *vm_stack;
     Stack *c_stack;
     Object *jthread;
+    pthread_t *pthread;
 } Thread;
 
 Frame *create_vm_frame_by_method(Thread* thread, ClassFile *class, MethodInfo *method, CodeAttribute *code);
@@ -46,7 +48,7 @@ void free_frame(Frame **frame);
 
 void print_local_variables(Frame *frame);
 
-u4 get_localvar(Frame *frame, int index);
+u8 get_localvar(Frame *frame, int index);
 
 Slot *get_slot_localvar(Frame *frame, int index);
 
@@ -56,7 +58,9 @@ void set_long_localvar(Frame *frame, int index, u8 value);
 
 void set_localvar_with_slot(Frame *frame, int index, Slot *value);
 
-void set_localvar(Frame *frame, int index, u4 value);
+void set_localvar_with_slot_copy(Frame *frame, int index, Slot *value);
+
+void set_localvar(Frame *frame, int index, u8 value);
 
 u8 get_long_localvar(Frame *frame, int index);
 

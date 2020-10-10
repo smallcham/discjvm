@@ -7,6 +7,8 @@
 
 #include <stdio.h>
 #include <zconf.h>
+#include <pthread.h>
+#include <stdlib.h>
 
 #define LOG_DEBUG   0
 #define LOG_SUCCESS 0

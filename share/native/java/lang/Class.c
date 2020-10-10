@@ -49,3 +49,9 @@ void java_lang_Class_forName0_9Ljava_lang_String1ZLjava_lang_ClassLoader1Ljava_l
         push_object(frame->operand_stack, class->class_object);
     }
 }
+
+void java_lang_Class_isPrimitive_90Z(Thread *thread, SerialHeap *heap, Frame *frame)
+{
+    Object *this = get_localvar_this(frame);
+    push_int(frame->operand_stack, is_full_primitive_desc(this->raw_class->class_name));
+}

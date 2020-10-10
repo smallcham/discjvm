@@ -83,6 +83,7 @@ void start_vm(char *class_path)
             "java/lang/String",
             "java/lang/System",
             "java/lang/Class",
+            "java/lang/ClassLoader",
             "java/lang/ThreadGroup",
             "java/lang/Thread",
             "sun/nio/fs/UnixFileAttributes",
@@ -94,7 +95,8 @@ void start_vm(char *class_path)
     init_native_factory();
     init_instructions_desc();
     Thread *thread = create_thread(VM_STACK_SIZE, C_STACK_SIZE);
-    init_lib_by_names(thread, heap, base_lib, 8);
+    thread->pthread = (pthread_t *) pthread_self();
+    init_lib_by_names(thread, heap, base_lib, 9);
     init_primitives(thread, heap);
 
     //创建 main方法栈帧

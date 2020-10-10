@@ -520,7 +520,7 @@ void lstore(SerialHeap *heap, Thread *thread, Frame *frame) {
 void fstore(SerialHeap *heap, Thread *thread, Frame *frame) {
     Slot *value = pop_slot(frame->operand_stack);
     int index = step_pc1_and_read_code(frame);
-    set_localvar_with_slot(frame, index, value);
+    set_localvar_with_slot_copy(frame, index, value);
     step_pc_1(frame);
 }
 
@@ -533,7 +533,7 @@ void dstore(SerialHeap *heap, Thread *thread, Frame *frame) {
 
 void astore(SerialHeap *heap, Thread *thread, Frame *frame) {
     u1 index = step_pc1_and_read_code(frame);
-    set_localvar_with_slot(frame, index, pop_slot(frame->operand_stack));
+    set_localvar_with_slot_copy(frame, index, pop_slot(frame->operand_stack));
     step_pc_1(frame);
 }
 
@@ -587,25 +587,25 @@ void lstore_3(SerialHeap *heap, Thread *thread, Frame *frame) {
 
 void fstore_0(SerialHeap *heap, Thread *thread, Frame *frame) {
     Slot *value = pop_slot(frame->operand_stack);
-    set_localvar_with_slot(frame, 0, value);
+    set_localvar_with_slot_copy(frame, 0, value);
     step_pc_1(frame);
 }
 
 void fstore_1(SerialHeap *heap, Thread *thread, Frame *frame) {
     Slot *value = pop_slot(frame->operand_stack);
-    set_localvar_with_slot(frame, 1, value);
+    set_localvar_with_slot_copy(frame, 1, value);
     step_pc_1(frame);
 }
 
 void fstore_2(SerialHeap *heap, Thread *thread, Frame *frame) {
     Slot *value = pop_slot(frame->operand_stack);
-    set_localvar_with_slot(frame, 2, value);
+    set_localvar_with_slot_copy(frame, 2, value);
     step_pc_1(frame);
 }
 
 void fstore_3(SerialHeap *heap, Thread *thread, Frame *frame) {
     Slot *value = pop_slot(frame->operand_stack);
-    set_localvar_with_slot(frame, 3, value);
+    set_localvar_with_slot_copy(frame, 3, value);
     step_pc_1(frame);
 }
 
@@ -635,23 +635,23 @@ void dstore_3(SerialHeap *heap, Thread *thread, Frame *frame) {
 
 void astore_0(SerialHeap *heap, Thread *thread, Frame *frame) {
 //    frame->local_variables[0] = pop_slot(frame->operand_stack);
-    set_localvar_with_slot(frame, 0, pop_slot(frame->operand_stack));
+    set_localvar_with_slot_copy(frame, 0, pop_slot(frame->operand_stack));
     step_pc_1(frame);
 }
 
 void astore_1(SerialHeap *heap, Thread *thread, Frame *frame) {
 //    frame->local_variables[1] = pop_slot(frame->operand_stack);
-    set_localvar_with_slot(frame, 1, pop_slot(frame->operand_stack));
+    set_localvar_with_slot_copy(frame, 1, pop_slot(frame->operand_stack));
     step_pc_1(frame);
 }
 
 void astore_2(SerialHeap *heap, Thread *thread, Frame *frame) {
-    set_localvar_with_slot(frame, 2, pop_slot(frame->operand_stack));
+    set_localvar_with_slot_copy(frame, 2, pop_slot(frame->operand_stack));
     step_pc_1(frame);
 }
 
 void astore_3(SerialHeap *heap, Thread *thread, Frame *frame) {
-    set_localvar_with_slot(frame, 3, pop_slot(frame->operand_stack));
+    set_localvar_with_slot_copy(frame, 3, pop_slot(frame->operand_stack));
     step_pc_1(frame);
 }
 
@@ -1458,7 +1458,6 @@ void arraylength(SerialHeap *heap, Thread *thread, Frame *frame) {
 void athrow(SerialHeap *heap, Thread *thread, Frame *frame) {
     Object *exception = pop_object(frame->operand_stack);
     printf_err("throw %s", exception->raw_class->class_name);
-    printf_err("athrow not complete");
     ExceptionsAttribute *exceptions = get_exception_handle(frame->constant_pool, frame->method, exception->raw_class);
     if (NULL == exceptions) {
         pop_frame(thread, heap);
@@ -2034,7 +2033,12 @@ long count = 0;
 
 void exec(Operator operator, SerialHeap *heap, Thread *thread, Frame *frame)
 {
-    printf_debug("\t\t\t[%ld - %d] - %s.%s%s\t\t\t#%d %s:\n", count++, frame->pc, frame->class->class_name, frame->method->name, frame->method->desc, frame->pc, instructions_desc[read_code(frame)]);
+    char *t_name = "";
+    if (NULL != thread->jthread) {
+        Object *t_name_obj = get_field_object_value_by_name_and_desc(thread->jthread, "name", "Ljava/lang/String;");
+        if (NULL != t_name_obj) t_name = get_str_field_value_by_object(t_name_obj);
+    }
+    printf_debug("\t\t\t[%ld - %s] - %s.%s%s\t\t\t#%d %s:\n", count++, t_name, frame->class->class_name, frame->method->name, frame->method->desc, frame->pc, instructions_desc[read_code(frame)]);
     frame->count = count;
     operator(heap, thread, frame);
     Frame *_frame = get_stack(thread->vm_stack);
@@ -2055,7 +2059,7 @@ void single_invoke(SerialHeap *heap, ClassFile *class, char *method_name, char *
     int size = params->size;
     Slot **slots = pop_slot_with_num(params, params->size);
     for (int i = 0; i < size; i++) {
-        set_localvar_with_slot(frame, i, slots[i]);
+        set_localvar_with_slot_copy(frame, i, slots[i]);
     }
     run(thread, heap);
     printf_warn("\t\t\t[SINGLE-INVOKE-ESC] %s.%s%s", class->class_name, method_name, method_desc);

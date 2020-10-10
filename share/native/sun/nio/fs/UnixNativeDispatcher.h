@@ -7,9 +7,12 @@
 
 #include "../../../../../model/thread.h"
 #include "../../../../../runtime/class_loader.h"
+#include <sys/stat.h>
 
 void sun_nio_fs_UnixNativeDispatcher_init_90I(Thread *thread, SerialHeap *heap, Frame *frame);
 
 void sun_nio_fs_UnixNativeDispatcher_getcwd_90Bs(Thread *thread, SerialHeap *heap, Frame *frame);
+
+void sun_nio_fs_UnixNativeDispatcher_stat1_9J0I(Thread *thread, SerialHeap *heap, Frame *frame);
 
 #endif //DISCJVM_UNIXNATIVEDISPATCHER_H
