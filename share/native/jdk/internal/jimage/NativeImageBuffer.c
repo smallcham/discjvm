@@ -18,11 +18,7 @@ void jdk_internal_jimage_NativeImageBuffer_getNativeMap_9Ljava_lang_String10Ljav
     ImageFile *image = read_image(image_path);
     if (NULL != image) {
         ClassFile *class = load_class(thread, heap, "java/nio/DirectByteBuffer");
-        if (class_is_not_init(class)) {
-            Thread *new_thread = create_thread_with_jthread(VM_STACK_SIZE, C_STACK_SIZE, thread->jthread);
-            new_thread->pthread = thread->pthread;
-            clinit_class_and_exec(new_thread, heap, class);
-        }
+        ensure_inited_class(thread, heap, class);
         Object *byte_buffer = malloc_object(thread, heap, class);
         put_field_by_name_and_desc(byte_buffer, "address", "J", create_slot_set_value((u8) image->_index_data));
         put_field_by_name_and_desc(byte_buffer, "capacity", "I", create_slot_set_value(image->_file_size));

@@ -282,8 +282,7 @@ ClassFile *load_class_by_bytes(Thread *thread, SerialHeap *heap, u1 *bytes)
             class->methods[i].attributes_count = l2b_2(*(u2 *) class_file);
             class_file += sizeof(u2);
             if (class->methods[i].attributes_count > 0) {
-                class->methods[i].attributes = (AttributeInfo *) malloc(
-                        class->methods[i].attributes_count * sizeof(AttributeInfo));
+                class->methods[i].attributes = (AttributeInfo *) malloc(class->methods[i].attributes_count * sizeof(AttributeInfo));
                 for (int j = 0; j < class->methods[i].attributes_count; j++) {
                     class->methods[i].class = class;
                     class->methods[i].attributes[j].attribute_name_index = l2b_2(*(u2 *) class_file);
@@ -298,6 +297,8 @@ ClassFile *load_class_by_bytes(Thread *thread, SerialHeap *heap, u1 *bytes)
                 }
             }
             class->methods[i].params_count = parse_method_param_count(*(CONSTANT_Utf8_info*)class->constant_pool[class->methods[i].descriptor_index].info);
+            class->methods[i].param_types = parse_param_types(thread, heap, class->methods[i].desc, class->methods[i].params_count);
+            class->methods[i].return_type = load_class(thread, heap, return_type_name(class->methods[i].desc));
         }
     }
     class->attributes_count = l2b_2(*(u2 *) class_file);
@@ -424,7 +425,7 @@ ClassFile *load_class(Thread *thread, SerialHeap *heap, char *full_class_name)
     if (NULL != class_from_cache) {
         return class_from_cache;
     }
-    if (full_class_name[0] == '[') {
+    if (full_class_name[0] == '[' || is_full_primitive_desc(full_class_name)) {
         return load_primitive_class(thread, heap, full_class_name);
     }
     ClassFile *class = (ClassFile*)malloc(sizeof(ClassFile));
@@ -1746,4 +1747,89 @@ Slot *create_str_slot_set_str(Thread *thread, SerialHeap *heap, char *str)
     Object *object = malloc_object(thread, heap, class);
     put_str_field(thread, heap, object, str);
     return create_object_slot_set_object(heap, object);
+}
+
+void ensure_inited_class(Thread *thread, SerialHeap *heap, ClassFile *class)
+{
+    if (class_is_not_init(class)) {
+        Thread *new_thread = create_thread_with_jthread(VM_STACK_SIZE, C_STACK_SIZE, thread->jthread);
+        new_thread->pthread = thread->pthread;
+        clinit_class_and_exec(new_thread, heap, class);
+    }
+}
+
+void* parse_param_types(Thread *thread, SerialHeap *heap, char *desc, int count)
+{
+    ClassFile **param_types = malloc(sizeof(ClassFile*) * count);
+    int desc_size = strlen(desc);
+    int params_count = 0;
+    int _offset = 0;
+    int _end = 0;
+    for (int k = 0; k < desc_size; ++k) {
+        if (desc[k] == '(') {
+            _offset = k + 1;
+            break;
+        }
+    }
+    for (int j = _offset; j < desc_size; ++j) {
+        if (desc[j] == ')') {
+            _end = j;
+            break;
+        }
+    }
+    while (_offset < _end) {
+        char *full_name = NULL;
+        while (1) {
+            if (desc[_offset] == ')' || desc[_offset] == ';') break;
+            else if (desc[_offset] == '[') {
+                if (desc[_offset + 1] == 'L') {
+                    int _count = 0;
+                    char name[100];
+                    for (int s = _offset; s < desc_size; ++s) {
+                        if (desc[s] == ';' || desc[s] == ')') {
+                            _offset = s;
+                            name[_count] = '\0';
+                            full_name = name;
+                            break;
+                        } else {
+                            name[_count++] = desc[s];
+                        }
+                    }
+                } else {
+                    char name[3];
+                    name[0] = '[';
+                    name[1] = desc[_offset + 1];
+                    name[2] = '\0';
+                    _offset += 2;
+                    full_name = name;
+                    break;
+                }
+            } else if (desc[_offset] == 'L') {
+                int _flag = _offset + 1;
+                int _count = 0;
+                char name[100];
+                for (int s = _flag; s < desc_size; ++s) {
+                    if (desc[s] == ';' || desc[s] == ')') {
+                        name[_count] = '\0';
+                        full_name = name;
+                        _offset = s;
+                        break;
+                    } else {
+                        name[_count++] = desc[s];
+                    }
+                }
+            } else {
+                char name[2];
+                name[0] = desc[_offset];
+                name[1] = '\0';
+                full_name = name;
+                _offset += 1;
+                break;
+            }
+        }
+        if (NULL != full_name) {
+            param_types[params_count++] = load_class(thread, heap, full_name);
+        }
+    }
+    return param_types;
 }

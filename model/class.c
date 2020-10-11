@@ -183,6 +183,11 @@ int is_static(u2 access_flags)
     return 0 != (access_flags & ACC_STATIC);
 }
 
+int is_public(u2 access_flags)
+{
+    return 0 != (access_flags & ACC_PUBLIC);
+}
+
 int is_final(u2 access_flags)
 {
     return 0 != (access_flags & ACC_FINAL);
@@ -201,4 +206,25 @@ void format_class_name(char *class_name)
             class_name[i] = '/';
         }
     }
+}
+
+char* return_type_name(char* desc)
+{
+    int size = strlen(desc);
+    int offset = 0;
+    for (int i = 0; i < size; i++) {
+        if (desc[i] == ')') {
+            offset = i + 1;
+            break;
+        }
+    }
+    int is_obj = desc[offset] == 'L';
+    int name_size = size - offset + 1 + (desc[size - 1] == ';' ? -1 : 0) - is_obj;
+    char *name = malloc(name_size);
+    memcpy(name, desc + offset + is_obj, name_size - 1);
+    name[name_size - 1] = '\0';
+    if (name_size == 2) {
+        return full_primitive_name(name[0]);
+    }
+    return name;
 }

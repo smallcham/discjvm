@@ -134,8 +134,13 @@ void jdk_internal_misc_Unsafe_compareAndSetObject_9Ljava_lang_Object1JLjava_lang
     Object *e = get_ref_localvar(frame, 4);
     Object *x = get_ref_localvar(frame, 5);
     void *object = get_ref_localvar(frame, 1);
-    long *p = object + offset;
-    *p = x;
+    if (is_array(object)) {
+        long *p = object + offset;
+        *p = x;
+    } else {
+        Object *o = object;
+        o->fields[offset].object_value = x;
+    }
     push_int(frame->operand_stack, 1);
 
 //    if (e == x) {

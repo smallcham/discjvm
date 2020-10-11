@@ -22,4 +22,6 @@ void java_lang_Class_forName0_9Ljava_lang_String1ZLjava_lang_ClassLoader1Ljava_l
 
 void java_lang_Class_isPrimitive_90Z(Thread *thread, SerialHeap *heap, Frame *frame);
 
+void java_lang_Class_getDeclaredMethods0_9Z0sLjava_lang_reflect_Method1(Thread *thread, SerialHeap *heap, Frame *frame);
+
 #endif //DISCJVM_CLASS_H

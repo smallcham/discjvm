@@ -26,6 +26,7 @@ void init_native_factory()
     put_map(&native_pool, "java/lang/Class.initClassName()Ljava/lang/String;", java_lang_Class_initClassName_90Ljava_lang_String1);
     put_map(&native_pool, "java/lang/Class.forName0(Ljava/lang/String;ZLjava/lang/ClassLoader;Ljava/lang/Class;)Ljava/lang/Class;", java_lang_Class_forName0_9Ljava_lang_String1ZLjava_lang_ClassLoader1Ljava_lang_Class10Ljava_lang_Class1);
     put_map(&native_pool, "java/lang/Class.isPrimitive()Z", java_lang_Class_isPrimitive_90Z);
+    put_map(&native_pool, "java/lang/Class.getDeclaredMethods0(Z)[Ljava/lang/reflect/Method;", java_lang_Class_getDeclaredMethods0_9Z0sLjava_lang_reflect_Method1);
 
     //System
     put_map(&native_pool, "java/lang/System.registerNatives()V", java_lang_System_registerNatives_90V);

@@ -191,4 +191,8 @@ ExceptionsAttribute *get_exception_handle(ConstantPool *pool, MethodInfo *method
 
 ClassFile *get_class_by_attr_index(Thread *thread, SerialHeap *heap, ConstantPool *pool, u2 index);
 
+void ensure_inited_class(Thread *thread, SerialHeap *heap, ClassFile *class);
+
+void* parse_param_types(Thread *thread, SerialHeap *heap, char *desc, int count);
+
 #endif //DISCJVM_CLASS_LOADER_H

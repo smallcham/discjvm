@@ -59,10 +59,12 @@ typedef struct {
     u2 descriptor_index;
     u2 attributes_count;
     u4 params_count;
+    void *param_types;
     u1 *name;
     u1 *desc;
     void *class;
     AttributeInfo *attributes;
+    void *return_type;
 } MethodInfo;
 
 typedef struct {
@@ -287,5 +289,9 @@ int is_object_by_name(char *name);
 int is_synchronized(u2 access_flags);
 
 void format_class_name(char *class_name);
+
+int is_public(u2 access_flags);
+
+char* return_type_name(char* desc);
 
 #endif //DISCJVM_CLASS_H
