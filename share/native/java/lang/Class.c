@@ -35,16 +35,20 @@ void java_lang_Class_initClassName_90Ljava_lang_String1(Thread *thread, SerialHe
 void java_lang_Class_forName0_9Ljava_lang_String1ZLjava_lang_ClassLoader1Ljava_lang_Class10Ljava_lang_Class1(Thread *thread, SerialHeap *heap, Frame *frame)
 {
     char *name = get_str_field_value_by_object(get_ref_localvar(frame, 0));
+    format_class_name(name);
     int initialize = get_localvar(frame, 1);
     ClassFile *class = load_class(thread, heap, name);
     if (initialize && class_is_not_init(class)) {
-        Frame *current = get_stack(thread->vm_stack);
-        push_slot(current->operand_stack, get_slot_localvar(frame, 0));
-        push_slot(current->operand_stack, get_slot_localvar(frame, 1));
-        push_slot(current->operand_stack, get_slot_localvar(frame, 2));
-        push_slot(current->operand_stack, get_slot_localvar(frame, 3));
-        back_pc(current, 3);
-        init_class(thread, heap, class);
+        Thread *new_thread = create_thread_with_jthread(VM_STACK_SIZE, C_STACK_SIZE, thread->jthread);
+        new_thread->pthread = thread->pthread;
+        clinit_class_and_exec(new_thread, heap, class);
+//        Frame *current = get_stack(thread->vm_stack);
+//        push_slot(current->operand_stack, get_slot_localvar(frame, 0));
+//        push_slot(current->operand_stack, get_slot_localvar(frame, 1));
+//        push_slot(current->operand_stack, get_slot_localvar(frame, 2));
+//        push_slot(current->operand_stack, get_slot_localvar(frame, 3));
+//        back_pc(current, 3);
+//        init_class(thread, heap, class);
     } else {
         push_object(frame->operand_stack, class->class_object);
     }

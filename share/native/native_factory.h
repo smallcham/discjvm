@@ -31,6 +31,9 @@
 #include "java/lang/ref/Reference.h"
 #include "jdk/internal/jimage/NativeImageBuffer.h"
 #include "java/util/concurrent/atomic/AtomicLong.h"
+#include "sun/nio/ch/IOUtil.h"
+#include "sun/nio/ch/FileChannelImpl.h"
+#include "sun/nio/ch/FileDispatcherImpl.h"
 
 typedef void (*NativeMethod)(Thread *, SerialHeap *, Frame *);
 

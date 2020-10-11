@@ -192,3 +192,13 @@ int is_native(u2 access_flag)
 {
     return 0 != (access_flag & ACC_NATIVE);
 }
+
+void format_class_name(char *class_name)
+{
+    for (int i = 0; i < strlen(class_name); i++) {
+        if (class_name[i] == '/') { break; }
+        if (class_name[i] == '.') {
+            class_name[i] = '/';
+        }
+    }
+}

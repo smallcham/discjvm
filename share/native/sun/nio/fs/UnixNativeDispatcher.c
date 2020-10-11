@@ -95,3 +95,15 @@ void sun_nio_fs_UnixNativeDispatcher_stat1_9J0I(Thread *thread, SerialHeap *heap
     }
     push_int(frame->operand_stack, rv);
 }
+
+/**
+* int open(const char* path, int oflag, mode_t mode)
+*/
+void sun_nio_fs_UnixNativeDispatcher_open0_9JII0I(Thread *thread, SerialHeap *heap, Frame *frame)
+{
+    char* path = (char*)get_long_localvar(frame, 0);
+    int flags = get_localvar(frame, 2);
+    int mode = get_localvar(frame, 3);
+    int fd = open(path, flags, mode);
+    push_int(frame->operand_stack, fd);
+}

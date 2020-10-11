@@ -129,6 +129,28 @@ u1 step_pc1_and_read_code(Frame *frame)
     return op_code;
 }
 
+u4 step_pc4_and_read_u4(Frame *frame)
+{
+    step_pc_1(frame);
+    u1 var1 = read_code(frame);
+    step_pc_1(frame);
+    u1 var2 = read_code(frame);
+    step_pc_1(frame);
+    u1 var3 = read_code(frame);
+    step_pc_1(frame);
+    u1 var4 = read_code(frame);
+    return (var1 << 24 | var2 << 16 | var3 << 8 | var4);
+}
+
+u4* step_pc4_and_read_u4_by_count(Frame *frame, int count)
+{
+    u4 *vars = malloc(count * sizeof(u4));
+    for (int i = 0; i < count; i++) {
+        vars[i] = step_pc4_and_read_u4(frame);
+    }
+    return vars;
+}
+
 void nop(SerialHeap *heap, Thread *thread, Frame *frame) {
     step_pc_1(frame);
 }
@@ -1303,17 +1325,23 @@ void ret(SerialHeap *heap, Thread *thread, Frame *frame) {
 }
 
 void tableswitch(SerialHeap *heap, Thread *thread, Frame *frame) {
-//    step_pc(frame, 3);
-//    int index = pop_int(frame->operand_stack);
-//    int default_offset = step_pc1_and_read_code(frame) | step_pc1_and_read_code(frame) | step_pc1_and_read_code(frame) | step_pc1_and_read_code(frame);
-//    int lower = step_pc1_and_read_code(frame) | step_pc1_and_read_code(frame) | step_pc1_and_read_code(frame) | step_pc1_and_read_code(frame);
-//    int higher = step_pc1_and_read_code(frame) | step_pc1_and_read_code(frame) | step_pc1_and_read_code(frame) | step_pc1_and_read_code(frame);
-//    int offset = higher - lower + 1;
-//    if (index < lower || index > higher) {
-//
-//    } else {
-//        index - lower
-//    }
+    u4 _pc = frame->pc;
+    step_pc(frame, 3);
+    int index = pop_int(frame->operand_stack);
+    int default_offset = step_pc4_and_read_u4(frame);
+    int lower = step_pc4_and_read_u4(frame);
+    int higher = step_pc4_and_read_u4(frame);
+    int count = higher - lower + 1;
+    u4 *offsets = step_pc4_and_read_u4_by_count(frame, count);
+    u4 offset;
+    if (index < lower || index > higher) {
+        offset = default_offset;
+    } else {
+        offset = offsets[index - lower];
+    }
+    frame->pc = _pc;
+    frame->pc = step_pc_and_read_pc(frame, offset);
+    free(offsets);
 }
 
 void lookupswitch(SerialHeap *heap, Thread *thread, Frame *frame) {}

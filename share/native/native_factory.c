@@ -126,6 +126,7 @@ void init_native_factory()
     put_map(&native_pool, "sun/nio/fs/UnixNativeDispatcher.init()I", sun_nio_fs_UnixNativeDispatcher_init_90I);
     put_map(&native_pool, "sun/nio/fs/UnixNativeDispatcher.getcwd()[B", sun_nio_fs_UnixNativeDispatcher_getcwd_90Bs);
     put_map(&native_pool, "sun/nio/fs/UnixNativeDispatcher.stat1(J)I", sun_nio_fs_UnixNativeDispatcher_stat1_9J0I);
+    put_map(&native_pool, "sun/nio/fs/UnixNativeDispatcher.open0(JII)I", sun_nio_fs_UnixNativeDispatcher_open0_9JII0I);
 
     //Reference
     put_map(&native_pool, "java/lang/ref/Reference.waitForReferencePendingList()V", java_lang_ref_Reference_waitForReferencePendingList_90V);
@@ -136,6 +137,16 @@ void init_native_factory()
 
     //AtomicLong
     put_map(&native_pool, "java/util/concurrent/atomic/AtomicLong.VMSupportsCS8()Z", java_util_concurrent_atomic_AtomicLong_VMSupportsCS8_90Z);
+
+    //IOUtil
+    put_map(&native_pool, "sun/nio/ch/IOUtil.initIDs()V", sun_nio_ch_IOUtil_initIDs_90V);
+    put_map(&native_pool, "sun/nio/ch/IOUtil.iovMax()I", sun_nio_ch_IOUtil_iovMax_90I);
+
+    //FileChannelImpl
+    put_map(&native_pool, "sun/nio/ch/FileChannelImpl.initIDs()J", sun_nio_ch_FileChannelImpl_initIDs_90J);
+
+    //FileDispatcherImpl
+    put_map(&native_pool, "sun/nio/ch/FileDispatcherImpl.init()V", sun_nio_ch_FileDispatcherImpl_init_90V);
 }
 
 NativeMethod find_native(char *class_name, char *method_name, char *method_desc)

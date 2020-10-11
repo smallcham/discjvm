@@ -99,6 +99,13 @@ void jdk_internal_misc_Unsafe_objectFieldOffset1_9Ljava_lang_Class1Ljava_lang_St
     FieldInfo *field = get_field_by_name(object->raw_class, name);
     free(name);
     push_long(frame->operand_stack, field->offset);
+
+//    Object *object = get_ref_localvar(frame, 1);
+//    Object *string = get_ref_localvar(frame, 2);
+//    char *name = get_str_field_value_by_object(string);
+//    FieldInfo *field = get_field_by_name(object->raw_class, name);
+//    free(name);
+//    push_long(frame->operand_stack, offsetof(Object, fields) + field->offset * sizeof(char*));
 }
 
 void jdk_internal_misc_Unsafe_storeFence_90V(Thread *thread, SerialHeap *heap, Frame *frame)
@@ -255,6 +262,9 @@ void jdk_internal_misc_Unsafe_getObject_9Ljava_lang_Object1J0Ljava_lang_Object1(
     Object *object = get_ref_localvar(frame, 1);
     long offset = get_long_localvar(frame, 2);
     push_object(frame->operand_stack, object->fields[offset].object_value);
+
+    //    Slot* slot = (Slot*)(object + offset);
+//    push_object(frame->operand_stack, slot->object_value);
 }
 
 void jdk_internal_misc_Unsafe_putObject_9Ljava_lang_Object1JLjava_lang_Object10V(Thread *thread, SerialHeap *heap, Frame *frame)
@@ -263,6 +273,12 @@ void jdk_internal_misc_Unsafe_putObject_9Ljava_lang_Object1JLjava_lang_Object10V
     u8 offset = get_long_localvar(frame, 2);
     Object *value = get_ref_localvar(frame, 4);
     object->fields[offset].object_value = value;
+
+//    void *object = get_ref_localvar(frame, 1);
+//    u8 offset = get_long_localvar(frame, 2);
+//    void *value = get_ref_localvar(frame, 4);
+//    long *p = object + offset;
+//    *p = value;
 }
 
 /**

@@ -15,4 +15,6 @@ void sun_nio_fs_UnixNativeDispatcher_getcwd_90Bs(Thread *thread, SerialHeap *hea
 
 void sun_nio_fs_UnixNativeDispatcher_stat1_9J0I(Thread *thread, SerialHeap *heap, Frame *frame);
 
+void sun_nio_fs_UnixNativeDispatcher_open0_9JII0I(Thread *thread, SerialHeap *heap, Frame *frame);
+
 #endif //DISCJVM_UNIXNATIVEDISPATCHER_H

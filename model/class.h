@@ -286,4 +286,6 @@ int is_object_by_name(char *name);
 
 int is_synchronized(u2 access_flags);
 
+void format_class_name(char *class_name);
+
 #endif //DISCJVM_CLASS_H
