@@ -59,12 +59,10 @@ typedef struct {
     u2 descriptor_index;
     u2 attributes_count;
     u4 params_count;
-    void *param_types;
     u1 *name;
     u1 *desc;
     void *class;
     AttributeInfo *attributes;
-    void *return_type;
 } MethodInfo;
 
 typedef struct {

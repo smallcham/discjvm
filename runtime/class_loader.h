@@ -4,8 +4,8 @@
 
 #ifndef DISCJVM_CLASS_LOADER_H
 #define DISCJVM_CLASS_LOADER_H
-#define CLASS_INITED 1
-#define CLASS_IN_INIT 0
+#define CLASS_INITED 0
+#define CLASS_IN_INIT 1
 #define CLASS_NOT_INIT 2
 
 #include "../util/endian.h"
@@ -193,6 +193,6 @@ ClassFile *get_class_by_attr_index(Thread *thread, SerialHeap *heap, ConstantPoo
 
 void ensure_inited_class(Thread *thread, SerialHeap *heap, ClassFile *class);
 
-void* parse_param_types(Thread *thread, SerialHeap *heap, char *desc, int count);
+char** parse_param_types(Thread *thread, SerialHeap *heap, char *desc, int count);
 
 #endif //DISCJVM_CLASS_LOADER_H

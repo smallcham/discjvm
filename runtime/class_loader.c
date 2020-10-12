@@ -297,8 +297,6 @@ ClassFile *load_class_by_bytes(Thread *thread, SerialHeap *heap, u1 *bytes)
                 }
             }
             class->methods[i].params_count = parse_method_param_count(*(CONSTANT_Utf8_info*)class->constant_pool[class->methods[i].descriptor_index].info);
-            class->methods[i].param_types = parse_param_types(thread, heap, class->methods[i].desc, class->methods[i].params_count);
-            class->methods[i].return_type = load_class(thread, heap, return_type_name(class->methods[i].desc));
         }
     }
     class->attributes_count = l2b_2(*(u2 *) class_file);
@@ -1244,17 +1242,17 @@ ClassFile *get_super_class(Thread *thread, SerialHeap *heap, ClassFile *class)
 
 int class_is_not_init(ClassFile *class)
 {
-    return class->init_state == CLASS_NOT_INIT;
+    return class->init_state >= CLASS_NOT_INIT;
 }
 
 int class_is_in_init(ClassFile *class)
 {
-    return class->init_state == CLASS_IN_INIT;
+    return class->init_state <= CLASS_IN_INIT;
 }
 
 int class_is_inited(ClassFile *class)
 {
-    return class->init_state == CLASS_INITED;
+    return class->init_state <= CLASS_INITED;
 }
 
 void set_class_inited_by_frame(Thread *thread, SerialHeap *heap, Frame *frame, Frame *next_frame)
@@ -1758,9 +1756,10 @@ void ensure_inited_class(Thread *thread, SerialHeap *heap, ClassFile *class)
     }
 }
 
-void* parse_param_types(Thread *thread, SerialHeap *heap, char *desc, int count)
+char** parse_param_types(Thread *thread, SerialHeap *heap, char *desc, int count)
 {
-    ClassFile **param_types = malloc(sizeof(ClassFile*) * count);
+    if (count == 0) return NULL;
+    char **param_types = malloc(sizeof(char*) * count);
     int desc_size = strlen(desc);
     int params_count = 0;
     int _offset = 0;
@@ -1768,12 +1767,9 @@ void* parse_param_types(Thread *thread, SerialHeap *heap, char *desc, int count)
     for (int k = 0; k < desc_size; ++k) {
         if (desc[k] == '(') {
             _offset = k + 1;
-            break;
         }
-    }
-    for (int j = _offset; j < desc_size; ++j) {
-        if (desc[j] == ')') {
-            _end = j;
+        else if (desc[k] == ')') {
+            _end = k;
             break;
         }
     }
@@ -1828,7 +1824,13 @@ void* parse_param_types(Thread *thread, SerialHeap *heap, char *desc, int count)
             }
         }
         if (NULL != full_name) {
-            param_types[params_count++] = load_class(thread, heap, full_name);
+            int size = strlen(full_name);
+            char *_name = malloc(size + 1);
+            memcpy(_name, full_name, size);
+            _name[size] = '\0';
+            param_types[params_count++] = _name;
+        } else {
+            _offset ++;
         }
     }
     return param_types;
