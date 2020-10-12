@@ -195,4 +195,8 @@ void ensure_inited_class(Thread *thread, SerialHeap *heap, ClassFile *class);
 
 char** parse_param_types(Thread *thread, SerialHeap *heap, char *desc, int count);
 
+u1 *get_signature(ConstantPool *pool, MethodInfo method);
+
+ClassFile *get_class_class(Thread *thread, SerialHeap *heap);
+
 #endif //DISCJVM_CLASS_LOADER_H

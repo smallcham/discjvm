@@ -80,9 +80,10 @@ void start_vm(char *class_path)
     _reference_pending_list = NULL;
 
     char *base_lib[] = {
+            "java/lang/Object",
+            "java/lang/Class",
             "java/lang/String",
             "java/lang/System",
-            "java/lang/Class",
             "java/lang/ClassLoader",
             "java/lang/ThreadGroup",
             "java/lang/Thread",
@@ -96,7 +97,7 @@ void start_vm(char *class_path)
     init_instructions_desc();
     Thread *thread = create_thread(VM_STACK_SIZE, C_STACK_SIZE);
     thread->pthread = (pthread_t *) pthread_self();
-    init_lib_by_names(thread, heap, base_lib, 9);
+    init_lib_by_names(thread, heap, base_lib, 10);
     init_primitives(thread, heap);
 
     //创建 main方法栈帧

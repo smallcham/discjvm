@@ -24,4 +24,8 @@ void java_lang_Class_isPrimitive_90Z(Thread *thread, SerialHeap *heap, Frame *fr
 
 void java_lang_Class_getDeclaredMethods0_9Z0sLjava_lang_reflect_Method1(Thread *thread, SerialHeap *heap, Frame *frame);
 
+void java_lang_Class_getSuperclass_90Ljava_lang_Class1(Thread *thread, SerialHeap *heap, Frame *frame);
+
+void java_lang_Class_getInterfaces0_90sLjava_lang_Class1(Thread *thread, SerialHeap *heap, Frame *frame);
+
 #endif //DISCJVM_CLASS_H

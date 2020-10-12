@@ -297,6 +297,8 @@ ClassFile *load_class_by_bytes(Thread *thread, SerialHeap *heap, u1 *bytes)
                 }
             }
             class->methods[i].params_count = parse_method_param_count(*(CONSTANT_Utf8_info*)class->constant_pool[class->methods[i].descriptor_index].info);
+            class->methods[i].code_attribute = get_method_code(class->constant_pool, class->methods[i]);
+            class->methods[i].signature = get_signature(class->constant_pool, class->methods[i]);
         }
     }
     class->attributes_count = l2b_2(*(u2 *) class_file);
@@ -423,7 +425,7 @@ ClassFile *load_class(Thread *thread, SerialHeap *heap, char *full_class_name)
     if (NULL != class_from_cache) {
         return class_from_cache;
     }
-    if (full_class_name[0] == '[' || is_full_primitive_desc(full_class_name)) {
+    if (full_class_name[0] == '[' || is_full_primitive_desc(full_class_name) || strlen(full_class_name) == 1) {
         return load_primitive_class(thread, heap, full_class_name);
     }
     ClassFile *class = (ClassFile*)malloc(sizeof(ClassFile));
@@ -431,7 +433,7 @@ ClassFile *load_class(Thread *thread, SerialHeap *heap, char *full_class_name)
     u1 *class_file = get_class_bytes(full_class_name);
     class = load_class_by_bytes(thread, heap, class_file);
 
-    Object *class_object = malloc_object(thread, heap, load_class(thread, heap, "java/lang/Class"));
+    Object *class_object = malloc_object(thread, heap, get_class_class(thread, heap));
     class_object->raw_class = class;
     class->class_object = class_object;
     return class;
@@ -457,6 +459,9 @@ ClassFile *load_primitive_class(Thread *thread, SerialHeap *heap, char *primitiv
     char *name = malloc(size + 1);
     strcpy(name, primitive_name);
     name[size] = '\0';
+    if (strlen(name) == 1) {
+        name = full_primitive_name(name[0]);
+    }
     ClassFile *class = malloc(sizeof(ClassFile));
     memset(class, 0, sizeof(ClassFile));
     class->magic = CLASS_MAGIC_NUMBER;
@@ -466,7 +471,7 @@ ClassFile *load_primitive_class(Thread *thread, SerialHeap *heap, char *primitiv
     class->init_state = CLASS_INITED;
     put_class_to_cache(&heap->class_pool, class);
 
-    Object *class_object = malloc_object(thread, heap, load_class(thread, heap, "java/lang/Class"));
+    Object *class_object = malloc_object(thread, heap, get_class_class(thread, heap));
     put_object_value_field_by_name_and_desc(class_object, "classLoader", "Ljava/lang/ClassLoader;", get_bootstrap_class_loader(thread, heap));
     Object *component_type;
     if (primitive_name[0] == '[' && primitive_name[1] != 'L') {
@@ -475,8 +480,8 @@ ClassFile *load_primitive_class(Thread *thread, SerialHeap *heap, char *primitiv
     else if (primitive_name[1] == 'L') {
         char _name[strlen(primitive_name) - 1];
         memcpy(_name, primitive_name + 2, strlen(primitive_name) - 2);
-        _name[strlen(primitive_name) - 2] = '\0';
-        component_type = load_primitive_class(thread, heap, _name)->class_object;
+        _name[strlen(primitive_name) - 2 - (_name[strlen(primitive_name) - 3] == ';' ? 1 : 0)] = '\0';
+        component_type = load_class(thread, heap, _name)->class_object;
     } else {
         component_type = NULL;
     }
@@ -934,7 +939,7 @@ void put_field_by_name_and_desc(Object *object, char *name, char *desc, Slot *va
 
 void put_str_field(Thread *thread, SerialHeap *heap, Object *object, char *str)
 {
-    u8 len = strlen(str);
+    u8 len = NULL == str ? 0 : strlen(str);
     put_str_field_with_length(thread, heap, object, str, len);
 }
 
@@ -943,8 +948,12 @@ void put_str_field_with_length(Thread *thread, SerialHeap *heap, Object *object,
     FieldInfo *field = get_field_by_name_and_desc(object->class, "value", "[B");
     Array *array = malloc_array_by_type_size(thread, heap, load_class(thread, heap, "[B"), length, sizeof(char));
     char *_str = (char *) array->objects;
-    for (int i = 0; i < length; i++) {
-        _str[i] = str[i];
+    if (NULL == str) {
+        array->objects[0] = NULL;
+    } else {
+        for (int i = 0; i < length; i++) {
+            _str[i] = str[i];
+        }
     }
     Slot *slot = create_object_slot_set_object(heap, array);
     object->fields[field->offset] = *slot;
@@ -1324,10 +1333,7 @@ void init_class(Thread *thread, SerialHeap *heap, ClassFile *class)
     if (class_is_inited(class)) return;
     printf_debug("\t\t\t\t-> jump <clinit> - %s\n", class->class_name);
     class->init_state = CLASS_IN_INIT;
-    ClassFile *_class = load_class(thread, heap, "java/lang/Class");
-    if (class_is_not_init(_class)) {
-        init_class(thread, heap, _class);
-    }
+    get_class_class(thread, heap);
 
     ClassFile *super = get_super_class(thread, heap, class);
     if (NULL != super) {
@@ -1336,9 +1342,7 @@ void init_class(Thread *thread, SerialHeap *heap, ClassFile *class)
         }
         class->super_class = super;
     }
-
     init_fields(class);
-
     MethodInfo *clinit = find_method_with_desc(thread, heap, class, "<clinit>", "()V");
     if (NULL != clinit) {
         CodeAttribute *clinit_code = get_method_code(class->constant_pool, *clinit);
@@ -1402,6 +1406,27 @@ MethodInfo *get_method_info_by_ref(Thread *thread, SerialHeap *heap, ConstantPoo
     CONSTANT_Class_info class_info = *(CONSTANT_Class_info*)pool[ref.class_index].info;
     ClassFile *class = load_class(thread, heap, get_utf8_bytes(pool, class_info.name_index));
     return find_method_iter_super_with_desc(thread, heap, &class, method_name, method_desc);
+}
+
+u1 *get_signature(ConstantPool *pool, MethodInfo method)
+{
+    if (method.attributes_count == 0) return NULL;
+    int index = -1;
+    for (int i = 0; i < method.attributes_count; i++) {
+        CONSTANT_Utf8_info info = *(CONSTANT_Utf8_info *) pool[method.attributes[i].attribute_name_index].info;
+        if (strcmp(info.bytes, "Signature") == 0) {
+            index = i;
+            break;
+        }
+    }
+    if (index == -1) return NULL;
+    AttributeInfo info = method.attributes[index];
+    SignatureAttribute *signature = malloc(sizeof(SignatureAttribute));
+    u1 *bytes = info.info;
+    signature->attribute_name_index = info.attribute_name_index;
+    signature->attribute_length = info.attribute_length;
+    signature->signature_index = l2b_2(*(u2*)bytes);
+    return get_utf8_bytes(pool, signature->signature_index);
 }
 
 CodeAttribute *get_method_code(ConstantPool *pool, MethodInfo method)
@@ -1754,6 +1779,13 @@ void ensure_inited_class(Thread *thread, SerialHeap *heap, ClassFile *class)
         new_thread->pthread = thread->pthread;
         clinit_class_and_exec(new_thread, heap, class);
     }
+}
+
+ClassFile *get_class_class(Thread *thread, SerialHeap *heap)
+{
+    ClassFile *class_class = load_class(thread, heap, "java/lang/Class");
+    ensure_inited_class(thread, heap, class_class);
+    return class_class;
 }
 
 char** parse_param_types(Thread *thread, SerialHeap *heap, char *desc, int count)

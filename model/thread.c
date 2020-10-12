@@ -216,19 +216,23 @@ void print_local_variables(Frame *frame)
                 Object *obj = value->object_value;
                 if (NULL != obj->class) {
                     if (object_is_string(obj)) {
-                        Array *array = obj->fields->object_value;
-                        if (NULL == array) {
+                        if (obj->fields == NULL) {
                             printf_debug("[NULL-STR]");
                         } else {
-                            char *str = malloc(array->length + 1);
-                            memcpy(str, (char*)array->objects, array->length);
-                            str[array->length] = '\0';
-                            if (str[0] == '\n') {
-                                printf_debug("[%d-> \"\\n\"],", i);
+                            Array *array = obj->fields->object_value;
+                            if (NULL == array) {
+                                printf_debug("[NULL-STR]");
                             } else {
-                                printf_debug("[%d-> \"%s\"],", i, str);
+                                char *str = malloc(array->length + 1);
+                                memcpy(str, (char*)array->objects, array->length);
+                                str[array->length] = '\0';
+                                if (str[0] == '\n') {
+                                    printf_debug("[%d-> \"\\n\"],", i);
+                                } else {
+                                    printf_debug("[%d-> \"%s\"],", i, str);
+                                }
+                                free(str);
                             }
-                            free(str);
                         }
                     } else {
                         if (strcmp(obj->class->class_name, "[B") == 0) {

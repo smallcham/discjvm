@@ -297,19 +297,23 @@ void print_stack(Stack *stack)
             Object *obj = value->object_value;
             if (NULL != obj->class) {
                 if (object_is_string(obj)) {
-                    Array *array = obj->fields->object_value;
-                    if (NULL == array) {
+                    if (NULL == obj->fields) {
                         printf_debug("[NULL-STR]");
                     } else {
-                        char *str = malloc(array->length + 1);
-                        memcpy(str, (char*)array->objects, array->length);
-                        str[array->length] = '\0';
-                        if (str[0] == '\n') {
-                            printf_debug("\"\\n\"");
+                        Array *array = obj->fields->object_value;
+                        if (NULL == array) {
+                            printf_debug("[NULL-STR]");
                         } else {
-                            printf_debug("\"%s\"", str);
+                            char *str = malloc(array->length + 1);
+                            memcpy(str, (char*)array->objects, array->length);
+                            str[array->length] = '\0';
+                            if (str[0] == '\n') {
+                                printf_debug("\"\\n\"");
+                            } else {
+                                printf_debug("\"%s\"", str);
+                            }
+                            free(str);
                         }
-                        free(str);
                     }
                 } else {
                     if (strcmp(obj->class->class_name, "[B") == 0) {

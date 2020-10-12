@@ -54,18 +54,6 @@ typedef struct {
 } InterfaceInfo;
 
 typedef struct {
-    u2 access_flags;
-    u2 name_index;
-    u2 descriptor_index;
-    u2 attributes_count;
-    u4 params_count;
-    u1 *name;
-    u1 *desc;
-    void *class;
-    AttributeInfo *attributes;
-} MethodInfo;
-
-typedef struct {
     u2 attribute_name_index;
     u4 attribute_length;
     u2 max_stack;
@@ -82,6 +70,20 @@ typedef struct {
     u2 attributes_count;
     AttributeInfo *attributes;
 } CodeAttribute;
+
+typedef struct {
+    u2 access_flags;
+    u2 name_index;
+    u2 descriptor_index;
+    u2 attributes_count;
+    u4 params_count;
+    u1 *name;
+    u1 *desc;
+    void *class;
+    AttributeInfo *attributes;
+    CodeAttribute *code_attribute;
+    u1 *signature;
+} MethodInfo;
 
 typedef struct {
     u2 attribute_name_index;
@@ -122,6 +124,12 @@ typedef struct {
         u2 index;
     } *local_variable_type_table;
 } LocalVariableTypeTableAttribute;
+
+typedef struct {
+    u2 attribute_name_index;
+    u4 attribute_length;
+    u2 signature_index;
+} SignatureAttribute;
 
 typedef struct {
 
