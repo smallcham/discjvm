@@ -439,6 +439,9 @@ void dload_3(SerialHeap *heap, Thread *thread, Frame *frame) {
 }
 
 void aload_0(SerialHeap *heap, Thread *thread, Frame *frame) {
+    if (strcmp(frame->method->name, "getMethodsRecursive") == 0 && strcmp(get_str_field_value_by_object(frame->local_variables[1]->object_value), "setUninterruptible") == 0) {
+        printf_err("123");
+    }
     push_slot(frame->operand_stack, get_slot_localvar(frame, 0));
     step_pc_1(frame);
 }
@@ -2083,7 +2086,7 @@ void single_invoke(SerialHeap *heap, ClassFile *class, char *method_name, char *
     printf_warn("\t\t\t[SINGLE-INVOKE-IN] %s.%s%s", class->class_name, method_name, method_desc);
     Thread *thread = create_thread(100, 100);
     MethodInfo *method = find_method_with_desc(thread, heap, class, method_name, method_desc);
-    Frame *frame = create_vm_frame_by_method_with_push(thread, class, method, get_method_code(class->constant_pool, *method));
+    Frame *frame = create_vm_frame_by_method_with_push(thread, class, method);
     int size = params->size;
     Slot **slots = pop_slot_with_num(params, params->size);
     for (int i = 0; i < size; i++) {

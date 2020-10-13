@@ -116,39 +116,41 @@ void java_lang_Class_isPrimitive_90Z(Thread *thread, SerialHeap *heap, Frame *fr
  */
 void java_lang_Class_getDeclaredMethods0_9Z0sLjava_lang_reflect_Method1(Thread *thread, SerialHeap *heap, Frame *frame)
 {
+    //TODO
     Object *this = get_localvar_this(frame);
     int public_only = get_localvar(frame, 1);
     ClassFile *array_class = load_class(thread, heap, "[Ljava/lang/reflect/Method");
     ClassFile *class_class = load_class(thread, heap, "java/lang/Class");
-    if (is_primitive_desc(this->class->class_name)) {
+    if (is_primitive_desc(this->raw_class->class_name)) {
         push_object(frame->operand_stack, malloc_array(thread, heap, array_class, 0));
     } else {
-        Stack *stack = create_stack(this->class->methods_count);
+        Stack *stack = create_stack(this->raw_class->methods_count);
         ClassFile *method_class = load_class(thread, heap, "java/lang/reflect/Method");
         if (class_is_not_init(method_class)) {
             ensure_inited_class(thread, heap, method_class);
         }
-        for (int i = 0; i < this->class->methods_count; i++) {
-            if (strcmp(this->class->methods[i].name, "<init>") == 0 || strcmp(this->class->methods[i].name, "<clinit>") == 0) continue;
-            if (public_only && !is_public(this->class->methods[i].access_flags)) continue;
+        for (int i = 0; i < this->raw_class->methods_count; i++) {
+            if (strcmp(this->raw_class->methods[i].name, "<init>") == 0 || strcmp(this->raw_class->methods[i].name, "<clinit>") == 0) continue;
+            if (public_only && !is_public(this->raw_class->methods[i].access_flags)) continue;
             Object *method_object = malloc_object(thread, heap, method_class);
             Stack *params = create_stack(12);
-            char **param_types_name = parse_param_types(thread, heap, this->class->methods[i].desc, this->class->methods[i].params_count);
-            Array *parameter_types = malloc_array(thread, heap, class_class, this->class->methods[i].params_count);
+            char **param_types_name = parse_param_types(thread, heap, this->raw_class->methods[i].desc, this->raw_class->methods[i].real_params_count);
+            Array *parameter_types = malloc_array(thread, heap, class_class, this->raw_class->methods[i].real_params_count);
             if (NULL != param_types_name) {
-                for (int j = 0; j < this->class->methods[i].params_count; j++) {
+                for (int j = 0; j < this->raw_class->methods[i].real_params_count; j++) {
                     parameter_types->objects[j] = load_class(thread, heap, param_types_name[j])->class_object;
                 }
             }
             push_object(params, method_object);//this
-            push_object(params, this->class->class_object);//declaringClass
-            push_slot(params, create_str_slot_set_str(thread, heap, this->class->methods[i].name));//name
+
+            push_object(params, this->raw_class->class_object);//declaringClass
+            push_slot(params, create_str_slot_set_str(thread, heap, this->raw_class->methods[i].name));//name
             push_object(params, parameter_types);//parameterTypes
-            push_object(params, load_class(thread, heap, return_type_name(this->class->methods[i].desc))->class_object);//returnType
+            push_object(params, load_class(thread, heap, return_type_name(this->raw_class->methods[i].desc))->class_object);//returnType
             push_slot(params, NULL_SLOT);//checkedExceptions
-            push_int(params, this->class->methods[i].access_flags);//modifiers
+            push_int(params, this->raw_class->methods[i].access_flags);//modifiers
             push_int(params, i);//slot
-            push_slot(params, create_str_slot_set_str(thread, heap, this->class->methods[i].signature));//signature
+            push_slot(params, create_str_slot_set_str(thread, heap, this->raw_class->methods[i].signature));//signature
             push_slot(params, NULL_SLOT);//annotations
             push_slot(params, NULL_SLOT);//parameterAnnotations
             push_slot(params, NULL_SLOT);//annotationDefault
@@ -186,9 +188,19 @@ void java_lang_Class_getInterfaces0_90sLjava_lang_Class1(Thread *thread, SerialH
     for (int i = 0; i < this->raw_class->interfaces_count; i++) {
         ClassFile *interface = this->raw_class->interfaces_info[i].class;
         ensure_inited_class(thread, heap, interface);
-        Object *class_object = malloc_object(thread, heap, get_class_class(thread, heap));
-        class_object->raw_class = interface;
-        array->objects[i] = class_object;
+        array->objects[i] = interface->class_object;
     }
     push_object(frame->operand_stack, array);
+}
+
+void java_lang_Class_getConstantPool_90Ljdk_internal_reflect_ConstantPool1(Thread *thread, SerialHeap *heap, Frame *frame)
+{
+    Object *this = get_localvar_this(frame);
+    if (is_primitive_desc(this->raw_class->class_name)) {
+        push_slot(frame->operand_stack, NULL_SLOT);
+    } else {
+        ClassFile *pool_class = load_class(thread, heap, "jdk/internal/reflect/ConstantPool");
+        ensure_inited_class(thread, heap, pool_class);
+        push_object(frame->operand_stack, pool_class->class_object);
+    }
 }

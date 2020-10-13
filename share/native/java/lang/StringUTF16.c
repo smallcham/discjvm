@@ -6,5 +6,6 @@
 
 void java_lang_StringUTF16_isBigEndian_90Z(Thread *thread, SerialHeap *heap, Frame *frame)
 {
-    push_int(frame->operand_stack, 1);
+    unsigned int endianTest = 0xff000000;
+    push_int(frame->operand_stack, ((char*)(&endianTest))[0] != 0 ? 1 : 0);
 }

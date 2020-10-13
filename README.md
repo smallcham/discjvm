@@ -38,3 +38,5 @@
 # use lstore_3 stored the long number not equals with the pushed long number, set pointer to 120826  
 
 # complete the method "parse_param_types"
+
+# complete the opcode "instanof" and complete the next native method stat0

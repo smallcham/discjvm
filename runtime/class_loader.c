@@ -296,7 +296,7 @@ ClassFile *load_class_by_bytes(Thread *thread, SerialHeap *heap, u1 *bytes)
                     }
                 }
             }
-            class->methods[i].params_count = parse_method_param_count(*(CONSTANT_Utf8_info*)class->constant_pool[class->methods[i].descriptor_index].info);
+            class->methods[i].params_count = parse_method_param_count(*(CONSTANT_Utf8_info*)class->constant_pool[class->methods[i].descriptor_index].info, &class->methods[i].real_params_count);
             class->methods[i].code_attribute = get_method_code(class->constant_pool, class->methods[i]);
             class->methods[i].signature = get_signature(class->constant_pool, class->methods[i]);
         }
@@ -498,14 +498,15 @@ u1 *get_class_name_by_index(ConstantPool *pool, u2 index)
     return name->bytes;
 }
 
-u4 parse_method_param_count(CONSTANT_Utf8_info method_desc)
+u4 parse_method_param_count(CONSTANT_Utf8_info method_desc, u4 *real_count)
 {
-    return parse_method_param_count_by_desc(method_desc.bytes, method_desc.length);
+    return parse_method_param_count_by_desc(method_desc.bytes, method_desc.length, real_count);
 }
 
-u4 parse_method_param_count_by_desc(char *desc, int length)
+u4 parse_method_param_count_by_desc(char *desc, int length, u4 *real_count)
 {
     u4 count = 0;
+    u4 _real_count = 0;
     int idx = 0;
     for (int i = 0; i < length; i++) {
         if (desc[i] == '(') {
@@ -518,9 +519,11 @@ u4 parse_method_param_count_by_desc(char *desc, int length)
             case ')': break;
             case 'B': case 'C': case 'I': case 'S': case 'Z': case 'F':
                 count ++;
+                _real_count ++;
                 continue;
             case 'D': case 'J':
                 count += 2;
+                _real_count ++;
                 continue;
             case '[': {
                 continue;
@@ -536,11 +539,13 @@ u4 parse_method_param_count_by_desc(char *desc, int length)
                     }
                 }
                 count ++;
+                _real_count ++;
                 continue;
             }
         }
         break;
     }
+    if (NULL != real_count) *real_count = _real_count;
     return count;
 }
 
@@ -631,7 +636,7 @@ void do_invokedynamic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
             if (is_native(method->access_flags)) {
                 create_c_frame_and_invoke_add_params(thread, heap, frame, class->class_name, method);
             } else {
-                create_vm_frame_by_method_add_params(thread, method->class, frame, method, get_method_code(class->constant_pool, *method));
+                create_vm_frame_by_method_add_params(thread, method->class, frame, method);
             }
             break;
         }
@@ -647,7 +652,7 @@ void do_invokedynamic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
     params = create_stack(2);
     push_object(params, frame->class->class_object);
     push_object(params, get_rtype(thread, heap, desc));
-    push_object(params, get_ptypes(thread, heap, desc, parse_method_param_count_by_desc(desc, strlen(desc))));
+    push_object(params, get_ptypes(thread, heap, desc, parse_method_param_count_by_desc(desc, strlen(desc), NULL)));
     method_type->object_value = new_object_by_desc(thread, heap, frame, frame->class->class_object, "java/lang/invoke/MethodType", "(Ljava/lang/Class;[Ljava/lang/Class;)V", params);
 }
 
@@ -675,7 +680,7 @@ void do_invokestatic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2
     if (is_native(method->access_flags)) {
         new_frame = create_c_frame_and_invoke_add_params(thread, heap, frame, class->class_name, method);
     } else {
-        new_frame = create_vm_frame_by_method_add_params(thread, class, frame, method, get_method_code(class->constant_pool, *method));
+        new_frame = create_vm_frame_by_method_add_params(thread, class, frame, method);
     }
     if (is_synchronized(method->access_flags)) {
         Object *class_object = class->class_object;
@@ -695,7 +700,7 @@ void do_invokeinterface_by_index(Thread *thread, SerialHeap *heap, Frame *frame,
     u1 *method_desc = get_utf8_bytes(frame->constant_pool, name_and_type_info.descriptor_index);
     ClassFile *class = load_class(thread, heap, class_name);
     printf_debug("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class_name, name_and_type_info.name_index, method_name, name_and_type_info.descriptor_index, method_desc);
-    int params_count = parse_method_param_count(*(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info);
+    int params_count = parse_method_param_count(*(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info, NULL);
     Slot **slots = pop_slot_with_num(frame->operand_stack, params_count + 1);
     for (int i = 0; i < params_count + 1; i++) {
         push_slot(frame->operand_stack, slots[i]);
@@ -711,7 +716,7 @@ void do_invokeinterface_by_index(Thread *thread, SerialHeap *heap, Frame *frame,
     if (is_native(method->access_flags)) {
         new_frame = create_c_frame_and_invoke_add_params_plus1(thread, heap, frame, class->class_name, method);
     } else {
-        new_frame = create_vm_frame_by_method_add_params_plus1(thread, class, frame, method, get_method_code(class->constant_pool, *method));
+        new_frame = create_vm_frame_by_method_add_params_plus1(thread, class, frame, method);
     }
     if (is_synchronized(method->access_flags)) {
         new_frame->pop_args = object->monitor;
@@ -732,7 +737,7 @@ void do_invokespecial_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
     printf_debug("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class_name_info.bytes, name_and_type_info.name_index, method_name_info.bytes, name_and_type_info.descriptor_index, method_desc_info.bytes);
     MethodInfo *method = find_method_iter_super_with_desc(thread, heap, &class, method_name_info.bytes, method_desc_info.bytes);
 
-    int params_count = parse_method_param_count(*(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info);
+    int params_count = parse_method_param_count(*(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info, NULL);
     Slot **slots = pop_slot_with_num(frame->operand_stack, params_count + 1);
     for (int i = 0; i < params_count + 1; i++) {
         push_slot(frame->operand_stack, slots[i]);
@@ -746,7 +751,7 @@ void do_invokespecial_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
     if (is_native(method->access_flags)) {
         new_frame = create_c_frame_and_invoke_add_params_plus1(thread, heap, frame, class->class_name, method);
     } else {
-        new_frame = create_vm_frame_by_method_add_params_plus1(thread, class, frame, method, get_method_code(class->constant_pool, *method));
+        new_frame = create_vm_frame_by_method_add_params_plus1(thread, class, frame, method);
     }
     if (is_synchronized(method->access_flags)) {
         new_frame->pop_args = object->monitor;
@@ -766,7 +771,7 @@ void do_invokevirtual_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
     ClassFile *class = load_class(thread, heap, class_name_info.bytes);
     printf_debug("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class->class_name, name_and_type_info.name_index, method_name_info.bytes, name_and_type_info.descriptor_index, method_desc_info.bytes);
 
-    int params_count = parse_method_param_count(*(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info);
+    int params_count = parse_method_param_count(*(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info, NULL);
     Slot **slots = pop_slot_with_num(frame->operand_stack, params_count + 1);
     for (int i = 0; i < params_count + 1; i++) {
         push_slot(frame->operand_stack, slots[i]);
@@ -782,7 +787,7 @@ void do_invokevirtual_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
     if (is_native(method->access_flags)) {
         new_frame = create_c_frame_and_invoke_add_params_plus1(thread, heap, frame, class->class_name, method);
     } else {
-        new_frame = create_vm_frame_by_method_add_params_plus1(thread, class, frame, method, get_method_code(class->constant_pool, *method));
+        new_frame = create_vm_frame_by_method_add_params_plus1(thread, class, frame, method);
     }
     if (is_synchronized(method->access_flags)) {
         new_frame->pop_args = object->monitor;
@@ -1345,8 +1350,7 @@ void init_class(Thread *thread, SerialHeap *heap, ClassFile *class)
     init_fields(class);
     MethodInfo *clinit = find_method_with_desc(thread, heap, class, "<clinit>", "()V");
     if (NULL != clinit) {
-        CodeAttribute *clinit_code = get_method_code(class->constant_pool, *clinit);
-        create_vm_frame_by_method_add_hook(thread, class, clinit, clinit_code, (PopHook) set_class_inited_by_frame);
+        create_vm_frame_by_method_add_hook(thread, class, clinit, (PopHook) set_class_inited_by_frame);
     } else {
         class->init_state = CLASS_INITED;
     }
@@ -1369,7 +1373,7 @@ Object *new_object_by_desc(Thread *thread, SerialHeap *heap, Frame *frame, Objec
     ClassFile *class = load_class(thread, heap, class_name);
     Object *object = malloc_object(thread, heap, class);
     MethodInfo *init_method = find_method_with_desc(thread, heap, class, "<init>", desc);
-    create_vm_frame_by_method_add_params_plus1(thread, class, frame, init_method, get_method_code(class->constant_pool, *init_method));
+    create_vm_frame_by_method_add_params_plus1(thread, class, frame, init_method);
     init_class(thread, heap, class);
     return object;
 }

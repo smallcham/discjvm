@@ -77,6 +77,7 @@ typedef struct {
     u2 descriptor_index;
     u2 attributes_count;
     u4 params_count;
+    u4 real_params_count;
     u1 *name;
     u1 *desc;
     void *class;

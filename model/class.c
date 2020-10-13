@@ -93,6 +93,7 @@ char *full_primitive_name(char name)
     if (name == 'S') return "short";
     if (name == 'I') return "int";
     if (name == 'J') return "long";
+    if (name == 'V') return "void";
     return NULL;
 }
 

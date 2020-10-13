@@ -71,7 +71,7 @@ void do_invokevirtual_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
 
 void init_class(Thread *thread, SerialHeap *heap, ClassFile *class);
 
-u4 parse_method_param_count(CONSTANT_Utf8_info method_desc);
+u4 parse_method_param_count(CONSTANT_Utf8_info method_desc, u4 *real_count);
 
 int class_is_not_init(ClassFile *class);
 
@@ -183,7 +183,7 @@ Object *get_rtype(Thread *thread, SerialHeap *heap, char *desc);
 
 Array *get_ptypes(Thread *thread, SerialHeap *heap, char *desc, int params_count);
 
-u4 parse_method_param_count_by_desc(char *desc, int length);
+u4 parse_method_param_count_by_desc(char *desc, int length, u4 *real_count);
 
 char *get_str_field_value_by_object_and_name(Object *object, char *name);
 

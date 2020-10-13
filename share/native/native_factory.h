@@ -35,6 +35,7 @@
 #include "sun/nio/ch/FileChannelImpl.h"
 #include "sun/nio/ch/FileDispatcherImpl.h"
 #include "java/lang/StringUTF16.h"
+#include "jdk/internal/reflect/NativeMethodAccessorImpl.h"
 
 typedef void (*NativeMethod)(Thread *, SerialHeap *, Frame *);
 
