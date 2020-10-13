@@ -150,6 +150,9 @@ void init_native_factory()
 
     //FileDispatcherImpl
     put_map(&native_pool, "sun/nio/ch/FileDispatcherImpl.init()V", sun_nio_ch_FileDispatcherImpl_init_90V);
+
+    //StringUTF16
+    put_map(&native_pool, "java/lang/StringUTF16.isBigEndian()Z", java_lang_StringUTF16_isBigEndian_90Z);
 }
 
 NativeMethod find_native(char *class_name, char *method_name, char *method_desc)
