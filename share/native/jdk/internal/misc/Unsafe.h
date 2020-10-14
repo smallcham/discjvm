@@ -51,4 +51,6 @@ void jdk_internal_misc_Unsafe_putByte_9Ljava_lang_Object1JB0V(Thread *thread, Se
 
 void jdk_internal_misc_Unsafe_getInt_9Ljava_lang_Object1J0I(Thread *thread, SerialHeap *heap, Frame *frame);
 
+void jdk_internal_misc_Unsafe_getByte_9Ljava_lang_Object1J0B(Thread *thread, SerialHeap *heap, Frame *frame);
+
 #endif //DISCJVM_UNSAFE_H

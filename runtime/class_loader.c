@@ -522,7 +522,11 @@ u4 parse_method_param_count_by_desc(char *desc, int length, u4 *real_count)
                 _real_count ++;
                 continue;
             case 'D': case 'J':
-                count += 2;
+                if (desc[j - 1] == '[') {
+                    count ++;
+                } else {
+                    count += 2;
+                }
                 _real_count ++;
                 continue;
             case '[': {
@@ -1363,19 +1367,20 @@ Object *new_object(Thread *thread, SerialHeap *heap, Frame *frame, Object *this,
 
 Object *new_object_by_desc(Thread *thread, SerialHeap *heap, Frame *frame, Object *this, char *class_name, char *desc, Stack *params)
 {
+    ClassFile *class = load_class(thread, heap, class_name);
+    ensure_inited_class(thread, heap, class);
+    this = (NULL == this) ? malloc_object(thread, heap, class) : this;
     if (NULL != params && params->size > 0) {
         int size = params->size;
         push_object(frame->operand_stack, this);
+        Slot **slots = pop_slot_with_num(params, size);
         for (int i = 0; i < size; i++) {
-            push_slot(frame->operand_stack, pop_slot(params));
+            push_slot(frame->operand_stack, slots[i]);
         }
     }
-    ClassFile *class = load_class(thread, heap, class_name);
-    Object *object = malloc_object(thread, heap, class);
     MethodInfo *init_method = find_method_with_desc(thread, heap, class, "<init>", desc);
     create_vm_frame_by_method_add_params_plus1(thread, class, frame, init_method);
-    init_class(thread, heap, class);
-    return object;
+    return this;
 }
 
 void clinit_class_and_exec(Thread *thread, SerialHeap *heap, ClassFile *class)
@@ -1721,12 +1726,19 @@ int is_instance_of(ClassFile *s, ClassFile *t)
 
 int is_impl_interface(ClassFile *this, ClassFile *interface)
 {
-    for (int j = 0; j < this->interfaces_count; j++) {
-        ClassFile *source = this->interfaces_info[j].class;
-        if (source == interface) {
-            return 1;
+    ClassFile *temp = this;
+    while (NULL != temp) {
+        if (strcmp(temp->class_name, "java/lang/Object") == 0) {
+            return 0;
         }
-        if (source->interfaces_count > 0) return is_impl_interface(source, interface);
+        for (int j = 0; j < temp->interfaces_count; j++) {
+            ClassFile *source = temp->interfaces_info[j].class;
+            if (source == interface) {
+                return 1;
+            }
+            if (source->interfaces_count > 0) return is_impl_interface(source, interface);
+        }
+        temp = temp->super_class;
     }
     return 0;
 }

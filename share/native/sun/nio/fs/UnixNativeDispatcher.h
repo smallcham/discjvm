@@ -17,4 +17,6 @@ void sun_nio_fs_UnixNativeDispatcher_stat1_9J0I(Thread *thread, SerialHeap *heap
 
 void sun_nio_fs_UnixNativeDispatcher_open0_9JII0I(Thread *thread, SerialHeap *heap, Frame *frame);
 
+void sun_nio_fs_UnixNativeDispatcher_stat0_9JLsun_nio_fs_UnixFileAttributes10V(Thread *thread, SerialHeap *heap, Frame *frame);
+
 #endif //DISCJVM_UNIXNATIVEDISPATCHER_H

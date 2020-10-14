@@ -72,6 +72,7 @@ void init_native_factory()
     put_map(&native_pool, "jdk/internal/misc/Unsafe.copyMemory0(Ljava/lang/Object;JLjava/lang/Object;JJ)V", jdk_internal_misc_Unsafe_copyMemory0_9Ljava_lang_Object1JLjava_lang_Object1JJ0V);
     put_map(&native_pool, "jdk/internal/misc/Unsafe.putByte(Ljava/lang/Object;JB)V", jdk_internal_misc_Unsafe_putByte_9Ljava_lang_Object1JB0V);
     put_map(&native_pool, "jdk/internal/misc/Unsafe.getInt(Ljava/lang/Object;J)I", jdk_internal_misc_Unsafe_getInt_9Ljava_lang_Object1J0I);
+    put_map(&native_pool, "jdk/internal/misc/Unsafe.getByte(Ljava/lang/Object;J)B", jdk_internal_misc_Unsafe_getByte_9Ljava_lang_Object1J0B);
 
     //ClassLoader
     put_map(&native_pool, "java/lang/ClassLoader.registerNatives()V", java_lang_ClassLoader_registerNatives_90V);
@@ -133,6 +134,7 @@ void init_native_factory()
     put_map(&native_pool, "sun/nio/fs/UnixNativeDispatcher.getcwd()[B", sun_nio_fs_UnixNativeDispatcher_getcwd_90Bs);
     put_map(&native_pool, "sun/nio/fs/UnixNativeDispatcher.stat1(J)I", sun_nio_fs_UnixNativeDispatcher_stat1_9J0I);
     put_map(&native_pool, "sun/nio/fs/UnixNativeDispatcher.open0(JII)I", sun_nio_fs_UnixNativeDispatcher_open0_9JII0I);
+    put_map(&native_pool, "sun/nio/fs/UnixNativeDispatcher.stat0(JLsun/nio/fs/UnixFileAttributes;)V", sun_nio_fs_UnixNativeDispatcher_stat0_9JLsun_nio_fs_UnixFileAttributes10V);
 
     //Reference
     put_map(&native_pool, "java/lang/ref/Reference.waitForReferencePendingList()V", java_lang_ref_Reference_waitForReferencePendingList_90V);

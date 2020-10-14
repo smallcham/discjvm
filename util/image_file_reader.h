@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "../model/base_type.h"
+#include "../model/hash_map.h"
 
 typedef struct {
     u4 magic;
@@ -22,7 +23,6 @@ typedef struct {
 typedef struct {
     char *name;
     int _use;
-    int _fd;
     long _file_size;
     ImageHeader header;
     size_t _index_size;
@@ -33,6 +33,6 @@ typedef struct {
     u1* _string_bytes;
 } ImageFile;
 
-ImageFile* read_image(char *image_path);
+ImageFile* find_image(char *name);
 
 #endif //DISCJVM_IMAGE_FILE_READER_H

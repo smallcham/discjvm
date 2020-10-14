@@ -17,9 +17,13 @@ int location_size(ImageHeader header);
 int location_offset(ImageHeader header);
 int string_size(ImageHeader header);
 int index_size(ImageHeader header);
+void inc_use(ImageFile *image);
+
+HashMap *image_pool = NULL;
 
 ImageFile* read_image(char *image_path)
 {
+
     FILE *fp = fopen(image_path, "rb");
     fseek(fp, 0, SEEK_END);
     long f_size = ftell(fp);
@@ -32,23 +36,27 @@ ImageFile* read_image(char *image_path)
     image->name = image_path;
     image->_file_size = f_size;
     image->_index_data = bytes;
-    image->header.magic = *(u4*)bytes;
-    bytes += sizeof(u4);
-    image->header.version = *(u4*)bytes;
-    bytes += sizeof(u4);
-    image->header.flags = *(u4*)bytes;
-    bytes += sizeof(u4);
-    image->header.res_count = *(u4*)bytes;
-    bytes += sizeof(u4);
-    image->header.table_length = *(u4*)bytes;
-    bytes += sizeof(u4);
-    image->header.location_size = *(u4*)bytes;
-    bytes += sizeof(u4);
-    image->header.string_size = *(u4*)bytes;
-    bytes += sizeof(u4);
+    memcpy(&image->header, bytes, sizeof(ImageHeader));
+//    image->header.magic = *(u4*)bytes;
+//    bytes += sizeof(u4);
+//    image->header.version = *(u4*)bytes;
+//    bytes += sizeof(u4);
+//    image->header.flags = *(u4*)bytes;
+//    bytes += sizeof(u4);
+//    image->header.res_count = *(u4*)bytes;
+//    bytes += sizeof(u4);
+//    image->header.table_length = *(u4*)bytes;
+//    bytes += sizeof(u4);
+//    image->header.location_size = *(u4*)bytes;
+//    bytes += sizeof(u4);
+//    image->header.string_size = *(u4*)bytes;
+//    bytes += sizeof(u4);
 //    image->header.major_version = (version >> 16);
 //    image->header.minor_version = (version & 0xffff);
     image->_index_size = index_size(image->header);
+    if (image->_file_size < image->_index_size) {
+        return NULL;
+    }
     u4 length = image->header.table_length;
     u4 redirect_table_offset = header_size();
     u4 offsets_table_offset = redirect_table_offset + length * (u4)sizeof(s4);
@@ -59,6 +67,20 @@ ImageFile* read_image(char *image_path)
     image->_offsets_table = (u4*)(image->_index_data + offsets_table_offset);
     image->_location_bytes = (u1*)image->_index_data + location_bytes_offset;
     image->_string_bytes = (u1*)image->_index_data + string_bytes_offset;
+    put_map(&image_pool, image_path, image);
+    return image;
+}
+
+ImageFile* find_image(char *name)
+{
+    if (NULL == image_pool) image_pool = create_map();
+    ImageFile *image = get_map(&image_pool, name);
+    if (NULL == image) {
+        image = read_image(name);
+    }
+    if (NULL != image) {
+        inc_use(image);
+    }
     return image;
 }
 
@@ -106,4 +128,9 @@ int index_size(ImageHeader header)
 {
     return sizeof(ImageHeader) + header.table_length * sizeof(u4) * 2 + location_size(header) + string_size(header);
 //    return header_size() + redirect_size(header) + offset_size(header) + location_size(header) + string_size(header);
+}
+
+void inc_use(ImageFile *image)
+{
+    image->_use++;
 }

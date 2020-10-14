@@ -400,3 +400,17 @@ void jdk_internal_misc_Unsafe_getInt_9Ljava_lang_Object1J0I(Thread *thread, Seri
     }
     push_int(frame->operand_stack, value);
 }
+
+void jdk_internal_misc_Unsafe_getByte_9Ljava_lang_Object1J0B(Thread *thread, SerialHeap *heap, Frame *frame)
+{
+    void *object = get_ref_localvar(frame, 1);
+    long offset = get_long_localvar(frame, 2);
+    int value;
+    if (NULL == object || is_array(object)) {
+        value = *(int*)(object + offset);
+    } else {
+        Object *obj = object;
+        value = obj->fields[offset].value;
+    }
+    push_int(frame->operand_stack, value);
+}

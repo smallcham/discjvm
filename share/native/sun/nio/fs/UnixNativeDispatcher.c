@@ -107,3 +107,31 @@ void sun_nio_fs_UnixNativeDispatcher_open0_9JII0I(Thread *thread, SerialHeap *he
     int fd = open(path, flags, mode);
     push_int(frame->operand_stack, fd);
 }
+
+void sun_nio_fs_UnixNativeDispatcher_stat0_9JLsun_nio_fs_UnixFileAttributes10V(Thread *thread, SerialHeap *heap, Frame *frame)
+{
+    const char * path_address = (const char *)get_long_localvar(frame, 0);
+    Object* attrs = get_ref_localvar(frame, 2);
+    struct stat s_buf;
+    int errno = stat((const char *) path_address, &s_buf);
+    if (errno == -1) {
+        printf_err("throwUnixException %d", errno);
+        exit(-1);
+    } else {
+        put_value_field_by_name_and_desc(attrs, "st_mode", "I", s_buf.st_mode);
+        put_value_field_by_name_and_desc(attrs, "st_ino", "J", s_buf.st_ino);
+        put_value_field_by_name_and_desc(attrs, "st_dev", "J", s_buf.st_dev);
+        put_value_field_by_name_and_desc(attrs, "st_rdev", "J", s_buf.st_rdev);
+        put_value_field_by_name_and_desc(attrs, "st_nlink", "I", s_buf.st_nlink);
+        put_value_field_by_name_and_desc(attrs, "st_uid", "I", s_buf.st_uid);
+        put_value_field_by_name_and_desc(attrs, "st_gid", "I", s_buf.st_gid);
+        put_value_field_by_name_and_desc(attrs, "st_size", "J", s_buf.st_size);
+        put_value_field_by_name_and_desc(attrs, "st_atime_sec", "J", s_buf.st_atim.tv_sec);
+        put_value_field_by_name_and_desc(attrs, "st_mtime_sec", "J", s_buf.st_mtim.tv_sec);
+        put_value_field_by_name_and_desc(attrs, "st_ctime_sec", "J", s_buf.st_ctim.tv_sec);
+        put_value_field_by_name_and_desc(attrs, "st_atime_nsec", "J", s_buf.st_atim.tv_nsec);
+        put_value_field_by_name_and_desc(attrs, "st_mtime_nsec", "J", s_buf.st_mtim.tv_nsec);
+        put_value_field_by_name_and_desc(attrs, "st_ctime_nsec", "J", s_buf.st_ctim.tv_nsec);
+//        put_value_field_by_name_and_desc(attrs, "st_birthtime_sec", "J", );
+    }
+}

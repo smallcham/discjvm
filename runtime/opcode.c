@@ -681,7 +681,13 @@ void astore_3(SerialHeap *heap, Thread *thread, Frame *frame) {
 }
 
 void xastore_(SerialHeap *heap, Thread *thread, Frame *frame, char desc) {
-    Slot *value = pop_slot(frame->operand_stack);
+    Slot *value;
+    if (desc == 'J' || desc == 'D') {
+        pop_slot(frame->operand_stack);
+        value = pop_slot(frame->operand_stack);
+    } else {
+        value = pop_slot(frame->operand_stack);
+    }
     if (NULL == value) {
         printf_err("throw NULLPointerException");
         exit(-1);
