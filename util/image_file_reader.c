@@ -7,58 +7,54 @@
 const int MAJOR_VERSION = 1;
 const int MINOR_VERSION = 0;
 const int HEADER_SLOTS = 7;
+int memory_map_image = sizeof(void*) == 8;
 
-int header_size();
-int redirect_size(ImageHeader header);
-int offset_size(ImageHeader header);
-int redirect_offset();
-int offset_offset(ImageHeader header);
 int location_size(ImageHeader header);
-int location_offset(ImageHeader header);
 int string_size(ImageHeader header);
 int index_size(ImageHeader header);
 void inc_use(ImageFile *image);
+void close_image(ImageFile *image);
+u8 map_size(ImageFile *image);
+void* map_image_memory(int fd, size_t offset, size_t bytes);
 
 HashMap *image_pool = NULL;
 
 ImageFile* read_image(char *image_path)
 {
 
-    FILE *fp = fopen(image_path, "rb");
-    fseek(fp, 0, SEEK_END);
-    long f_size = ftell(fp);
-    u1* bytes = (u1*) malloc(f_size * sizeof(char));
-    rewind(fp);
-    fread(bytes, f_size, 1, fp);
-    fclose(fp);
-
     ImageFile *image = malloc(sizeof(ImageFile));
     image->name = image_path;
-    image->_file_size = f_size;
-    image->_index_data = bytes;
-    memcpy(&image->header, bytes, sizeof(ImageHeader));
-//    image->header.magic = *(u4*)bytes;
-//    bytes += sizeof(u4);
-//    image->header.version = *(u4*)bytes;
-//    bytes += sizeof(u4);
-//    image->header.flags = *(u4*)bytes;
-//    bytes += sizeof(u4);
-//    image->header.res_count = *(u4*)bytes;
-//    bytes += sizeof(u4);
-//    image->header.table_length = *(u4*)bytes;
-//    bytes += sizeof(u4);
-//    image->header.location_size = *(u4*)bytes;
-//    bytes += sizeof(u4);
-//    image->header.string_size = *(u4*)bytes;
-//    bytes += sizeof(u4);
-//    image->header.major_version = (version >> 16);
-//    image->header.minor_version = (version & 0xffff);
-    image->_index_size = index_size(image->header);
-    if (image->_file_size < image->_index_size) {
+    image->_fd = open(image_path, 0);
+    if (image->_fd == -1) {
+        free(image);
         return NULL;
     }
+
+    struct stat statbuf;
+    if (stat(image_path, &statbuf) < 0 ||
+        (statbuf.st_mode & S_IFREG) != S_IFREG) {
+        free(image);
+        return NULL;
+    }
+    image->_file_size = statbuf.st_size;
+    size_t header_size = sizeof(ImageHeader);
+    if (image->_file_size < header_size || !(pread(image->_fd, &image->header, header_size, 0) == header_size)) {
+        close_image(image);
+        free(image);
+        return NULL;
+    }
+    image->_index_size = index_size(image->header);
+    if (image->_file_size < image->_index_size) {
+        free(image);
+        return NULL;
+    }
+    image->_index_data = map_image_memory(image->_fd, 0, map_size(image));
+    if (!image->_index_data) {
+        printf("image file not memory mapped");
+        exit(-1);
+    }
     u4 length = image->header.table_length;
-    u4 redirect_table_offset = header_size();
+    u4 redirect_table_offset = (u4)header_size;
     u4 offsets_table_offset = redirect_table_offset + length * (u4)sizeof(s4);
     u4 location_bytes_offset = offsets_table_offset + length * (u4)sizeof(u4);
     u4 string_bytes_offset = location_bytes_offset + location_size(image->header);
@@ -84,39 +80,10 @@ ImageFile* find_image(char *name)
     return image;
 }
 
-int header_size()
-{
-    return HEADER_SLOTS * 4;
-}
-
-int redirect_size(ImageHeader header)
-{
-    return header.table_length * 4;
-}
-
-int offset_size(ImageHeader header)
-{
-    return header.table_length * 4;
-}
-
-int redirect_offset()
-{
-    return header_size();
-}
-
-int offset_offset(ImageHeader header)
-{
-    return redirect_offset() + redirect_size(header);
-}
 
 int location_size(ImageHeader header)
 {
     return header.location_size;
-}
-
-int location_offset(ImageHeader header)
-{
-    return offset_offset(header) + offset_size(header);
 }
 
 int string_size(ImageHeader header)
@@ -127,10 +94,39 @@ int string_size(ImageHeader header)
 int index_size(ImageHeader header)
 {
     return sizeof(ImageHeader) + header.table_length * sizeof(u4) * 2 + location_size(header) + string_size(header);
-//    return header_size() + redirect_size(header) + offset_size(header) + location_size(header) + string_size(header);
+}
+
+u8 map_size(ImageFile *image)
+{
+    return (u8)(memory_map_image ? image->_file_size : image->_index_size);
 }
 
 void inc_use(ImageFile *image)
 {
     image->_use++;
+}
+
+void close_image(ImageFile *image)
+{
+    if (NULL == image) return;
+    if (image->_index_data) {
+        munmap((char *) image->_index_data, image->_index_size);
+        image->_index_data = NULL;
+    }
+    if (image->_fd != -1) {
+        close(image->_fd);
+        image->_fd = -1;
+    }
+}
+
+void* map_image_memory(int fd, size_t offset, size_t bytes)
+{
+    void* mapped_address = NULL;
+    mapped_address = (void*) mmap(NULL,
+                                  bytes, PROT_READ, MAP_SHARED,
+                                  fd, offset);
+    if (mapped_address == MAP_FAILED) {
+        return NULL;
+    }
+    return mapped_address;
 }

@@ -7,6 +7,12 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+
+
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <zconf.h>
+#include <sys/mman.h>
 #include "../model/base_type.h"
 #include "../model/hash_map.h"
 
@@ -22,7 +28,8 @@ typedef struct {
 
 typedef struct {
     char *name;
-    int _use;
+    s4 _use;
+    int _fd;
     long _file_size;
     ImageHeader header;
     size_t _index_size;
