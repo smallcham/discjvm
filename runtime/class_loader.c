@@ -182,9 +182,9 @@ ClassFile *load_class_by_bytes(Thread *thread, SerialHeap *heap, u1 *bytes)
                         sizeof(CONSTANT_InvokeDynamic_info));
                 constant_invokedynamic_info->tag = class->constant_pool[i].tag;
                 class_file += sizeof(u1);
-                constant_invokedynamic_info->name_and_type_index = l2b_2(*(u2 *) class_file);
-                class_file += sizeof(u2);
                 constant_invokedynamic_info->bootstrap_method_attr_index = l2b_2(*(u2 *) class_file);
+                class_file += sizeof(u2);
+                constant_invokedynamic_info->name_and_type_index = l2b_2(*(u2 *) class_file);
                 class_file += sizeof(u2);
                 class->constant_pool[i].info = constant_invokedynamic_info;
                 continue;
@@ -557,107 +557,61 @@ u4 parse_method_param_count_by_desc(char *desc, int length, u4 *real_count)
 
 void do_invokedynamic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
 {
-    //TODO not complete
-    printf_err("invokedynamic not complete");
-    exit(-1);
-
-    CONSTANT_Dynamic_info dynamic_info = *(CONSTANT_Dynamic_info*)frame->constant_pool[index].info;
-    CONSTANT_NameAndType_info name_and_type_info = *(CONSTANT_NameAndType_info*)frame->constant_pool[dynamic_info.bootstrap_method_attr_index].info;
-    u1 *name = get_utf8_bytes(frame->constant_pool, name_and_type_info.name_index);
-    u1 *desc = get_utf8_bytes(frame->constant_pool, name_and_type_info.descriptor_index);
-    BootstrapMethods *methods = get_bootstrap_methods(frame->constant_pool, frame->class);
-    BootstrapMethodInfo method_info = methods->methods[dynamic_info.name_and_type_index];
-    CONSTANT_MethodHandle_info method_handle = *(CONSTANT_MethodHandle_info*)frame->constant_pool[method_info.bootstrap_method_ref].info;
-
-    for (int i = 0; i < method_info.num_bootstrap_arguments; i++) {
-        u2 _index = method_info.bootstrap_arguments[i];
-        switch (frame->constant_pool[method_info.bootstrap_arguments[i]].tag) {
-            case CONSTANT_String: {
-                char *str = get_str_from_string_index(frame->constant_pool, _index);
-                create_string_object_without_back(thread, heap, frame, str);
-                break;
-            }
-            case CONSTANT_Class: {
-                CONSTANT_Class_info class_info = *(CONSTANT_Class_info *) frame->constant_pool[_index].info;
-                u1 *class_name = get_utf8_bytes(frame->constant_pool, class_info.name_index);
-                push_object(frame->operand_stack, load_class(thread, heap, class_name)->class_object);
-                break;
-            }
-            case CONSTANT_InterfaceMethodref: {
-                CONSTANT_InterfaceMethodref_info info = *(CONSTANT_InterfaceMethodref_info *) frame->constant_pool[_index].info;
-                create_object_with_backpc(thread, heap, frame, info.class_index, 5);
-                break;
-            }
-            case CONSTANT_MethodType: {
-                create_object_with_class_name_and_backpc(thread, heap, frame, "java/lang/invoke/MethodType", 5);
-                break;
-            }
-            case CONSTANT_MethodHandle:
-                create_object_with_class_name_and_backpc(thread, heap, frame, "java/lang/invoke/MethodHandle", 5);
-                break;
-            case CONSTANT_Integer:
-                push_int(frame->operand_stack, get_u4_value_from_index(frame->constant_pool, _index));
-                break;
-            case CONSTANT_Float: {
-                push_float_by_u4(frame->operand_stack, get_u4_value_from_index(frame->constant_pool, _index));
-                break;
-            }
-        }
-    }
-
-    Slot *lookup = create_slot();
-    Slot *method_type = create_slot();
-
-    switch (method_handle.reference_kind) {
-        case REF_getField: case REF_getStatic: case REF_putField: case REF_putStatic: {
-            CONSTANT_Fieldref_info field_ref = *(CONSTANT_Fieldref_info*)frame->constant_pool[method_handle.reference_index].info;
-            break;
-        }
-        case REF_invokeVirtual: case REF_newInvokeSpecial: {
-            CONSTANT_Methodref_info method_ref = *(CONSTANT_Methodref_info*)frame->constant_pool[method_handle.reference_index].info;
-            MethodInfo *method = get_method_info_by_ref(thread, heap, frame->constant_pool, method_ref);
-            if (NULL == method) {
-                printf_err("method idx [%s] not found", method_ref.name_and_type_index);
-                exit(-1);
-            }
-            break;
-        }
-        case REF_invokeStatic: case REF_invokeSpecial: {
-            CONSTANT_Methodref_info method_ref = *(CONSTANT_Methodref_info*)frame->constant_pool[method_handle.reference_index].info;
-            MethodInfo *method = get_method_info_by_ref(thread, heap, frame->constant_pool, method_ref);
-            if (NULL == method) {
-                printf_err("method idx [%s] not found", method_ref.name_and_type_index);
-                exit(-1);
-            }
-            push_slot(frame->operand_stack, method_type);
-            push_slot(frame->operand_stack, create_str_slot_set_str(thread, heap, method->name));
-            push_slot(frame->operand_stack, lookup);
-            Slot **slots = pop_slot_with_num(frame->operand_stack, method->params_count + method_info.num_bootstrap_arguments);
-            for (int i = 0; i < method->params_count + method_info.num_bootstrap_arguments; i++) {
-                push_slot(frame->operand_stack, slots[i]);
-            }
-            ClassFile *class = method->class;
-            if (is_native(method->access_flags)) {
-                create_c_frame_and_invoke_add_params(thread, heap, frame, class->class_name, method);
-            } else {
-                create_vm_frame_by_method_add_params(thread, method->class, frame, method);
-            }
-            break;
-        }
+    CONSTANT_InvokeDynamic_info dynamic_info = *(CONSTANT_InvokeDynamic_info*)frame->constant_pool[index].info;
+    CONSTANT_NameAndType_info name_and_type_info = *(CONSTANT_NameAndType_info*)frame->constant_pool[dynamic_info.name_and_type_index].info;
+    u1* invoke_name = get_utf8_bytes(frame->constant_pool, name_and_type_info.name_index);
+    u1* invoke_desc = get_utf8_bytes(frame->constant_pool, name_and_type_info.descriptor_index);
+    BootstrapMethods* bootstrap_methods = get_bootstrap_methods(frame->constant_pool, frame->class);
+    BootstrapMethodInfo boot_method_info = bootstrap_methods->methods[dynamic_info.bootstrap_method_attr_index];
+    CONSTANT_MethodHandle_info mh_info = *(CONSTANT_MethodHandle_info*)frame->constant_pool[boot_method_info.bootstrap_method_ref].info;
+    CONSTANT_Methodref_info m_ref_info = *(CONSTANT_Methodref_info*)frame->constant_pool[mh_info.reference_index].info;
+    ClassFile *class = load_class_by_class_info_index(thread, heap, frame->constant_pool, m_ref_info.class_index);
+    CONSTANT_NameAndType_info mh_name_and_type_info = *(CONSTANT_NameAndType_info*)frame->constant_pool[m_ref_info.name_and_type_index].info;
+    u1* method_name = get_utf8_bytes(frame->constant_pool, mh_name_and_type_info.name_index);
+    u1* method_desc = get_utf8_bytes(frame->constant_pool, mh_name_and_type_info.descriptor_index);
+    MethodInfo *method_info = find_method_iter_super_with_desc(thread, heap, &class, method_name, method_desc);
+    Stack *params = create_unlimit_stack();
+    switch (mh_info.reference_kind) {
         case REF_invokeInterface: {
-            CONSTANT_InterfaceMethodref_info interface_info = *(CONSTANT_InterfaceMethodref_info*)frame->constant_pool[method_handle.reference_index].info;
-            break;
+            printf("123");
+        }
+        case REF_invokeSpecial: {
+            printf("123");
+        }
+        case REF_invokeStatic: {
+            //caller
+            new_method_handle_lookup(thread, heap, class->class_object);
+
+            //invokedName
+            push_slot(params, create_str_slot_set_str(thread, heap, invoke_name));
+
+            //invokedType
+            Object *method_type = new_method_type(thread, heap, method_desc);
+            push_object(params, method_type);
+
+            //samMethodType
+            Slot *sam_method_type;
+            if (NULL == method_info->signature) {
+                sam_method_type = NULL_SLOT;
+            } else {
+                sam_method_type = create_object_slot_set_object(heap, new_method_type(thread, heap, method_info->signature));
+            }
+            push_slot(params, sam_method_type);
+
+            //implMethod
+            push_object(params, new_method_handle(thread, heap, method_type, method_type));
+
+            //instantiatedMethodType
+            push_slot(params, sam_method_type);
+
+            create_vm_frame_by_method_add_params(thread, class, params, method_info);
+            printf("123");
+        }
+        case REF_invokeVirtual: {
+            printf("123");
         }
     }
-
-    Stack *params = create_stack(1);
-    push_object(params, frame->class->class_object);
-    lookup->object_value = new_object_by_desc(thread, heap, frame, frame->class->class_object, "java/lang/invoke/MethodHandles$Lookup", "(Ljava/lang/Class;)V", params);
-    params = create_stack(2);
-    push_object(params, frame->class->class_object);
-    push_object(params, get_rtype(thread, heap, desc));
-    push_object(params, get_ptypes(thread, heap, desc, parse_method_param_count_by_desc(desc, strlen(desc), NULL)));
-    method_type->object_value = new_object_by_desc(thread, heap, frame, frame->class->class_object, "java/lang/invoke/MethodType", "(Ljava/lang/Class;[Ljava/lang/Class;)V", params);
+    printf("123");
 }
 
 void do_invokestatic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
@@ -680,11 +634,16 @@ void do_invokestatic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2
         printf_err("method [%s] not found", method_name_info.bytes);
         exit(-1);
     }
+    Slot **slots = pop_slot_with_num(frame->operand_stack, method->params_count);
+    Stack *params = create_unlimit_stack();
+    for (int i = 0; i < method->params_count; i++) {
+        push_slot(params, slots[i]);
+    }
     Frame *new_frame;
     if (is_native(method->access_flags)) {
-        new_frame = create_c_frame_and_invoke_add_params(thread, heap, frame, class->class_name, method);
+        new_frame = create_c_frame_and_invoke_add_params(thread, heap, frame, params, class->class_name, method);
     } else {
-        new_frame = create_vm_frame_by_method_add_params(thread, class, frame, method);
+        new_frame = create_vm_frame_by_method_add_params(thread, class, params, method);
     }
     if (is_synchronized(method->access_flags)) {
         Object *class_object = class->class_object;
@@ -706,8 +665,9 @@ void do_invokeinterface_by_index(Thread *thread, SerialHeap *heap, Frame *frame,
     printf_debug("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class_name, name_and_type_info.name_index, method_name, name_and_type_info.descriptor_index, method_desc);
     int params_count = parse_method_param_count(*(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info, NULL);
     Slot **slots = pop_slot_with_num(frame->operand_stack, params_count + 1);
+    Stack *params = create_unlimit_stack();
     for (int i = 0; i < params_count + 1; i++) {
-        push_slot(frame->operand_stack, slots[i]);
+        push_slot(params, slots[i]);
     }
     Object *object = slots[0]->object_value;
     class = object->class;
@@ -718,9 +678,9 @@ void do_invokeinterface_by_index(Thread *thread, SerialHeap *heap, Frame *frame,
     }
     Frame *new_frame;
     if (is_native(method->access_flags)) {
-        new_frame = create_c_frame_and_invoke_add_params_plus1(thread, heap, frame, class->class_name, method);
+        new_frame = create_c_frame_and_invoke_add_params_plus1(thread, heap, frame, params, class->class_name, method);
     } else {
-        new_frame = create_vm_frame_by_method_add_params_plus1(thread, class, frame, method);
+        new_frame = create_vm_frame_by_method_add_params_plus1(thread, class, params, method);
     }
     if (is_synchronized(method->access_flags)) {
         new_frame->pop_args = object->monitor;
@@ -743,8 +703,9 @@ void do_invokespecial_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
 
     int params_count = parse_method_param_count(*(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info, NULL);
     Slot **slots = pop_slot_with_num(frame->operand_stack, params_count + 1);
+    Stack *params = create_unlimit_stack();
     for (int i = 0; i < params_count + 1; i++) {
-        push_slot(frame->operand_stack, slots[i]);
+        push_slot(params, slots[i]);
     }
     Object *object = slots[0]->object_value;
     if (NULL == method) {
@@ -753,9 +714,9 @@ void do_invokespecial_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
     }
     Frame *new_frame;
     if (is_native(method->access_flags)) {
-        new_frame = create_c_frame_and_invoke_add_params_plus1(thread, heap, frame, class->class_name, method);
+        new_frame = create_c_frame_and_invoke_add_params_plus1(thread, heap, frame, params, class->class_name, method);
     } else {
-        new_frame = create_vm_frame_by_method_add_params_plus1(thread, class, frame, method);
+        new_frame = create_vm_frame_by_method_add_params_plus1(thread, class, params, method);
     }
     if (is_synchronized(method->access_flags)) {
         new_frame->pop_args = object->monitor;
@@ -777,8 +738,9 @@ void do_invokevirtual_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
 
     int params_count = parse_method_param_count(*(CONSTANT_Utf8_info*)frame->constant_pool[name_and_type_info.descriptor_index].info, NULL);
     Slot **slots = pop_slot_with_num(frame->operand_stack, params_count + 1);
+    Stack *params = create_unlimit_stack();
     for (int i = 0; i < params_count + 1; i++) {
-        push_slot(frame->operand_stack, slots[i]);
+        push_slot(params, slots[i]);
     }
     Object *object = slots[0]->object_value;
     class = object->class;
@@ -789,9 +751,9 @@ void do_invokevirtual_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
     }
     Frame *new_frame;
     if (is_native(method->access_flags)) {
-        new_frame = create_c_frame_and_invoke_add_params_plus1(thread, heap, frame, class->class_name, method);
+        new_frame = create_c_frame_and_invoke_add_params_plus1(thread, heap, frame, params, class->class_name, method);
     } else {
-        new_frame = create_vm_frame_by_method_add_params_plus1(thread, class, frame, method);
+        new_frame = create_vm_frame_by_method_add_params_plus1(thread, class, params, method);
     }
     if (is_synchronized(method->access_flags)) {
         new_frame->pop_args = object->monitor;
@@ -1360,27 +1322,61 @@ void init_class(Thread *thread, SerialHeap *heap, ClassFile *class)
     }
 }
 
-Object *new_object(Thread *thread, SerialHeap *heap, Frame *frame, Object *this, char *class_name, Stack *params)
+Object *new_object(Thread *thread, SerialHeap *heap, Object *this, char *class_name, Stack *params)
 {
-    return new_object_by_desc(thread, heap, frame, this, class_name, "()V", params);
+    return new_object_by_desc(thread, heap, this, class_name, "()V", params);
 }
 
-Object *new_object_by_desc(Thread *thread, SerialHeap *heap, Frame *frame, Object *this, char *class_name, char *desc, Stack *params)
+Object *new_object_by_desc(Thread *thread, SerialHeap *heap, Object *this, char *class_name, char *desc, Stack *params)
 {
     ClassFile *class = load_class(thread, heap, class_name);
     ensure_inited_class(thread, heap, class);
     this = (NULL == this) ? malloc_object(thread, heap, class) : this;
     if (NULL != params && params->size > 0) {
         int size = params->size;
-        push_object(frame->operand_stack, this);
         Slot **slots = pop_slot_with_num(params, size);
+        push_object(params, this);
         for (int i = 0; i < size; i++) {
-            push_slot(frame->operand_stack, slots[i]);
+            push_slot(params, slots[i]);
         }
     }
     MethodInfo *init_method = find_method_with_desc(thread, heap, class, "<init>", desc);
-    create_vm_frame_by_method_add_params_plus1(thread, class, frame, init_method);
+    create_vm_frame_by_method_add_params_plus1(thread, class, params, init_method);
     return this;
+}
+
+Object *new_method_handle_lookup(Thread *thread, SerialHeap *heap, Object *class)
+{
+    Stack *params = create_unlimit_stack();
+    push_object(params, class);
+    Object *lookup = new_object_by_desc(thread, heap, NULL, "java/lang/invoke/MethodHandles$Lookup", "(Ljava/lang/Class)V", params);
+    return lookup;
+}
+
+Object *new_method_type(Thread *thread, SerialHeap *heap, char *desc)
+{
+    u4 count;
+    parse_method_param_count_by_desc(desc, strlen(desc), &count);
+    Stack *params = create_unlimit_stack();
+    ClassFile *rtype_class = load_class(thread, heap, return_type_name(desc));
+    ensure_inited_class(thread, heap, rtype_class);
+    push_object(params, rtype_class->class_object);
+    char **param_names = parse_param_types(thread, heap, desc, count);
+    Array *ptypes = malloc_array(thread, heap, load_primitive_class(thread, heap, "[Ljava/lang/Class"), count);
+    for (int i = 0; i < count; i++) {
+        ptypes->objects[i] = load_class(thread, heap, param_names[i])->class_object;
+    }
+    push_object(params, ptypes);
+    Object *method_type = new_object_by_desc(thread, heap, NULL, "java/lang/invoke/MethodType", "(Ljava/lang/Class;[Ljava/lang/Class)V", params);
+    return method_type;
+}
+
+Object *new_method_handle(Thread *thread, SerialHeap *heap, Object *method_type, Object *from_method_type)
+{
+    Stack *params = create_unlimit_stack();
+    push_object(params, method_type);
+    push_object(params, new_object_by_desc(thread, heap, NULL, "java/lang/invoke/LambdaForm", "(Ljava/lang/invoke/MethodType)V", params));
+    return new_object_by_desc(thread, heap, NULL, "java/lang/invoke/MethodHandle", "(Ljava/lang/invoke/MethodType;Ljava/lang/invoke/LambdaForm)V", params);
 }
 
 void clinit_class_and_exec(Thread *thread, SerialHeap *heap, ClassFile *class)

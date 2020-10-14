@@ -115,6 +115,7 @@ void push_slot_from(Stack *source, Stack *target)
 
 Slot **pop_slot_with_num(Stack *stack, int num)
 {
+    if (num < 1) return NULL;
     Slot **slots = malloc(sizeof(Slot) * num);
 //    for (int i = 0; i < num; i++) {
     for (int i = num - 1; i >= 0; i--) {

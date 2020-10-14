@@ -11,8 +11,9 @@ void jdk_internal_reflect_NativeMethodAccessorImpl_invoke0_9Ljava_lang_reflect_M
     Array *args = get_ref_localvar(frame, 2);
     int slot = get_field_value_by_name_and_desc(method, "slot", "I");
     MethodInfo *method_info = &object->raw_class->methods[slot];
+    Stack *params = create_unlimit_stack();
     if (!is_static(method_info->access_flags)) {
-        push_object(frame->operand_stack, object->raw_class->class_object);
+        push_object(params, object->raw_class->class_object);
     }
     for (int i = 0; i < args->length; i++) {
         //TODO
@@ -21,8 +22,8 @@ void jdk_internal_reflect_NativeMethodAccessorImpl_invoke0_9Ljava_lang_reflect_M
         exit(-1);
     }
     if (!is_static(method_info->access_flags)) {
-        create_vm_frame_by_method_add_params_plus1(thread, object->raw_class, frame, method_info);
+        create_vm_frame_by_method_add_params_plus1(thread, object->raw_class, params, method_info);
     } else {
-        create_vm_frame_by_method_add_params(thread, object->raw_class, frame, method_info);
+        create_vm_frame_by_method_add_params(thread, object->raw_class, params, method_info);
     }
 }

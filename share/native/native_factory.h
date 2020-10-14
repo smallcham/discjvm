@@ -47,8 +47,8 @@ NativeMethod find_native(char *class_name, char *method_name, char *method_desc)
 
 void invoke_native(Thread *thread, SerialHeap *heap);
 
-Frame *create_c_frame_and_invoke_add_params(Thread *thread, SerialHeap *heap, Frame *frame, char *class_name, MethodInfo *method);
+Frame *create_c_frame_and_invoke_add_params(Thread *thread, SerialHeap *heap, Frame *frame, Stack *params, char *class_name, MethodInfo *method);
 
-Frame *create_c_frame_and_invoke_add_params_plus1(Thread *thread, SerialHeap *heap, Frame *frame, char *class_name, MethodInfo *method);
+Frame *create_c_frame_and_invoke_add_params_plus1(Thread *thread, SerialHeap *heap, Frame *frame, Stack *params, char *class_name, MethodInfo *method);
 
 #endif //DISCJVM_NATIVE_FACTORY_H

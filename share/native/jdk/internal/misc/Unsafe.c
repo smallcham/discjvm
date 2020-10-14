@@ -398,9 +398,9 @@ void jdk_internal_misc_Unsafe_getByte_9Ljava_lang_Object1J0B(Thread *thread, Ser
 {
     void *object = get_ref_localvar(frame, 1);
     long offset = get_long_localvar(frame, 2);
-    int value;
+    u1 value;
     if (NULL == object || is_array(object)) {
-        value = *(int*)(object + offset);
+        value = *(u1*)(object + offset);
     } else {
         Object *obj = object;
         value = obj->fields[offset].value;

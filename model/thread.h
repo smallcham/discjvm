@@ -36,9 +36,9 @@ Frame *create_vm_frame_by_method(Thread* thread, ClassFile *class, MethodInfo *m
 
 Frame *create_vm_frame_by_method_with_push(Thread* thread, ClassFile *class, MethodInfo *method);
 
-Frame *create_vm_frame_by_method_add_params(Thread* thread, ClassFile *class, Frame *frame, MethodInfo *method);
+Frame *create_vm_frame_by_method_add_params(Thread* thread, ClassFile *class, Stack *params, MethodInfo *method);
 
-Frame *create_vm_frame_by_method_add_params_plus1(Thread* thread, ClassFile *class, Frame *frame, MethodInfo *method);
+Frame *create_vm_frame_by_method_add_params_plus1(Thread* thread, ClassFile *class, Stack *params, MethodInfo *method);
 
 Frame *create_vm_frame_by_method_add_hook(Thread* thread, ClassFile *class, MethodInfo *method, PopHook hook);
 
@@ -72,9 +72,9 @@ void *get_localvar_this(Frame *frame);
 
 void *set_ref_localvar(Frame *frame, int index, void *object_value);
 
-void add_params(Frame *frame, Frame *new_frame, MethodInfo *method);
+void add_params(Stack *params, Frame *new_frame, MethodInfo *method);
 
-void add_params_and_plus1(Frame *frame, Frame *new_frame, MethodInfo *method);
+void add_params_and_plus1(Stack *params, Frame *new_frame, MethodInfo *method);
 
 Thread *create_thread_with_jthread(int vm_stack_size, int c_stack_size, Object *jthread);
 

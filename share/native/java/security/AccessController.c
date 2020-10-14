@@ -40,7 +40,8 @@ void java_security_AccessController_doPrivileged_9Ljava_security_PrivilegedActio
    Object *action = get_ref_localvar(frame, 0);
    ClassFile *class = action->raw_class;
 
-   push_object(frame->operand_stack, action);
+   Stack *params = create_stack(1);
+   push_object(params, action);
    MethodInfo *method = find_method_with_desc(thread, heap, class, "run", "()Ljava/lang/Object;");
-   create_vm_frame_by_method_add_params_plus1(thread, class, frame, method);
+   create_vm_frame_by_method_add_params_plus1(thread, class, params, method);
 }

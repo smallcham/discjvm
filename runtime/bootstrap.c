@@ -31,11 +31,6 @@ HashMap **init_vm_opts()
     VM_OPTS = create_map_by_size((int)(20 * 1.3) + 1);
     char *lib_path = malloc(strlen(JAVA_HOME) + 4);
     sprintf(lib_path, "%s/lib", JAVA_HOME);
-//    if (NULL == getenv(LD_LIBRARY_PATH)) {
-//        char ld_path[strlen(lib_path) + 8];
-//        sprintf(ld_path, "%s/server", lib_path);
-//        setenv(LD_LIBRARY_PATH, ld_path, 1);
-//    }
     put_map(&VM_OPTS, "java.version", "1.11.0");
     put_map(&VM_OPTS, "java.version.data", "2019");
     put_map(&VM_OPTS, "java.vendor", "discjvm");
@@ -105,7 +100,6 @@ void start_vm(char *class_path)
     clinit_class_and_exec(thread, heap, class);
 
     MethodInfo *main = find_method(thread, heap, class, "main");
-//    CodeAttribute *main_code = get_method_code(class->constant_pool, *main);
 
     if (NULL == main) {
         printf_err("main method not found");
@@ -113,6 +107,7 @@ void start_vm(char *class_path)
     }
     create_vm_frame_by_method_with_push(thread, class, main);
 
+    Stack *params = create_unlimit_stack();
     //new ThreadGroup
     ClassFile *jthread_group = load_class(thread, heap, "java/lang/ThreadGroup");
     Slot *jthread_group_object = create_object_slot(thread, heap, jthread_group);
@@ -131,36 +126,30 @@ void start_vm(char *class_path)
 
     //初始化3阶段
     MethodInfo *init_phase3 = find_method_with_desc(thread, heap, system, "initPhase3", "()V");
-    Frame *phase3_frame = create_vm_frame_by_method_with_push(thread, system, init_phase3);
-    push_slot(phase3_frame->operand_stack, system_object);
-    add_params_and_plus1(phase3_frame, phase3_frame, init_phase3);
+    push_slot(params, system_object);
+    create_vm_frame_by_method_add_params(thread, system, params, init_phase3);
 
     //初始化2阶段
     MethodInfo *init_phase2 = find_method_with_desc(thread, heap, system, "initPhase2", "(ZZ)I");
-    Frame *phase2_frame = create_vm_frame_by_method_with_push(thread, system, init_phase2);
-    push_slot(phase2_frame->operand_stack, system_object);
-    push_slot(phase2_frame->operand_stack, create_slot_set_value(1));
-    push_slot(phase2_frame->operand_stack, create_slot_set_value(1));
-    add_params_and_plus1(phase2_frame, phase2_frame, init_phase2);
+    push_slot(params, create_slot_set_value(1));
+    push_slot(params, create_slot_set_value(1));
+    create_vm_frame_by_method_add_params(thread, system, params, init_phase2);
 
     //初始化1阶段
     MethodInfo *init_phase1 = find_method_with_desc(thread, heap, system, "initPhase1", "()V");
-    Frame *phase1_frame = create_vm_frame_by_method_with_push(thread, system, init_phase1);
-    push_slot(phase1_frame->operand_stack, system_object);
-    add_params_and_plus1(phase1_frame, phase1_frame, init_phase1);
+    create_vm_frame_by_method_add_params(thread, system, NULL, init_phase1);
 
     //创建main Thread
-    Frame *jthread_frame = create_vm_frame_by_method_with_push(thread, jthread, jthread_init);
-    push_slot(jthread_frame->operand_stack, jthread_object);
-    push_slot(jthread_frame->operand_stack, jthread_group_object);
-    create_string_object_without_back(thread, heap, jthread_frame, "main");
-    add_params_and_plus1(jthread_frame, jthread_frame, jthread_init);
+    push_slot(params, jthread_object);
+    push_slot(params, jthread_group_object);
+    push_slot(params, create_str_slot_set_str(thread, heap, "main"));
+    create_vm_frame_by_method_add_params_plus1(thread, jthread, params, jthread_init);
+
     thread->jthread = jthread_object->object_value;
 
     //创建ThreadGroup
-    Frame *jthread_group_frame = create_vm_frame_by_method_with_push(thread, jthread_group, jthread_group_init);
-    push_slot(jthread_group_frame->operand_stack, jthread_group_object);
-    add_params_and_plus1(jthread_group_frame, jthread_group_frame, jthread_group_init);
+    push_slot(params, jthread_group_object);
+    create_vm_frame_by_method_add_params_plus1(thread, jthread_group, params, jthread_group_init);
 
     run(thread, heap);
 }

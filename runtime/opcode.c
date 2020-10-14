@@ -439,9 +439,6 @@ void dload_3(SerialHeap *heap, Thread *thread, Frame *frame) {
 }
 
 void aload_0(SerialHeap *heap, Thread *thread, Frame *frame) {
-    if (strcmp(frame->method->name, "getMethodsRecursive") == 0 && strcmp(get_str_field_value_by_object(frame->local_variables[1]->object_value), "setUninterruptible") == 0) {
-        printf_err("123");
-    }
     push_slot(frame->operand_stack, get_slot_localvar(frame, 0));
     step_pc_1(frame);
 }

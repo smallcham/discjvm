@@ -17,10 +17,10 @@ void jdk_internal_jimage_NativeImageBuffer_getNativeMap_9Ljava_lang_String10Ljav
     char *image_path = get_str_field_value_by_object(get_ref_localvar(frame, 0));
     ImageFile *image = find_image(image_path);
     if (NULL != image) {
-        Stack *params = create_stack(3);
+        Stack *params = create_unlimit_stack();
         push_long(params, (long)image->_index_data);
         push_int(params, (int)image->_file_size);
-        Object *byte_buffer = new_object_by_desc(thread, heap, frame, NULL, "java/nio/DirectByteBuffer", "(JI)V", params);
+        Object *byte_buffer = new_object_by_desc(thread, heap, NULL, "java/nio/DirectByteBuffer", "(JI)V", params);
         push_object(frame->operand_stack, byte_buffer);
     } else {
         push_slot(frame->operand_stack, NULL_SLOT);

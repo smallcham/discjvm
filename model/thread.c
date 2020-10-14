@@ -45,17 +45,17 @@ Frame *create_vm_frame_by_method(Thread* thread, ClassFile *class, MethodInfo *m
     return frame;
 }
 
-Frame *create_vm_frame_by_method_add_params(Thread* thread, ClassFile *class, Frame *frame, MethodInfo *method)
+Frame *create_vm_frame_by_method_add_params(Thread* thread, ClassFile *class, Stack *params, MethodInfo *method)
 {
     Frame *new_frame = create_vm_frame_by_method_with_push(thread, class, method);
-    if (NULL != new_frame) add_params(frame, new_frame, method);
+    if (NULL != new_frame) add_params(params, new_frame, method);
     return new_frame;
 }
 
-Frame *create_vm_frame_by_method_add_params_plus1(Thread* thread, ClassFile *class, Frame *frame, MethodInfo *method)
+Frame *create_vm_frame_by_method_add_params_plus1(Thread* thread, ClassFile *class, Stack *params, MethodInfo *method)
 {
     Frame *new_frame = create_vm_frame_by_method_with_push(thread, class, method);
-    if (NULL != new_frame) add_params_and_plus1(frame, new_frame, method);
+    if (NULL != new_frame) add_params_and_plus1(params, new_frame, method);
     return new_frame;
 }
 
@@ -115,11 +115,11 @@ LocalVariableTableAttribute *get_local_variable(ConstantPool *pool, CodeAttribut
     return NULL;
 }
 
-void add_params_and_plus1(Frame *frame, Frame *new_frame, MethodInfo *method)
+void add_params_and_plus1(Stack *params, Frame *new_frame, MethodInfo *method)
 {
     int count = method->params_count + 1;
     printf_debug("\t\t\t\t[addparams(%d)]\n", count);
-    Slot **slots = pop_slot_with_num(frame->operand_stack, count);
+    Slot **slots = pop_slot_with_num(params, count);
     for (int i = 0; i < count; i++) {
         set_localvar_with_slot_copy(new_frame, i, slots[i]);
 //        new_frame->local_variables[i] = slots[i];
@@ -127,11 +127,11 @@ void add_params_and_plus1(Frame *frame, Frame *new_frame, MethodInfo *method)
     free(slots);
 }
 
-void add_params(Frame *frame, Frame *new_frame, MethodInfo *method)
+void add_params(Stack *params, Frame *new_frame, MethodInfo *method)
 {
     if (method->params_count == 0) return;
     printf_debug("\t\t\t\t[addparams(%d)]\n", method->params_count);
-    Slot **slots = pop_slot_with_num(frame->operand_stack, method->params_count);
+    Slot **slots = pop_slot_with_num(params, method->params_count);
     for (int i = 0; i < method->params_count; i++) {
         set_localvar_with_slot_copy(new_frame, i, slots[i]);
 //        new_frame->local_variables[i] = slots[i];

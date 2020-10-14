@@ -175,9 +175,15 @@ void put_static_field_by_name_and_desc(ClassFile *class, char *name, char *desc,
 
 BootstrapMethods *get_bootstrap_methods(ConstantPool *pool, ClassFile *class);
 
-Object *new_object_by_desc(Thread *thread, SerialHeap *heap, Frame *frame, Object *this, char *class_name, char *desc, Stack *params);
+Object *new_object_by_desc(Thread *thread, SerialHeap *heap, Object *this, char *class_name, char *desc, Stack *params);
 
-Object *new_object(Thread *thread, SerialHeap *heap, Frame *frame, Object *this, char *class_name, Stack *params);
+Object *new_object(Thread *thread, SerialHeap *heap, Object *this, char *class_name, Stack *params);
+
+Object *new_method_type(Thread *thread, SerialHeap *heap, char *desc);
+
+Object *new_method_handle_lookup(Thread *thread, SerialHeap *heap, Object *class);
+
+Object *new_method_handle(Thread *thread, SerialHeap *heap, Object *method_type, Object *from_method_type);
 
 Object *get_rtype(Thread *thread, SerialHeap *heap, char *desc);
 

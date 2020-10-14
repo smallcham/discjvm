@@ -217,20 +217,20 @@ Frame *create_c_frame(Thread *thread, SerialHeap *heap, Frame *frame, char *clas
     return new_frame;
 }
 
-Frame *create_c_frame_and_invoke_add_params_plus1(Thread *thread, SerialHeap *heap, Frame *frame, char *class_name, MethodInfo *method)
+Frame *create_c_frame_and_invoke_add_params_plus1(Thread *thread, SerialHeap *heap, Frame *frame, Stack *params, char *class_name, MethodInfo *method)
 {
     Frame *new_frame = create_c_frame(thread, heap, frame, class_name, method);
-    add_params_and_plus1(frame, new_frame, method);
+    add_params_and_plus1(params, new_frame, method);
     printf_warn("[**INVOKE-NATIVE] %s.%s.%s\n", class_name, method->name, method->desc);
     invoke_native(thread, heap);
     print_native_log(frame, method);
     return new_frame;
 }
 
-Frame *create_c_frame_and_invoke_add_params(Thread *thread, SerialHeap *heap, Frame *frame, char *class_name, MethodInfo *method)
+Frame *create_c_frame_and_invoke_add_params(Thread *thread, SerialHeap *heap, Frame *frame, Stack *params, char *class_name, MethodInfo *method)
 {
     Frame *new_frame = create_c_frame(thread, heap, frame, class_name, method);
-    add_params(frame, new_frame, method);
+    add_params(params, new_frame, method);
     printf_warn("[**INVOKE-NATIVE] %s.%s.%s\n", class_name, method->name, method->desc);
     invoke_native(thread, heap);
     print_native_log(frame, method);
