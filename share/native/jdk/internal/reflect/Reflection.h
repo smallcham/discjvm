@@ -6,7 +6,7 @@
 #define DISCJVM_REFLECTION_H
 
 #include "../../../../../model/thread.h"
-#include "../../../../../runtime/class_loader.h"
+#include "../../../../../runtime/jvm.h"
 
 void jdk_internal_reflect_Reflection_getCallerClass_90Ljava_lang_Class1(Thread *thread, SerialHeap *heap, Frame *frame);
 

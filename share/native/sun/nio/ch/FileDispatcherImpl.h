@@ -6,7 +6,7 @@
 #define DISCJVM_FILEDISPATCHERIMPL_H
 
 #include "../../../../../model/thread.h"
-#include "../../../../../runtime/class_loader.h"
+#include "../../../../../runtime/jvm.h"
 #include <sys/socket.h>
 
 void sun_nio_ch_FileDispatcherImpl_init_90V(Thread *thread, SerialHeap *heap, Frame *frame);

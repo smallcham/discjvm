@@ -7,7 +7,7 @@
 
 #include "../model/stack.h"
 #include "../model/thread.h"
-#include "../runtime/class_loader.h"
+#include "../runtime/jvm.h"
 #include "../share/gc/serial/serial_heap.h"
 
 typedef struct {

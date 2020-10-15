@@ -6,7 +6,7 @@
 #define DISCJVM_JIOUTIL_H
 
 #include "../../../../../model/thread.h"
-#include "../../../../../runtime/class_loader.h"
+#include "../../../../../runtime/jvm.h"
 
 void sun_nio_ch_IOUtil_initIDs_90V(Thread *thread, SerialHeap *heap, Frame *frame);
 

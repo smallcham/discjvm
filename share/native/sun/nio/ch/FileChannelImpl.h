@@ -6,7 +6,7 @@
 #define DISCJVM_FILECHANNELIMPL_H
 
 #include "../../../../../model/thread.h"
-#include "../../../../../runtime/class_loader.h"
+#include "../../../../../runtime/jvm.h"
 
 void sun_nio_ch_FileChannelImpl_initIDs_90J(Thread *thread, SerialHeap *heap, Frame *frame);
 

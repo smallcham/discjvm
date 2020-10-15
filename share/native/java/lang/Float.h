@@ -6,7 +6,7 @@
 #define DISCJVM_FLOAT_H
 
 #include "../../../../model/thread.h"
-#include "../../../../runtime/class_loader.h"
+#include "../../../../runtime/jvm.h"
 
 void java_lang_Float_floatToRawIntBits_9F0I(Thread *thread, SerialHeap *heap, Frame *frame);
 

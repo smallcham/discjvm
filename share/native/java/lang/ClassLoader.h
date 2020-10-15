@@ -6,7 +6,7 @@
 #define DISCJVM_CLASSLOADER_H
 
 #include "../../../../model/thread.h"
-#include "../../../../runtime/class_loader.h"
+#include "../../../../runtime/jvm.h"
 #include <dlfcn.h>
 
 void java_lang_ClassLoader_registerNatives_90V(Thread *thread, SerialHeap *heap, Frame *frame);

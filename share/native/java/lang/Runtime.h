@@ -6,7 +6,7 @@
 #define DISCJVM_RUNTIME_H
 
 #include "../../../../model/thread.h"
-#include "../../../../runtime/class_loader.h"
+#include "../../../../runtime/jvm.h"
 #include <sys/sysinfo.h>
 
 void java_lang_Runtime_registerNatives_90V(Thread *thread, SerialHeap *heap, Frame *frame);

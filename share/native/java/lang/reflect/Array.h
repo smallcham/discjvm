@@ -6,7 +6,7 @@
 #define DISCJVM_ARRAY_H
 
 #include "../../../../../model/thread.h"
-#include "../../../../../runtime/class_loader.h"
+#include "../../../../../runtime/jvm.h"
 
 void java_lang_reflect_Array_newArray_9Ljava_lang_Class1I0Ljava_lang_Object1(Thread *thread, SerialHeap *heap, Frame *frame);
 

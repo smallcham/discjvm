@@ -6,7 +6,7 @@
 #define DISCJVM_VM_H
 
 #include "../../../../../model/thread.h"
-#include "../../../../../runtime/class_loader.h"
+#include "../../../../../runtime/jvm.h"
 
 void jdk_internal_misc_VM_initialize_90V(Thread *thread, SerialHeap *heap, Frame *frame);
 

@@ -6,7 +6,7 @@
 #define DISCJVM_SIGNAL_H
 
 #include "../../../../../model/thread.h"
-#include "../../../../../runtime/class_loader.h"
+#include "../../../../../runtime/jvm.h"
 
 void jdk_internal_misc_Signal_findSignal0_9Ljava_lang_String10I(Thread *thread, SerialHeap *heap, Frame *frame);
 

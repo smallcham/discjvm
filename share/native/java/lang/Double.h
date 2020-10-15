@@ -6,7 +6,7 @@
 #define DISCJVM_DOUBLE_H
 
 #include "../../../../model/thread.h"
-#include "../../../../runtime/class_loader.h"
+#include "../../../../runtime/jvm.h"
 
 void java_lang_Double_doubleToRawLongBits_9D0J(Thread *thread, SerialHeap *heap, Frame *frame);
 

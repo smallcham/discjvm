@@ -6,7 +6,7 @@
 #define DISCJVM_JTHREAD_H
 
 #include "../../../../model/thread.h"
-#include "../../../../runtime/class_loader.h"
+#include "../../../../runtime/jvm.h"
 #include <pthread.h>
 
 void java_lang_Thread_registerNatives_90V(Thread *thread, SerialHeap *heap, Frame *frame);

@@ -6,7 +6,7 @@
 #define DISCJVM_UNIXNATIVEDISPATCHER_H
 
 #include "../../../../../model/thread.h"
-#include "../../../../../runtime/class_loader.h"
+#include "../../../../../runtime/jvm.h"
 #include <sys/stat.h>
 
 void sun_nio_fs_UnixNativeDispatcher_init_90I(Thread *thread, SerialHeap *heap, Frame *frame);

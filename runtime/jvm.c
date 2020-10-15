@@ -1,4 +1,4 @@
-#include "class_loader.h"
+#include "jvm.h"
 
 u1* get_class_bytes(char *path);
 
@@ -580,7 +580,7 @@ void do_invokedynamic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
         }
         case REF_invokeStatic: {
             //caller
-            new_method_handle_lookup(thread, heap, class->class_object);
+            new_method_handle_lookup(thread, heap, frame->class->class_object);
 
             //invokedName
             push_slot(params, create_str_slot_set_str(thread, heap, invoke_name));

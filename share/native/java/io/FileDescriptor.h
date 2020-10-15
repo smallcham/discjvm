@@ -6,7 +6,7 @@
 #define DISCJVM_FILEDESCRIPTOR_H
 
 #include "../../../../model/thread.h"
-#include "../../../../runtime/class_loader.h"
+#include "../../../../runtime/jvm.h"
 #include <fcntl.h>
 #include <bits/fcntl-linux.h>
 

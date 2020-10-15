@@ -2,8 +2,8 @@
 // Created by wangzhanzhi on 2020/6/22.
 //
 
-#ifndef DISCJVM_CLASS_LOADER_H
-#define DISCJVM_CLASS_LOADER_H
+#ifndef DISCJVM_JVM_H
+#define DISCJVM_JVM_H
 #define CLASS_INITED 0
 #define CLASS_IN_INIT 1
 #define CLASS_NOT_INIT 2
@@ -205,4 +205,4 @@ u1 *get_signature(ConstantPool *pool, MethodInfo method);
 
 ClassFile *get_class_class(Thread *thread, SerialHeap *heap);
 
-#endif //DISCJVM_CLASS_LOADER_H
+#endif //DISCJVM_JVM_H

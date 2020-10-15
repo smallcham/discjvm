@@ -6,7 +6,7 @@
 #define DISCJVM_UNIXFILESYSTEM_H
 
 #include "../../../../model/thread.h"
-#include "../../../../runtime/class_loader.h"
+#include "../../../../runtime/jvm.h"
 
 void java_io_UnixFileSystem_initIDs_90V(Thread *thread, SerialHeap *heap, Frame *frame);
 

@@ -6,7 +6,7 @@
 #define DISCJVM_STRINGUTF16_H
 
 #include "../../../../model/thread.h"
-#include "../../../../runtime/class_loader.h"
+#include "../../../../runtime/jvm.h"
 
 void java_lang_StringUTF16_isBigEndian_90Z(Thread *thread, SerialHeap *heap, Frame *frame);
 

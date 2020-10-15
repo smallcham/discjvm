@@ -7,7 +7,7 @@
 
 #include "../share/gc/serial/serial_heap.h"
 #include "../share/native/native_factory.h"
-#include "class_loader.h"
+#include "jvm.h"
 #include "opcode.h"
 
 #define LD_LIBRARY_PATH "LD_LIBRARY_PATH"

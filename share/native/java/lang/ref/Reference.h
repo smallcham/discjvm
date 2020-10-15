@@ -6,7 +6,7 @@
 #define DISCJVM_REFERENCE_H
 
 #include "../../../../../model/thread.h"
-#include "../../../../../runtime/class_loader.h"
+#include "../../../../../runtime/jvm.h"
 
 void java_lang_ref_Reference_waitForReferencePendingList_90V(Thread *thread, SerialHeap *heap, Frame *frame);
 

@@ -6,7 +6,7 @@
 #define DISCJVM_ACCESSCONTROLLER_H
 
 #include "../../../../model/thread.h"
-#include "../../../../runtime/class_loader.h"
+#include "../../../../runtime/jvm.h"
 
 void java_security_AccessController_getStackAccessControlContext_90Ljava_security_AccessControlContext1(Thread *thread, SerialHeap *heap, Frame *frame);
 
