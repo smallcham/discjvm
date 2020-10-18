@@ -6,7 +6,7 @@
 
 void jdk_internal_reflect_Reflection_getCallerClass_90Ljava_lang_Class1(Thread *thread, SerialHeap *heap, Frame *frame)
 {
-    Frame *caller_frame = get_stack_offset(thread->vm_stack, 2);
+    Frame *caller_frame = get_caller_frame(thread);
     push_object(frame->operand_stack, caller_frame->class->class_object);
 }
 

@@ -204,3 +204,38 @@ void java_lang_Class_getConstantPool_90Ljdk_internal_reflect_ConstantPool1(Threa
         push_object(frame->operand_stack, pool_class->class_object);
     }
 }
+
+/**
+ * Determines if the class or interface represented by this
+ * {@code Class} object is either the same as, or is a superclass or
+ * superinterface of, the class or interface represented by the specified
+ * {@code Class} parameter. It returns {@code true} if so;
+ * otherwise it returns {@code false}. If this {@code Class}
+ * object represents a primitive type, this method returns
+ * {@code true} if the specified {@code Class} parameter is
+ * exactly this {@code Class} object; otherwise it returns
+ * {@code false}.
+ *
+ * <p> Specifically, this method tests whether the type represented by the
+ * specified {@code Class} parameter can be converted to the type
+ * represented by this {@code Class} object via an identity conversion
+ * or via a widening reference conversion. See <em>The Java Language
+ * Specification</em>, sections 5.1.1 and 5.1.4 , for details.
+ *
+ * @param cls the {@code Class} object to be checked
+ * @return the {@code boolean} value indicating whether objects of the
+ * type {@code cls} can be assigned to objects of this class
+ * @exception NullPointerException if the specified Class parameter is
+ *            null.
+ * @since 1.1
+ */
+void java_lang_Class_isAssignableFrom_9Ljava_lang_Class10Z(Thread *thread, SerialHeap *heap, Frame *frame)
+{
+    Object *this = get_localvar_this(frame);
+    Object *cls = get_ref_localvar(frame, 1);
+    if (this->class == cls->raw_class || is_parent(this->raw_class, cls->raw_class) || is_instance_of(this->raw_class, cls->raw_class)) {
+        push_int(frame->operand_stack, 1);
+    } else {
+        push_int(frame->operand_stack, 0);
+    }
+}

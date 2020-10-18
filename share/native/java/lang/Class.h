@@ -30,4 +30,6 @@ void java_lang_Class_getInterfaces0_90sLjava_lang_Class1(Thread *thread, SerialH
 
 void java_lang_Class_getConstantPool_90Ljdk_internal_reflect_ConstantPool1(Thread *thread, SerialHeap *heap, Frame *frame);
 
+void java_lang_Class_isAssignableFrom_9Ljava_lang_Class10Z(Thread *thread, SerialHeap *heap, Frame *frame);
+
 #endif //DISCJVM_CLASS_H

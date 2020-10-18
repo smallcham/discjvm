@@ -30,6 +30,7 @@ void init_native_factory()
     put_map(&native_pool, "java/lang/Class.getSuperclass()Ljava/lang/Class;", java_lang_Class_getSuperclass_90Ljava_lang_Class1);
     put_map(&native_pool, "java/lang/Class.getInterfaces0()[Ljava/lang/Class;", java_lang_Class_getInterfaces0_90sLjava_lang_Class1);
     put_map(&native_pool, "java/lang/Class.getConstantPool()Ljdk/internal/reflect/ConstantPool;", java_lang_Class_getConstantPool_90Ljdk_internal_reflect_ConstantPool1);
+    put_map(&native_pool, "java/lang/Class.isAssignableFrom(Ljava/lang/Class;)Z", java_lang_Class_isAssignableFrom_9Ljava_lang_Class10Z);
 
     //System
     put_map(&native_pool, "java/lang/System.registerNatives()V", java_lang_System_registerNatives_90V);

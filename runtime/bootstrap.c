@@ -125,15 +125,15 @@ void start_vm(char *class_path)
     Slot *system_object = create_object_slot(thread, heap, system);
 
     //初始化3阶段
-    MethodInfo *init_phase3 = find_method_with_desc(thread, heap, system, "initPhase3", "()V");
-    push_slot(params, system_object);
-    create_vm_frame_by_method_add_params(thread, system, params, init_phase3);
-
-    //初始化2阶段
-    MethodInfo *init_phase2 = find_method_with_desc(thread, heap, system, "initPhase2", "(ZZ)I");
-    push_slot(params, create_slot_set_value(1));
-    push_slot(params, create_slot_set_value(1));
-    create_vm_frame_by_method_add_params(thread, system, params, init_phase2);
+//    MethodInfo *init_phase3 = find_method_with_desc(thread, heap, system, "initPhase3", "()V");
+//    push_slot(params, system_object);
+//    create_vm_frame_by_method_add_params(thread, system, params, init_phase3);
+//
+//    //初始化2阶段
+//    MethodInfo *init_phase2 = find_method_with_desc(thread, heap, system, "initPhase2", "(ZZ)I");
+//    push_slot(params, create_slot_set_value(1));
+//    push_slot(params, create_slot_set_value(1));
+//    create_vm_frame_by_method_add_params(thread, system, params, init_phase2);
 
     //初始化1阶段
     MethodInfo *init_phase1 = find_method_with_desc(thread, heap, system, "initPhase1", "()V");

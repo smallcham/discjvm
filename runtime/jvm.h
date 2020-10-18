@@ -205,4 +205,6 @@ u1 *get_signature(ConstantPool *pool, MethodInfo method);
 
 ClassFile *get_class_class(Thread *thread, SerialHeap *heap);
 
+Frame *get_caller_frame(Thread *thread);
+
 #endif //DISCJVM_JVM_H

@@ -29,11 +29,11 @@ public class Hello {
 
     public static void main(String[] args) {
         for (int i = 0; i < 100; i++) {
-            System.out.println(i);
+            System.out.println("Hello" + i);
         }
-        int a = 100;
-        int b = 300;
-        System.out.println(a + b);
-        System.out.println("Hello World!");
+//         int a = 100;
+//         int b = 300;
+//         System.out.println(a + b);
+//         System.out.println("Hello World!");
 	}
 }

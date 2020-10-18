@@ -562,55 +562,94 @@ void do_invokedynamic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
     u1* invoke_name = get_utf8_bytes(frame->constant_pool, name_and_type_info.name_index);
     u1* invoke_desc = get_utf8_bytes(frame->constant_pool, name_and_type_info.descriptor_index);
     BootstrapMethods* bootstrap_methods = get_bootstrap_methods(frame->constant_pool, frame->class);
+    if (NULL == bootstrap_methods) {
+        printf_err("IllegalStateException");
+        exit(-1);
+    }
     BootstrapMethodInfo boot_method_info = bootstrap_methods->methods[dynamic_info.bootstrap_method_attr_index];
     CONSTANT_MethodHandle_info mh_info = *(CONSTANT_MethodHandle_info*)frame->constant_pool[boot_method_info.bootstrap_method_ref].info;
-    CONSTANT_Methodref_info m_ref_info = *(CONSTANT_Methodref_info*)frame->constant_pool[mh_info.reference_index].info;
-    ClassFile *class = load_class_by_class_info_index(thread, heap, frame->constant_pool, m_ref_info.class_index);
-    CONSTANT_NameAndType_info mh_name_and_type_info = *(CONSTANT_NameAndType_info*)frame->constant_pool[m_ref_info.name_and_type_index].info;
-    u1* method_name = get_utf8_bytes(frame->constant_pool, mh_name_and_type_info.name_index);
-    u1* method_desc = get_utf8_bytes(frame->constant_pool, mh_name_and_type_info.descriptor_index);
-    MethodInfo *method_info = find_method_iter_super_with_desc(thread, heap, &class, method_name, method_desc);
+
     Stack *params = create_unlimit_stack();
-    switch (mh_info.reference_kind) {
-        case REF_invokeInterface: {
-            printf("123");
-        }
-        case REF_invokeSpecial: {
-            printf("123");
-        }
-        case REF_invokeStatic: {
-            //caller
-            new_method_handle_lookup(thread, heap, frame->class->class_object);
+    CONSTANT_Methodref_info m_ref_info = *(CONSTANT_Methodref_info*)frame->constant_pool[mh_info.reference_index].info;
+    CONSTANT_NameAndType_info mh_name_and_type_info = *(CONSTANT_NameAndType_info*)frame->constant_pool[m_ref_info.name_and_type_index].info;
+    ClassFile *class = load_class_by_class_info_index(thread, heap, frame->constant_pool, m_ref_info.class_index);
+    ensure_inited_class(thread, heap, class);
+    u1* x = get_utf8_bytes(frame->constant_pool, mh_name_and_type_info.name_index);
+    u1* t = get_utf8_bytes(frame->constant_pool, mh_name_and_type_info.descriptor_index);
+    MethodInfo *method_info = find_method_iter_super_with_desc(thread, heap, &class, x, t);
 
-            //invokedName
-            push_slot(params, create_str_slot_set_str(thread, heap, invoke_name));
-
-            //invokedType
-            Object *method_type = new_method_type(thread, heap, method_desc);
-            push_object(params, method_type);
-
-            //samMethodType
-            Slot *sam_method_type;
-            if (NULL == method_info->signature) {
-                sam_method_type = NULL_SLOT;
+//    new_method_handle(thread, heap, );
+    push_object(params, new_method_handle_lookup(thread, heap, get_caller_frame(thread)->class->class_object));
+    push_slot(params, create_str_slot_set_str(thread, heap, invoke_name));
+    push_object(params, new_method_type(thread, heap, invoke_desc));
+    for (int i = 0; i < boot_method_info.num_bootstrap_arguments; ++i) {
+        CONSTANT_Utf8_info *str = get_utf8_info_from_string_index(frame->constant_pool, boot_method_info.bootstrap_arguments[i]);
+        push_slot(params, create_str_slot_set_str(thread, heap, str->bytes));
+    }
+    int count = method_info->params_count - 3 - boot_method_info.num_bootstrap_arguments;
+    if (count > 0) {
+        char **params_names = parse_param_types(thread, heap, method_info->desc, method_info->params_count);
+        for (int i = 3 + boot_method_info.num_bootstrap_arguments; i < method_info->params_count; i++) {
+            ClassFile *param_class = load_class(thread, heap, params_names[i]);
+            if (class_is_array(param_class)) {
+                Array *array = malloc_array(thread, heap, param_class, 0);
+                push_object(params, array);
             } else {
-                sam_method_type = create_object_slot_set_object(heap, new_method_type(thread, heap, method_info->signature));
+                push_object(params, malloc_object(thread, heap, param_class));
             }
-            push_slot(params, sam_method_type);
-
-            //implMethod
-            push_object(params, new_method_handle(thread, heap, method_type, method_type));
-
-            //instantiatedMethodType
-            push_slot(params, sam_method_type);
-
-            create_vm_frame_by_method_add_params(thread, class, params, method_info);
-            printf("123");
-        }
-        case REF_invokeVirtual: {
-            printf("123");
         }
     }
+
+//    ClassFile *mh_native = load_class(thread, heap, "java/lang/invoke/MethodHandleNatives");
+//    MethodInfo *link_call_site_method = find_method_with_desc(thread, heap, mh_native, "linkCallSite", "(Ljava/lang/Object;ILjava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/invoke/MemberName;");
+
+    create_vm_frame_by_method_add_params(thread, class, params, method_info);
+//    switch (mh_info.reference_kind) {
+//        case REF_invokeInterface: {
+//            printf("123");
+//        }
+//        case REF_invokeSpecial: {
+//            ClassFile *class = frame->class;
+//        }
+//        case REF_invokeStatic: {
+//
+//
+//
+////            new_method_handle(thread, heap, method_type);
+//
+//
+////            //caller
+////            new_method_handle_lookup(thread, heap, frame->class->class_object);
+////
+////            //invokedName
+////            push_slot(params, create_str_slot_set_str(thread, heap, invoke_name));
+////
+////            //invokedType
+////            Object *method_type = new_method_type(thread, heap, t);
+////            push_object(params, method_type);
+////
+////            //samMethodType
+////            Slot *sam_method_type;
+////            if (NULL == method_info->signature) {
+////                sam_method_type = NULL_SLOT;
+////            } else {
+////                sam_method_type = create_object_slot_set_object(heap, new_method_type(thread, heap, method_info->signature));
+////            }
+////            push_slot(params, sam_method_type);
+////
+////            //implMethod
+////            push_object(params, new_method_handle(thread, heap, method_type, method_type));
+////
+////            //instantiatedMethodType
+////            push_slot(params, sam_method_type);
+////
+////            create_vm_frame_by_method_add_params(thread, class, params, method_info);
+//            printf("123");
+//        }
+//        case REF_invokeVirtual: {
+//            printf("123");
+//        }
+//    }
     printf("123");
 }
 
@@ -1340,8 +1379,9 @@ Object *new_object_by_desc(Thread *thread, SerialHeap *heap, Object *this, char 
             push_slot(params, slots[i]);
         }
     }
-    MethodInfo *init_method = find_method_with_desc(thread, heap, class, "<init>", desc);
-    create_vm_frame_by_method_add_params_plus1(thread, class, params, init_method);
+//    MethodInfo *init_method = find_method_with_desc(thread, heap, class, "<init>", desc);
+//    create_vm_frame_by_method_add_params_plus1(thread, class, params, init_method);
+    single_invoke(heap, class, "<init>", desc, params);
     return this;
 }
 
@@ -1349,7 +1389,7 @@ Object *new_method_handle_lookup(Thread *thread, SerialHeap *heap, Object *class
 {
     Stack *params = create_unlimit_stack();
     push_object(params, class);
-    Object *lookup = new_object_by_desc(thread, heap, NULL, "java/lang/invoke/MethodHandles$Lookup", "(Ljava/lang/Class)V", params);
+    Object *lookup = new_object_by_desc(thread, heap, NULL, "java/lang/invoke/MethodHandles$Lookup", "(Ljava/lang/Class;)V", params);
     return lookup;
 }
 
@@ -1367,7 +1407,7 @@ Object *new_method_type(Thread *thread, SerialHeap *heap, char *desc)
         ptypes->objects[i] = load_class(thread, heap, param_names[i])->class_object;
     }
     push_object(params, ptypes);
-    Object *method_type = new_object_by_desc(thread, heap, NULL, "java/lang/invoke/MethodType", "(Ljava/lang/Class;[Ljava/lang/Class)V", params);
+    Object *method_type = new_object_by_desc(thread, heap, NULL, "java/lang/invoke/MethodType", "(Ljava/lang/Class;[Ljava/lang/Class;)V", params);
     return method_type;
 }
 
@@ -1375,8 +1415,8 @@ Object *new_method_handle(Thread *thread, SerialHeap *heap, Object *method_type,
 {
     Stack *params = create_unlimit_stack();
     push_object(params, method_type);
-    push_object(params, new_object_by_desc(thread, heap, NULL, "java/lang/invoke/LambdaForm", "(Ljava/lang/invoke/MethodType)V", params));
-    return new_object_by_desc(thread, heap, NULL, "java/lang/invoke/MethodHandle", "(Ljava/lang/invoke/MethodType;Ljava/lang/invoke/LambdaForm)V", params);
+    push_object(params, new_object_by_desc(thread, heap, NULL, "java/lang/invoke/LambdaForm", "(Ljava/lang/invoke/MethodType;)V", params));
+    return new_object_by_desc(thread, heap, NULL, "java/lang/invoke/MethodHandle", "(Ljava/lang/invoke/MethodType;Ljava/lang/invoke/LambdaForm;)V", params);
 }
 
 void clinit_class_and_exec(Thread *thread, SerialHeap *heap, ClassFile *class)
@@ -1878,4 +1918,9 @@ char** parse_param_types(Thread *thread, SerialHeap *heap, char *desc, int count
         }
     }
     return param_types;
+}
+
+Frame *get_caller_frame(Thread *thread)
+{
+    return get_stack_offset(thread->vm_stack, 2);
 }
