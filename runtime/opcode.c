@@ -9,6 +9,7 @@ void ifx_(SerialHeap *heap, Thread *thread, Frame *frame, int cond);
 void if_icmpx_(SerialHeap *heap, Thread *thread, Frame *frame, int cond);
 void if_acmpx_(SerialHeap *heap, Thread *thread, Frame *frame, int cond);
 void fcmpx_(SerialHeap *heap, Thread *thread, Frame *frame, int res);
+void do_multianewarray(Thread *thread, SerialHeap *heap, Array *array, Slot **counts, int idx, int dimensions);
 
 void step_pc(Frame *frame, int offset)
 {
@@ -1350,7 +1351,9 @@ void tableswitch(SerialHeap *heap, Thread *thread, Frame *frame) {
     free(offsets);
 }
 
-void lookupswitch(SerialHeap *heap, Thread *thread, Frame *frame) {}
+void lookupswitch(SerialHeap *heap, Thread *thread, Frame *frame) {
+
+}
 
 void ireturn(SerialHeap *heap, Thread *thread, Frame *frame) {
     Frame *next = get_prev(thread->vm_stack);
@@ -1573,7 +1576,31 @@ void monitorexit(SerialHeap *heap, Thread *thread, Frame *frame) {
 
 void wide(SerialHeap *heap, Thread *thread, Frame *frame) {}
 
-void multianewarray(SerialHeap *heap, Thread *thread, Frame *frame) {}
+void multianewarray(SerialHeap *heap, Thread *thread, Frame *frame) {
+    u1 byte1 = step_pc1_and_read_code(frame);
+    u1 byte2 = step_pc1_and_read_code(frame);
+    u1 dimensions = step_pc1_and_read_code(frame);
+    ClassFile *class = load_class_by_class_info_index(thread, heap, frame->constant_pool, (byte1 << 8) | byte2);
+    if (class_is_not_init(class)) {
+        back_pc(frame, 3);
+        init_class(thread, heap, class);
+        return;
+    }
+    Slot **counts = pop_slot_with_num(frame->operand_stack, dimensions);
+    Array *array = malloc_array(thread, heap, class, counts[0]->value);
+    do_multianewarray(thread, heap, array, counts, 1, dimensions);
+    push_object(frame->operand_stack, array);
+    step_pc_1(frame);
+}
+
+void do_multianewarray(Thread *thread, SerialHeap *heap, Array *array, Slot **counts, int idx, int dimensions)
+{
+    if (dimensions <= 1) return;
+    for (int i = 0; i < array->length; i++) {
+        array->objects[i] = malloc_array(thread, heap, get_component_type(array)->raw_class, counts[idx]->value);
+        do_multianewarray(thread, heap, array->objects[i], counts, 1 + i + idx, dimensions - (i + 1));
+    }
+}
 
 void ifnull(SerialHeap *heap, Thread *thread, Frame *frame) {
     Object *value = pop_object(frame->operand_stack);

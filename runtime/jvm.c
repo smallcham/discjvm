@@ -475,7 +475,13 @@ ClassFile *load_primitive_class(Thread *thread, SerialHeap *heap, char *primitiv
     put_object_value_field_by_name_and_desc(class_object, "classLoader", "Ljava/lang/ClassLoader;", get_bootstrap_class_loader(thread, heap));
     Object *component_type;
     if (primitive_name[0] == '[' && primitive_name[1] != 'L') {
-        component_type = load_primitive_class(thread, heap, full_primitive_name(primitive_name[1]))->class_object;
+        char *_name = full_primitive_name(primitive_name[1]);
+        if (NULL == _name) {
+            _name = malloc(strlen(primitive_name));
+            memcpy(_name, primitive_name + 1, strlen(primitive_name));
+            _name[strlen(primitive_name)] = '\0';
+        }
+        component_type = load_primitive_class(thread, heap, _name)->class_object;
     }
     else if (primitive_name[1] == 'L') {
         char _name[strlen(primitive_name) - 1];
@@ -486,6 +492,7 @@ ClassFile *load_primitive_class(Thread *thread, SerialHeap *heap, char *primitiv
         component_type = NULL;
     }
     put_object_value_field_by_name_and_desc(class_object, "componentType", "Ljava/lang/Class;", component_type);
+//    class->component_class = NULL == component_type ? NULL : component_type->raw_class;
     class_object->raw_class = class;
     class->class_object = class_object;
     return class;
@@ -569,7 +576,6 @@ void do_invokedynamic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
     BootstrapMethodInfo boot_method_info = bootstrap_methods->methods[dynamic_info.bootstrap_method_attr_index];
     CONSTANT_MethodHandle_info mh_info = *(CONSTANT_MethodHandle_info*)frame->constant_pool[boot_method_info.bootstrap_method_ref].info;
 
-    Stack *params = create_unlimit_stack();
     CONSTANT_Methodref_info m_ref_info = *(CONSTANT_Methodref_info*)frame->constant_pool[mh_info.reference_index].info;
     CONSTANT_NameAndType_info mh_name_and_type_info = *(CONSTANT_NameAndType_info*)frame->constant_pool[m_ref_info.name_and_type_index].info;
     ClassFile *class = load_class_by_class_info_index(thread, heap, frame->constant_pool, m_ref_info.class_index);
@@ -578,32 +584,39 @@ void do_invokedynamic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
     u1* t = get_utf8_bytes(frame->constant_pool, mh_name_and_type_info.descriptor_index);
     MethodInfo *method_info = find_method_iter_super_with_desc(thread, heap, &class, x, t);
 
-//    new_method_handle(thread, heap, );
-    push_object(params, new_method_handle_lookup(thread, heap, get_caller_frame(thread)->class->class_object));
-    push_slot(params, create_str_slot_set_str(thread, heap, invoke_name));
-    push_object(params, new_method_type(thread, heap, invoke_desc));
+    Object *lookup = new_method_handle_lookup(thread, heap, get_caller_frame(thread)->class->class_object);
+    Object *method_type = new_method_type(thread, heap, invoke_desc);
+    Object *method_handle = new_method_handle(thread, heap, method_type, method_type);
+    Object *method_str = create_str_slot_set_str(thread, heap, invoke_name)->object_value;
+
+    Array *arr = malloc_array(thread, heap, load_primitive_class(thread, heap, "[Ljava/lang/Object"), 4);
+    arr->objects[0] = lookup;
+    arr->objects[1] = method_handle;
+    arr->objects[2] = method_type;
     for (int i = 0; i < boot_method_info.num_bootstrap_arguments; ++i) {
         CONSTANT_Utf8_info *str = get_utf8_info_from_string_index(frame->constant_pool, boot_method_info.bootstrap_arguments[i]);
-        push_slot(params, create_str_slot_set_str(thread, heap, str->bytes));
+        arr->objects[3] = create_str_slot_set_str(thread, heap, str->bytes)->object_value;
     }
-    int count = method_info->params_count - 3 - boot_method_info.num_bootstrap_arguments;
-    if (count > 0) {
-        char **params_names = parse_param_types(thread, heap, method_info->desc, method_info->params_count);
-        for (int i = 3 + boot_method_info.num_bootstrap_arguments; i < method_info->params_count; i++) {
-            ClassFile *param_class = load_class(thread, heap, params_names[i]);
-            if (class_is_array(param_class)) {
-                Array *array = malloc_array(thread, heap, param_class, 0);
-                push_object(params, array);
-            } else {
-                push_object(params, malloc_object(thread, heap, param_class));
-            }
-        }
-    }
+    MethodInfo *invoke = find_method_with_desc(thread, heap, method_handle->class, "invokeExact", "[Ljava/lang/Object;");
+//    int count = method_info->params_count - 3 - boot_method_info.num_bootstrap_arguments;
+//    if (count > 0) {
+//        char **params_names = parse_param_types(thread, heap, method_info->desc, method_info->params_count);
+//        for (int i = 3 + boot_method_info.num_bootstrap_arguments; i < method_info->params_count; i++) {
+//            ClassFile *param_class = load_class(thread, heap, params_names[i]);
+//            if (class_is_array(param_class)) {
+//                Array *array = malloc_array(thread, heap, param_class, 0);
+//                push_object(params, array);
+//            } else {
+//                push_object(params, malloc_object(thread, heap, param_class));
+//            }
+//        }
+//    }
 
 //    ClassFile *mh_native = load_class(thread, heap, "java/lang/invoke/MethodHandleNatives");
 //    MethodInfo *link_call_site_method = find_method_with_desc(thread, heap, mh_native, "linkCallSite", "(Ljava/lang/Object;ILjava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/invoke/MemberName;");
-
-    create_vm_frame_by_method_add_params(thread, class, params, method_info);
+    Stack *params = create_unlimit_stack();
+    push_object(params, arr);
+    create_vm_frame_by_method_add_params(thread, class, params, invoke);
 //    switch (mh_info.reference_kind) {
 //        case REF_invokeInterface: {
 //            printf("123");
@@ -916,7 +929,7 @@ u8 get_field_value_by_name_and_desc(Object *object, char *name, char *desc)
 
 void *get_field_object_value_by_name_and_desc(Object *object, char *name, char *desc)
 {
-    FieldInfo *field = get_field_by_name_and_desc(object->raw_class, name, desc);
+    FieldInfo *field = get_field_by_name_and_desc(object->class, name, desc);
     return object->fields[field->offset].object_value;
 }
 
@@ -979,6 +992,12 @@ void put_object_value_field_by_name_and_desc(Object *object, char *name, char *d
 {
     FieldInfo *field = get_field_by_name_and_desc(object->class, name, desc);
     object->fields[field->offset].object_value = value;
+}
+
+Object *get_component_type(void *object)
+{
+    Object *obj = object;
+    return get_field_object_value_by_name_and_desc(obj->class->class_object, "componentType", "Ljava/lang/Class;");
 }
 
 void put_static_field_by_name_and_desc(ClassFile *class, char *name, char *desc, void *value)
