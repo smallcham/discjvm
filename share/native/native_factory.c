@@ -162,6 +162,10 @@ void init_native_factory()
 
     //NativeMethodAccessorImpl
     put_map(&native_pool, "jdk/internal/reflect/NativeMethodAccessorImpl.invoke0(Ljava/lang/reflect/Method;Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;", jdk_internal_reflect_NativeMethodAccessorImpl_invoke0_9Ljava_lang_reflect_Method1Ljava_lang_Object1sLjava_lang_Object10Ljava_lang_Object1);
+
+    //MethodHandleNatives
+    put_map(&native_pool, "java/lang/invoke/MethodHandleNatives.registerNatives()V", java_lang_invoke_MethodHandleNatives_registerNatives_90V);
+    put_map(&native_pool, "java/lang/invoke/MethodHandleNatives.resolve(Ljava/lang/invoke/MemberName;Ljava/lang/Class;Z)Ljava/lang/invoke/MemberName;", java_lang_invoke_MethodHandleNatives_resolve_9Ljava_lang_invoke_MemberName1Ljava_lang_Class1Z0Ljava_lang_invoke_MemberName1);
 }
 
 NativeMethod find_native(char *class_name, char *method_name, char *method_desc)
