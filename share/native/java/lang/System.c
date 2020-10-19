@@ -52,6 +52,7 @@ void java_lang_System_arraycopy_9Ljava_lang_Object1ILjava_lang_Object1II0V(Threa
                 t_obj->fields[k].object_value = s_obj->fields[k].object_value;
             }
             dest->objects[j] = t_obj;
+//            dest->objects[j] = source->objects[i];
         }
     }
 }

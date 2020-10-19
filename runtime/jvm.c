@@ -451,27 +451,34 @@ ClassFile *load_primitive_class_by_str_array(Thread *thread, SerialHeap *heap, A
 
 ClassFile *load_primitive_class(Thread *thread, SerialHeap *heap, char *primitive_name)
 {
-    ClassFile *class_from_cache = get_class_from_cache(heap->class_pool, primitive_name);
-    if (NULL != class_from_cache) {
-        return class_from_cache;
-    }
     unsigned long size = strlen(primitive_name);
     char *name = malloc(size + 1);
-    strcpy(name, primitive_name);
+    memcpy(name, primitive_name, size);
     name[size] = '\0';
-    if (strlen(name) == 1) {
-        name = full_primitive_name(name[0]);
+    int is_free = 1;
+    if (size == 1) {
+        free(name);
+        is_free = 0;
+        name = full_primitive_name(primitive_name[0]);
     }
+    ClassFile *class_from_cache = get_class_from_cache(heap->class_pool, name);
+    if (NULL != class_from_cache) {
+        if (is_free == 1) free(name);
+        return class_from_cache;
+    }
+    ClassFile *class_class = get_class_class(thread, heap);
     ClassFile *class = malloc(sizeof(ClassFile));
     memset(class, 0, sizeof(ClassFile));
     class->magic = CLASS_MAGIC_NUMBER;
     class->class_name = (u1*)name;
     class->fields_count = 1;
     class->object_fields_count = 1;
+    class->methods_count = class_class->methods_count;
+    class->methods = class_class->methods;
     class->init_state = CLASS_INITED;
     put_class_to_cache(&heap->class_pool, class);
 
-    Object *class_object = malloc_object(thread, heap, get_class_class(thread, heap));
+    Object *class_object = malloc_object(thread, heap, class_class);
     put_object_value_field_by_name_and_desc(class_object, "classLoader", "Ljava/lang/ClassLoader;", get_bootstrap_class_loader(thread, heap));
     Object *component_type;
     if (primitive_name[0] == '[' && primitive_name[1] != 'L') {
@@ -492,7 +499,6 @@ ClassFile *load_primitive_class(Thread *thread, SerialHeap *heap, char *primitiv
         component_type = NULL;
     }
     put_object_value_field_by_name_and_desc(class_object, "componentType", "Ljava/lang/Class;", component_type);
-//    class->component_class = NULL == component_type ? NULL : component_type->raw_class;
     class_object->raw_class = class;
     class->class_object = class_object;
     return class;
@@ -1707,6 +1713,9 @@ void print_class_info(ClassFile class)
 
 MethodInfo *find_method_iter_super_with_desc(Thread *thread, SerialHeap *heap, ClassFile **class, char *name, char *desc) {
     if (is_array_by_name((*class)->class_name)) {
+        *class = get_class_class(thread, heap);
+        MethodInfo *method = find_method_iter_super_with_desc(thread, heap, class, name, desc);
+        if (NULL != method) return method;
         *class = load_class(thread, heap, "java/lang/Object");
     }
     while (NULL != class)

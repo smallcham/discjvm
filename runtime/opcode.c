@@ -11,6 +11,11 @@ void if_acmpx_(SerialHeap *heap, Thread *thread, Frame *frame, int cond);
 void fcmpx_(SerialHeap *heap, Thread *thread, Frame *frame, int res);
 void do_multianewarray(Thread *thread, SerialHeap *heap, Array *array, Slot **counts, int idx, int dimensions);
 
+void step_pad(Frame *frame)
+{
+    frame->pc += (frame->pc + 1) % 4;
+}
+
 void step_pc(Frame *frame, int offset)
 {
     frame->pc += offset;
@@ -143,9 +148,9 @@ u4 step_pc4_and_read_u4(Frame *frame)
     return (var1 << 24 | var2 << 16 | var3 << 8 | var4);
 }
 
-u4* step_pc4_and_read_u4_by_count(Frame *frame, int count)
+int* step_pc4_and_read_u4_by_count(Frame *frame, int count)
 {
-    u4 *vars = malloc(count * sizeof(u4));
+    int *vars = malloc(count * sizeof(int));
     for (int i = 0; i < count; i++) {
         vars[i] = step_pc4_and_read_u4(frame);
     }
@@ -1333,14 +1338,15 @@ void ret(SerialHeap *heap, Thread *thread, Frame *frame) {
 
 void tableswitch(SerialHeap *heap, Thread *thread, Frame *frame) {
     u4 _pc = frame->pc;
-    step_pc(frame, 3);
+    step_pad(frame);
+//    step_pc(frame, 3);
     int index = pop_int(frame->operand_stack);
     int default_offset = step_pc4_and_read_u4(frame);
     int lower = step_pc4_and_read_u4(frame);
     int higher = step_pc4_and_read_u4(frame);
     int count = higher - lower + 1;
-    u4 *offsets = step_pc4_and_read_u4_by_count(frame, count);
-    u4 offset;
+    int *offsets = step_pc4_and_read_u4_by_count(frame, count);
+    int offset;
     if (index < lower || index > higher) {
         offset = default_offset;
     } else {
@@ -1352,7 +1358,23 @@ void tableswitch(SerialHeap *heap, Thread *thread, Frame *frame) {
 }
 
 void lookupswitch(SerialHeap *heap, Thread *thread, Frame *frame) {
-
+    u4 _pc = frame->pc;
+    step_pad(frame);
+    int key = pop_int(frame->operand_stack);
+    int default_offset = step_pc4_and_read_u4(frame);
+    int npairs = step_pc4_and_read_u4(frame);
+    int count = npairs * 2;
+    int *offsets = step_pc4_and_read_u4_by_count(frame, count);
+    int offset = default_offset;
+    for (int i = 0; i < count; i += 2) {
+        if (key == offsets[i]) {
+            offset = offsets[i + 1];
+            break;
+        }
+    }
+    frame->pc = _pc;
+    frame->pc = step_pc_and_read_pc(frame, offset);
+    free(offsets);
 }
 
 void ireturn(SerialHeap *heap, Thread *thread, Frame *frame) {

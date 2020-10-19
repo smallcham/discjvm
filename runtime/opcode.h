@@ -61,7 +61,7 @@ u1 step_pc1_and_read_code(Frame *frame);
 
 u4 step_pc4_and_read_u4(Frame *frame);
 
-u4* step_pc4_and_read_u4_by_count(Frame *frame, int count);
+int* step_pc4_and_read_u4_by_count(Frame *frame, int count);
 
 Frame *pop_frame(Thread *thread, SerialHeap *heap);
 
