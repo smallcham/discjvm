@@ -1406,7 +1406,7 @@ Object *new_object_by_desc(Thread *thread, SerialHeap *heap, Object *this, char 
     }
 //    MethodInfo *init_method = find_method_with_desc(thread, heap, class, "<init>", desc);
 //    create_vm_frame_by_method_add_params_plus1(thread, class, params, init_method);
-    single_invoke(heap, class, "<init>", desc, params);
+    single_invoke(heap, class, "<init>", desc, params, NULL);
     return this;
 }
 

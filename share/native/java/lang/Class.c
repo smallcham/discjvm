@@ -154,7 +154,7 @@ void java_lang_Class_getDeclaredMethods0_9Z0sLjava_lang_reflect_Method1(Thread *
             push_slot(params, NULL_SLOT);//annotations
             push_slot(params, NULL_SLOT);//parameterAnnotations
             push_slot(params, NULL_SLOT);//annotationDefault
-            single_invoke(heap, method_class, "<init>", "(Ljava/lang/Class;Ljava/lang/String;[Ljava/lang/Class;Ljava/lang/Class;[Ljava/lang/Class;IILjava/lang/String;[B[B[B)V", params);
+            single_invoke(heap, method_class, "<init>", "(Ljava/lang/Class;Ljava/lang/String;[Ljava/lang/Class;Ljava/lang/Class;[Ljava/lang/Class;IILjava/lang/String;[B[B[B)V", params, NULL);
             push_object(stack, method_object);
         }
         if (stack->size > 0) {

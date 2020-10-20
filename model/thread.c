@@ -40,6 +40,7 @@ Frame *create_vm_frame_by_method(Thread* thread, ClassFile *class, MethodInfo *m
     frame->method = method;
     frame->code_info = code;
     frame->pop_hook = NULL;
+    frame->_return = NULL;
     frame->class = class;
     frame->pc = 0;
     return frame;

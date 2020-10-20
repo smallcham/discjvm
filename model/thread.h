@@ -22,6 +22,7 @@ typedef struct {
     CodeAttribute *code_info;
     PopHook pop_hook;
     void *pop_args;
+    Slot *_return;
     Slot *local_variables[];
 } Frame;
 

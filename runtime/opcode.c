@@ -1407,7 +1407,16 @@ void dreturn(SerialHeap *heap, Thread *thread, Frame *frame) {
 
 void areturn(SerialHeap *heap, Thread *thread, Frame *frame) {
     Frame *next = get_prev(thread->vm_stack);
-    if (NULL != next) push_slot_from(frame->operand_stack, next->operand_stack);
+    if (NULL != next) {
+        push_slot_from(frame->operand_stack, next->operand_stack);
+        Slot *slot = get_slot(next->operand_stack);
+        if (NULL != frame->_return) {
+            frame->_return->value = slot->value;
+            frame->_return->object_value = slot->object_value;
+        }
+    } else {
+        frame->_return = NULL;
+    }
     frame = pop_frame(thread, heap);
     free_frame(&frame);
 }
@@ -2133,16 +2142,19 @@ void exec(Operator operator, SerialHeap *heap, Thread *thread, Frame *frame)
     }
 }
 
-void single_invoke(SerialHeap *heap, ClassFile *class, char *method_name, char *method_desc, Stack *params)
+void single_invoke(SerialHeap *heap, ClassFile *class, char *method_name, char *method_desc, Stack *params, Slot *_return)
 {
     printf_warn("\t\t\t[SINGLE-INVOKE-IN] %s.%s%s", class->class_name, method_name, method_desc);
     Thread *thread = create_thread(100, 100);
     MethodInfo *method = find_method_with_desc(thread, heap, class, method_name, method_desc);
     Frame *frame = create_vm_frame_by_method_with_push(thread, class, method);
-    int size = params->size;
-    Slot **slots = pop_slot_with_num(params, params->size);
-    for (int i = 0; i < size; i++) {
-        set_localvar_with_slot_copy(frame, i, slots[i]);
+    frame->_return = _return;
+    if (NULL != params) {
+        int size = params->size;
+        Slot **slots = pop_slot_with_num(params, params->size);
+        for (int i = 0; i < size; i++) {
+            set_localvar_with_slot_copy(frame, i, slots[i]);
+        }
     }
     run(thread, heap);
     printf_warn("\t\t\t[SINGLE-INVOKE-ESC] %s.%s%s", class->class_name, method_name, method_desc);

@@ -71,7 +71,7 @@ void init_instructions_desc();
 
 void run(Thread *thread, SerialHeap *heap);
 
-void single_invoke(SerialHeap *heap, ClassFile *class, char *method_name, char *method_desc, Stack *params);
+void single_invoke(SerialHeap *heap, ClassFile *class, char *method_name, char *method_desc, Stack *params, Slot *_return);
 
 void run_by_env(Env *env);
 
