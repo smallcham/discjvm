@@ -13,7 +13,7 @@ void do_multianewarray(Thread *thread, SerialHeap *heap, Array *array, Slot **co
 
 void step_pad(Frame *frame)
 {
-    frame->pc += (frame->pc + 1) % 4;
+    frame->pc += 5 - ((frame->pc + 1) % 4);
 }
 
 void step_pc(Frame *frame, int offset)
@@ -137,7 +137,6 @@ u1 step_pc1_and_read_code(Frame *frame)
 
 u4 step_pc4_and_read_u4(Frame *frame)
 {
-    step_pc_1(frame);
     u1 var1 = read_code(frame);
     step_pc_1(frame);
     u1 var2 = read_code(frame);
@@ -145,6 +144,7 @@ u4 step_pc4_and_read_u4(Frame *frame)
     u1 var3 = read_code(frame);
     step_pc_1(frame);
     u1 var4 = read_code(frame);
+    step_pc_1(frame);
     return (var1 << 24 | var2 << 16 | var3 << 8 | var4);
 }
 

@@ -410,6 +410,7 @@ Object *get_bootstrap_class_loader(Thread *thread, SerialHeap *heap)
     ClassFile *class = load_class(thread, heap, "java/lang/ClassLoader");
     if (NULL == bootstrap_class_loader && class_is_inited(class)) {
         Object *object = malloc_object(thread, heap, class);
+//        bootstrap_class_loader = object;
 //        new_object(thread, heap, object, "java/lang/ClassLoader", NULL);
         Slot *name = create_slot();
         name->object_value = "BootstrapLoader";
@@ -479,8 +480,6 @@ ClassFile *load_primitive_class(Thread *thread, SerialHeap *heap, char *primitiv
     class->init_state = CLASS_INITED;
     put_class_to_cache(&heap->class_pool, class);
 
-    Object *class_object = malloc_object(thread, heap, class_class);
-    put_object_value_field_by_name_and_desc(class_object, "classLoader", "Ljava/lang/ClassLoader;", get_bootstrap_class_loader(thread, heap));
     Object *component_type;
     if (primitive_name[0] == '[' && primitive_name[1] != 'L') {
         char *_name = full_primitive_name(primitive_name[1]);
@@ -499,6 +498,8 @@ ClassFile *load_primitive_class(Thread *thread, SerialHeap *heap, char *primitiv
     } else {
         component_type = NULL;
     }
+    Object *class_object = malloc_object(thread, heap, class_class);
+    put_object_value_field_by_name_and_desc(class_object, "classLoader", "Ljava/lang/ClassLoader;", get_bootstrap_class_loader(thread, heap));
     put_object_value_field_by_name_and_desc(class_object, "componentType", "Ljava/lang/Class;", component_type);
     class_object->raw_class = class;
     class->class_object = class_object;
@@ -1303,7 +1304,7 @@ void create_array_reference(Thread *thread, SerialHeap *heap, Frame *frame, u2 i
     Array *arr = malloc_array(thread, heap, load_primitive_class(thread, heap, _arr_name), count);
     push_object(frame->operand_stack, arr);
 
-    if (NULL != class->class_object) {
+    if (NULL != arr->class->class_object) {
         put_field_by_name_and_desc(arr->class->class_object, "componentType", "Ljava/lang/Class;", create_object_slot_set_object(heap, class->class_object));
     }
 
@@ -1479,7 +1480,7 @@ Object *new_method_type(Thread *thread, SerialHeap *heap, char *desc)
     push_object(params, ptypes);
     ClassFile *class = load_class_ensure_init(thread, heap, "java/lang/invoke/MethodType");
     Slot *_return = create_slot();
-    single_invoke(thread, heap, class, "methodType", "(Ljava/lang/Class;Ljava/lang/Class;)Ljava/lang/invoke/MethodType;", params, _return);
+    single_invoke(thread, heap, class, "methodType", "(Ljava/lang/Class;[Ljava/lang/Class;)Ljava/lang/invoke/MethodType;", params, _return);
 //    Object *method_type = new_object_by_desc(thread, heap, NULL, "", "(Ljava/lang/Class;[Ljava/lang/Class;)V", params);
     return _return->object_value;
 }

@@ -126,7 +126,7 @@ void start_vm(char *class_path)
     ClassFile *system = load_class(thread, heap, "java/lang/System");
     Slot *system_object = create_object_slot(thread, heap, system);
 
-    //初始化3阶段
+//    //初始化3阶段
 //    MethodInfo *init_phase3 = find_method_with_desc(thread, heap, system, "initPhase3", "()V");
 //    push_slot(params, system_object);
 //    create_vm_frame_by_method_add_params(thread, system, params, init_phase3);

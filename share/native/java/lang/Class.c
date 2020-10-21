@@ -239,3 +239,31 @@ void java_lang_Class_isAssignableFrom_9Ljava_lang_Class10Z(Thread *thread, Seria
         push_int(frame->operand_stack, 0);
     }
 }
+
+void java_lang_Class_isInterface_90Z(Thread *thread, SerialHeap *heap, Frame *frame)
+{
+    Object *this = get_localvar_this(frame);
+    push_int(frame->operand_stack, is_interface(this->raw_class));
+}
+
+void java_lang_Class_getEnclosingMethod0_90sLjava_lang_Object1(Thread *thread, SerialHeap *heap, Frame *frame)
+{
+    //TODO
+    Object *this = get_localvar_this(frame);
+    if (is_full_primitive_desc(this->raw_class->class_name)) {
+        push_slot(frame->operand_stack, NULL_SLOT);
+    } else {
+        push_slot(frame->operand_stack, NULL_SLOT);
+    }
+}
+
+void java_lang_Class_getDeclaringClass0_90Ljava_lang_Class1(Thread *thread, SerialHeap *heap, Frame *frame)
+{
+    //TODO
+    Object *this = get_localvar_this(frame);
+    if (is_full_primitive_desc(this->raw_class->class_name) || strcmp(this->class->class_name, "java/lang/Class") != 0) {
+        push_slot(frame->operand_stack, NULL_SLOT);
+    } else {
+        push_slot(frame->operand_stack, NULL_SLOT);
+    }
+}
