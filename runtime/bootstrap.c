@@ -77,7 +77,9 @@ void start_vm(char *class_path)
     char *base_lib[] = {
             "java/lang/Object",
             "java/lang/Class",
+            "java/lang/Module",
             "java/lang/String",
+            "java/util/Vector",
             "java/lang/System",
             "java/lang/ClassLoader",
             "java/lang/ThreadGroup",
@@ -92,7 +94,7 @@ void start_vm(char *class_path)
     init_instructions_desc();
     Thread *thread = create_thread(VM_STACK_SIZE, C_STACK_SIZE);
     thread->pthread = (pthread_t *) pthread_self();
-    init_lib_by_names(thread, heap, base_lib, 10);
+    init_lib_by_names(thread, heap, base_lib, 12);
     init_primitives(thread, heap);
 
     //创建 main方法栈帧

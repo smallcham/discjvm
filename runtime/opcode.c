@@ -1339,7 +1339,6 @@ void ret(SerialHeap *heap, Thread *thread, Frame *frame) {
 void tableswitch(SerialHeap *heap, Thread *thread, Frame *frame) {
     u4 _pc = frame->pc;
     step_pad(frame);
-//    step_pc(frame, 3);
     int index = pop_int(frame->operand_stack);
     int default_offset = step_pc4_and_read_u4(frame);
     int lower = step_pc4_and_read_u4(frame);
@@ -1379,28 +1378,56 @@ void lookupswitch(SerialHeap *heap, Thread *thread, Frame *frame) {
 
 void ireturn(SerialHeap *heap, Thread *thread, Frame *frame) {
     Frame *next = get_prev(thread->vm_stack);
-    if (NULL != next) push_slot_from(frame->operand_stack, next->operand_stack);
+    if (NULL != next) {
+        push_slot_from(frame->operand_stack, next->operand_stack);
+        Slot *slot = get_slot(next->operand_stack);
+        if (NULL != frame->_return) {
+            frame->_return->value = slot->value;
+            frame->_return->object_value = slot->object_value;
+        }
+    }
     frame = pop_frame(thread, heap);
     free_frame(&frame);
 }
 
 void lreturn(SerialHeap *heap, Thread *thread, Frame *frame) {
     Frame *next = get_prev(thread->vm_stack);
-    if (NULL != next) push_long_from(frame->operand_stack, next->operand_stack);
+    if (NULL != next) {
+        push_long_from(frame->operand_stack, next->operand_stack);
+        Slot *slot = get_stack_offset(next->operand_stack, 2);
+        if (NULL != frame->_return) {
+            frame->_return->value = slot->value;
+            frame->_return->object_value = slot->object_value;
+        }
+    }
     frame = pop_frame(thread, heap);
     free_frame(&frame);
 }
 
 void freturn(SerialHeap *heap, Thread *thread, Frame *frame) {
     Frame *next = get_prev(thread->vm_stack);
-    if (NULL != next) push_float(next->operand_stack, pop_float(frame->operand_stack));
+    if (NULL != next) {
+        push_float(next->operand_stack, pop_float(frame->operand_stack));
+        Slot *slot = get_slot(next->operand_stack);
+        if (NULL != frame->_return) {
+            frame->_return->value = slot->value;
+            frame->_return->object_value = slot->object_value;
+        }
+    }
     frame = pop_frame(thread, heap);
     free_frame(&frame);
 }
 
 void dreturn(SerialHeap *heap, Thread *thread, Frame *frame) {
     Frame *next = get_prev(thread->vm_stack);
-    if (NULL != next) push_double_from(frame->operand_stack, next->operand_stack);
+    if (NULL != next) {
+        push_double_from(frame->operand_stack, next->operand_stack);
+        Slot *slot = get_stack_offset(next->operand_stack, 2);
+        if (NULL != frame->_return) {
+            frame->_return->value = slot->value;
+            frame->_return->object_value = slot->object_value;
+        }
+    }
     frame = pop_frame(thread, heap);
     free_frame(&frame);
 }
@@ -1414,8 +1441,6 @@ void areturn(SerialHeap *heap, Thread *thread, Frame *frame) {
             frame->_return->value = slot->value;
             frame->_return->object_value = slot->object_value;
         }
-    } else {
-        frame->_return = NULL;
     }
     frame = pop_frame(thread, heap);
     free_frame(&frame);
@@ -2142,10 +2167,12 @@ void exec(Operator operator, SerialHeap *heap, Thread *thread, Frame *frame)
     }
 }
 
-void single_invoke(SerialHeap *heap, ClassFile *class, char *method_name, char *method_desc, Stack *params, Slot *_return)
+void single_invoke(Thread *current_thread, SerialHeap *heap, ClassFile *class, char *method_name, char *method_desc, Stack *params, Slot *_return)
 {
     printf_warn("\t\t\t[SINGLE-INVOKE-IN] %s.%s%s", class->class_name, method_name, method_desc);
     Thread *thread = create_thread(100, 100);
+    thread->pthread = current_thread->pthread;
+    thread->jthread = current_thread->jthread;
     MethodInfo *method = find_method_with_desc(thread, heap, class, method_name, method_desc);
     Frame *frame = create_vm_frame_by_method_with_push(thread, class, method);
     frame->_return = _return;

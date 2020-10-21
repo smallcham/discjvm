@@ -20,7 +20,7 @@ void java_lang_System_initProperties_9Ljava_util_Properties10Ljava_util_Properti
         push_slot(params, create_object_slot_set_object(heap, object));
         push_slot(params, create_str_slot_set_str(thread, heap, _keys[i]));
         push_slot(params, create_str_slot_set_str(thread, heap, get_map(&VM_OPTS, _keys[i])));
-        single_invoke(heap, object->class, "setProperty", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Object;", params, NULL);
+        single_invoke(thread, heap, object->class, "setProperty", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Object;", params, NULL);
     }
     free(_keys);
 }

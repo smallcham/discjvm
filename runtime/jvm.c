@@ -410,6 +410,7 @@ Object *get_bootstrap_class_loader(Thread *thread, SerialHeap *heap)
     ClassFile *class = load_class(thread, heap, "java/lang/ClassLoader");
     if (NULL == bootstrap_class_loader && class_is_inited(class)) {
         Object *object = malloc_object(thread, heap, class);
+//        new_object(thread, heap, object, "java/lang/ClassLoader", NULL);
         Slot *name = create_slot();
         name->object_value = "BootstrapLoader";
         put_object_value_field_by_name_and_desc(object, "name", "Ljava/lang/String;", name);
@@ -501,6 +502,23 @@ ClassFile *load_primitive_class(Thread *thread, SerialHeap *heap, char *primitiv
     put_object_value_field_by_name_and_desc(class_object, "componentType", "Ljava/lang/Class;", component_type);
     class_object->raw_class = class;
     class->class_object = class_object;
+//    class->class_object = new_class_object(thread, heap, class, component_type);
+    return class;
+}
+
+Object *new_class_object(Thread *thread, SerialHeap *heap, ClassFile *class, Object *component_type)
+{
+    Object *class_object = malloc_object(thread, heap, get_class_class(thread, heap));
+    put_object_value_field_by_name_and_desc(class_object, "classLoader", "Ljava/lang/ClassLoader;", get_bootstrap_class_loader(thread, heap));
+    put_object_value_field_by_name_and_desc(class_object, "componentType", "Ljava/lang/Class;", component_type);
+    class_object->raw_class = class;
+    return class_object;
+}
+
+ClassFile *load_class_ensure_init(Thread *thread, SerialHeap *heap, char *class_name)
+{
+    ClassFile *class = load_class(thread, heap, class_name);
+    ensure_inited_class(thread, heap, class);
     return class;
 }
 
@@ -570,6 +588,7 @@ u4 parse_method_param_count_by_desc(char *desc, int length, u4 *real_count)
 
 void do_invokedynamic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
 {
+    Object *caller = get_caller_frame(thread)->class->class_object;
     CONSTANT_InvokeDynamic_info dynamic_info = *(CONSTANT_InvokeDynamic_info*)frame->constant_pool[index].info;
     CONSTANT_NameAndType_info name_and_type_info = *(CONSTANT_NameAndType_info*)frame->constant_pool[dynamic_info.name_and_type_index].info;
     u1* invoke_name = get_utf8_bytes(frame->constant_pool, name_and_type_info.name_index);
@@ -588,22 +607,50 @@ void do_invokedynamic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
     ensure_inited_class(thread, heap, class);
     u1* x = get_utf8_bytes(frame->constant_pool, mh_name_and_type_info.name_index);
     u1* t = get_utf8_bytes(frame->constant_pool, mh_name_and_type_info.descriptor_index);
-    MethodInfo *method_info = find_method_iter_super_with_desc(thread, heap, &class, x, t);
+//    MethodInfo *method_info = find_method_iter_super_with_desc(thread, heap, &class, x, t);
 
     Object *lookup = new_method_handle_lookup(thread, heap, get_caller_frame(thread)->class->class_object);
-    Object *method_type = new_method_type(thread, heap, invoke_desc);
-    Object *method_handle = new_method_handle(thread, heap, method_type, method_type);
-    Object *method_str = create_str_slot_set_str(thread, heap, invoke_name)->object_value;
+    Object *method_type = new_method_type(thread, heap, t);
 
-    Array *arr = malloc_array(thread, heap, load_primitive_class(thread, heap, "[Ljava/lang/Object"), 4);
-    arr->objects[0] = lookup;
-    arr->objects[1] = method_handle;
-    arr->objects[2] = method_type;
-    for (int i = 0; i < boot_method_info.num_bootstrap_arguments; ++i) {
-        CONSTANT_Utf8_info *str = get_utf8_info_from_string_index(frame->constant_pool, boot_method_info.bootstrap_arguments[i]);
-        arr->objects[3] = create_str_slot_set_str(thread, heap, str->bytes)->object_value;
+    switch (mh_info.reference_kind) {
+        case REF_invokeSpecial: {
+
+        }
+        case REF_invokeStatic: {
+            Slot *_return = create_slot();
+            Stack *params = create_unlimit_stack();
+            push_object(params, lookup);
+            push_object(params, caller);
+            push_slot(params, create_str_slot_set_str(thread, heap, invoke_name));
+            push_object(params, method_type);
+            single_invoke(thread, heap, lookup->class, "findStatic", "(Ljava/lang/Class;Ljava/lang/String;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/MethodHandle;", params, _return);
+            Object *method_handle = _return->object_value;
+            MethodInfo *invoke = find_method_with_desc(thread, heap, method_handle->class, "invokeExact", "[Ljava/lang/Object;");
+            push_object(params, method_handle);
+            push_object(params, create_str_slot_set_str(thread, heap, "Hello"));
+            create_vm_frame_by_method_add_params(thread, method_handle->class, params, invoke);
+        }
+        case REF_invokeVirtual: {
+
+        }
     }
-    MethodInfo *invoke = find_method_with_desc(thread, heap, method_handle->class, "invokeExact", "[Ljava/lang/Object;");
+
+//    Object *lookup = new_method_handle_lookup(thread, heap, get_caller_frame(thread)->class->class_object);
+//    Object *method_type = new_method_type(thread, heap, invoke_desc);
+//    Object *method_handle = new_method_handle(thread, heap, method_type, method_type);
+//    Object *method_str = create_str_slot_set_str(thread, heap, invoke_name)->object_value;
+//
+//    Array *arr = malloc_array(thread, heap, load_primitive_class(thread, heap, "[Ljava/lang/Object"), 4);
+//    arr->objects[0] = lookup;
+//    arr->objects[1] = method_handle;
+//    arr->objects[2] = method_type;
+//    for (int i = 0; i < boot_method_info.num_bootstrap_arguments; ++i) {
+//        CONSTANT_Utf8_info *str = get_utf8_info_from_string_index(frame->constant_pool, boot_method_info.bootstrap_arguments[i]);
+//        arr->objects[3] = create_str_slot_set_str(thread, heap, str->bytes)->object_value;
+//    }
+//    MethodInfo *invoke = find_method_with_desc(thread, heap, method_handle->class, "invokeExact", "[Ljava/lang/Object;");
+
+
 //    int count = method_info->params_count - 3 - boot_method_info.num_bootstrap_arguments;
 //    if (count > 0) {
 //        char **params_names = parse_param_types(thread, heap, method_info->desc, method_info->params_count);
@@ -620,9 +667,9 @@ void do_invokedynamic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
 
 //    ClassFile *mh_native = load_class(thread, heap, "java/lang/invoke/MethodHandleNatives");
 //    MethodInfo *link_call_site_method = find_method_with_desc(thread, heap, mh_native, "linkCallSite", "(Ljava/lang/Object;ILjava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/invoke/MemberName;");
-    Stack *params = create_unlimit_stack();
-    push_object(params, arr);
-    create_vm_frame_by_method_add_params(thread, class, params, invoke);
+//    Stack *params = create_unlimit_stack();
+//    push_object(params, arr);
+//    create_vm_frame_by_method_add_params(thread, class, params, invoke);
 //    switch (mh_info.reference_kind) {
 //        case REF_invokeInterface: {
 //            printf("123");
@@ -1396,17 +1443,16 @@ Object *new_object_by_desc(Thread *thread, SerialHeap *heap, Object *this, char 
     ClassFile *class = load_class(thread, heap, class_name);
     ensure_inited_class(thread, heap, class);
     this = (NULL == this) ? malloc_object(thread, heap, class) : this;
-    if (NULL != params && params->size > 0) {
-        int size = params->size;
-        Slot **slots = pop_slot_with_num(params, size);
-        push_object(params, this);
-        for (int i = 0; i < size; i++) {
-            push_slot(params, slots[i]);
-        }
+    params = NULL == params ? create_unlimit_stack() : params;
+    int size = params->size;
+    Slot **slots = pop_slot_with_num(params, size);
+    push_object(params, this);
+    for (int i = 0; i < size; i++) {
+        push_slot(params, slots[i]);
     }
 //    MethodInfo *init_method = find_method_with_desc(thread, heap, class, "<init>", desc);
 //    create_vm_frame_by_method_add_params_plus1(thread, class, params, init_method);
-    single_invoke(heap, class, "<init>", desc, params, NULL);
+    single_invoke(thread, heap, class, "<init>", desc, params, NULL);
     return this;
 }
 
@@ -1423,17 +1469,19 @@ Object *new_method_type(Thread *thread, SerialHeap *heap, char *desc)
     u4 count;
     parse_method_param_count_by_desc(desc, strlen(desc), &count);
     Stack *params = create_unlimit_stack();
-    ClassFile *rtype_class = load_class(thread, heap, return_type_name(desc));
-    ensure_inited_class(thread, heap, rtype_class);
+    ClassFile *rtype_class = load_class_ensure_init(thread, heap, return_type_name(desc));
     push_object(params, rtype_class->class_object);
     char **param_names = parse_param_types(thread, heap, desc, count);
     Array *ptypes = malloc_array(thread, heap, load_primitive_class(thread, heap, "[Ljava/lang/Class"), count);
     for (int i = 0; i < count; i++) {
-        ptypes->objects[i] = load_class(thread, heap, param_names[i])->class_object;
+        ptypes->objects[i] = load_class_ensure_init(thread, heap, param_names[i])->class_object;
     }
     push_object(params, ptypes);
-    Object *method_type = new_object_by_desc(thread, heap, NULL, "java/lang/invoke/MethodType", "(Ljava/lang/Class;[Ljava/lang/Class;)V", params);
-    return method_type;
+    ClassFile *class = load_class_ensure_init(thread, heap, "java/lang/invoke/MethodType");
+    Slot *_return = create_slot();
+    single_invoke(thread, heap, class, "methodType", "(Ljava/lang/Class;Ljava/lang/Class;)Ljava/lang/invoke/MethodType;", params, _return);
+//    Object *method_type = new_object_by_desc(thread, heap, NULL, "", "(Ljava/lang/Class;[Ljava/lang/Class;)V", params);
+    return _return->object_value;
 }
 
 Object *new_method_handle(Thread *thread, SerialHeap *heap, Object *method_type, Object *from_method_type)

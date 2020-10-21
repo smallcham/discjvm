@@ -25,6 +25,10 @@ ClassFile *load_primitive_class(Thread *thread, SerialHeap *heap, char *primitiv
 
 ClassFile *load_primitive_class_by_str_array(Thread *thread, SerialHeap *heap, Array *array);
 
+ClassFile *load_class_ensure_init(Thread *thread, SerialHeap *heap, char *class_name);
+
+Object *new_class_object(Thread *thread, SerialHeap *heap, ClassFile *class, Object *component_type);
+
 void put_static_field(Thread *thread, SerialHeap *heap, Frame *frame, CONSTANT_Fieldref_info field_ref_info);
 
 void put_static_field_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index);
