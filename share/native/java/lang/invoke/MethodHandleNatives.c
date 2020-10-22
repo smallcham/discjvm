@@ -18,9 +18,9 @@ void java_lang_invoke_MethodHandleNatives_resolve_9Ljava_lang_invoke_MemberName1
     push_object(frame->operand_stack, self);
 
     Object *defc_oop = get_field_object_value_by_name_and_desc(self, "clazz", "Ljava/lang/Class;");
-    ClassFile *defc_klass = defc_oop->raw_class;
     char *name = get_str_field_value_by_object(get_field_object_value_by_name_and_desc(self, "name", "Ljava/lang/String;"));
     Object *type = get_field_object_value_by_name_and_desc(self, "type", "Ljava/lang/Object;");
+    char *desc = get_field_object_value_by_name_and_desc(type, "methodDescriptor", "Ljava/lang/String;");
     int flags = get_field_value_by_name_and_desc(self, "flags", "I");
     int ref_kind = (flags >> MN_REFERENCE_KIND_SHIFT) & MN_REFERENCE_KIND_MASK;
 
@@ -40,7 +40,15 @@ void java_lang_invoke_MethodHandleNatives_resolve_9Ljava_lang_invoke_MemberName1
     switch (flags & ALL_KINDS) {
         case MN_IS_METHOD: {
             if (ref_kind == REF_invokeStatic) {
-
+                MethodInfo *method;
+                if (NULL == desc) {
+                    method = find_method(thread, heap, defc_oop->raw_class, name);
+                } else {
+                    method = find_method_iter_super_with_desc(thread, heap, &defc_oop->raw_class, name, desc);
+                }
+                put_value_field_by_name_and_desc(self, "flags", "I", flags | method->access_flags);
+                put_object_value_field_by_name_and_desc(self, "method", "Ljava/lang/invoke/ResolvedMethodName;", method);
+                break;
             } else if (ref_kind == REF_invokeInterface) {
 
             } else if (ref_kind == REF_invokeSpecial) {

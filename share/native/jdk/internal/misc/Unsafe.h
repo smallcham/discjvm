@@ -53,4 +53,6 @@ void jdk_internal_misc_Unsafe_getInt_9Ljava_lang_Object1J0I(Thread *thread, Seri
 
 void jdk_internal_misc_Unsafe_getByte_9Ljava_lang_Object1J0B(Thread *thread, SerialHeap *heap, Frame *frame);
 
+void jdk_internal_misc_Unsafe_shouldBeInitialized0_9Ljava_lang_Class10Z(Thread *thread, SerialHeap *heap, Frame *frame);
+
 #endif //DISCJVM_UNSAFE_H

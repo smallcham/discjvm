@@ -407,3 +407,13 @@ void jdk_internal_misc_Unsafe_getByte_9Ljava_lang_Object1J0B(Thread *thread, Ser
     }
     push_int(frame->operand_stack, value);
 }
+
+void jdk_internal_misc_Unsafe_shouldBeInitialized0_9Ljava_lang_Class10Z(Thread *thread, SerialHeap *heap, Frame *frame)
+{
+    Object *class = get_ref_localvar(frame, 1);
+    if (NULL == class) {
+        printf_err("clazz must not be NULL");
+        exit(-1);
+    }
+    push_int(frame->operand_stack, !class_is_in_init(class->raw_class));
+}

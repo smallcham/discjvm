@@ -610,18 +610,18 @@ void do_invokedynamic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
     u1* t = get_utf8_bytes(frame->constant_pool, mh_name_and_type_info.descriptor_index);
 //    MethodInfo *method_info = find_method_iter_super_with_desc(thread, heap, &class, x, t);
 
-    Object *lookup = new_method_handle_lookup(thread, heap, get_caller_frame(thread)->class->class_object);
+    Object *lookup = new_method_handle_lookup(thread, heap);
     Object *method_type = new_method_type(thread, heap, t);
 
     switch (mh_info.reference_kind) {
         case REF_invokeSpecial: {
-
+            break;
         }
         case REF_invokeStatic: {
             Slot *_return = create_slot();
             Stack *params = create_unlimit_stack();
             push_object(params, lookup);
-            push_object(params, caller);
+            push_object(params, class->class_object);
             push_slot(params, create_str_slot_set_str(thread, heap, invoke_name));
             push_object(params, method_type);
             single_invoke(thread, heap, lookup->class, "findStatic", "(Ljava/lang/Class;Ljava/lang/String;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/MethodHandle;", params, _return);
@@ -630,9 +630,10 @@ void do_invokedynamic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
             push_object(params, method_handle);
             push_object(params, create_str_slot_set_str(thread, heap, "Hello"));
             create_vm_frame_by_method_add_params(thread, method_handle->class, params, invoke);
+            break;
         }
         case REF_invokeVirtual: {
-
+            break;
         }
     }
 
@@ -1457,12 +1458,12 @@ Object *new_object_by_desc(Thread *thread, SerialHeap *heap, Object *this, char 
     return this;
 }
 
-Object *new_method_handle_lookup(Thread *thread, SerialHeap *heap, Object *class)
+Object *new_method_handle_lookup(Thread *thread, SerialHeap *heap)
 {
-    Stack *params = create_unlimit_stack();
-    push_object(params, class);
-    Object *lookup = new_object_by_desc(thread, heap, NULL, "java/lang/invoke/MethodHandles$Lookup", "(Ljava/lang/Class;)V", params);
-    return lookup;
+    Slot *_return = create_slot();
+    single_invoke(thread, heap, load_class_ensure_init(thread, heap, "java/lang/invoke/MethodHandles"), "lookup", "()Ljava/lang/invoke/MethodHandles$Lookup;", NULL, _return);
+//    Object *lookup = new_object_by_desc(thread, heap, NULL, "java/lang/invoke/MethodHandles$Lookup", "(Ljava/lang/Class;)V", params);
+    return _return->object_value;
 }
 
 Object *new_method_type(Thread *thread, SerialHeap *heap, char *desc)
@@ -1482,6 +1483,7 @@ Object *new_method_type(Thread *thread, SerialHeap *heap, char *desc)
     Slot *_return = create_slot();
     single_invoke(thread, heap, class, "methodType", "(Ljava/lang/Class;[Ljava/lang/Class;)Ljava/lang/invoke/MethodType;", params, _return);
 //    Object *method_type = new_object_by_desc(thread, heap, NULL, "", "(Ljava/lang/Class;[Ljava/lang/Class;)V", params);
+    put_object_value_field_by_name_and_desc(_return->object_value, "methodDescriptor", "Ljava/lang/String;", desc);
     return _return->object_value;
 }
 

@@ -77,6 +77,7 @@ void init_native_factory()
     put_map(&native_pool, "jdk/internal/misc/Unsafe.putByte(Ljava/lang/Object;JB)V", jdk_internal_misc_Unsafe_putByte_9Ljava_lang_Object1JB0V);
     put_map(&native_pool, "jdk/internal/misc/Unsafe.getInt(Ljava/lang/Object;J)I", jdk_internal_misc_Unsafe_getInt_9Ljava_lang_Object1J0I);
     put_map(&native_pool, "jdk/internal/misc/Unsafe.getByte(Ljava/lang/Object;J)B", jdk_internal_misc_Unsafe_getByte_9Ljava_lang_Object1J0B);
+    put_map(&native_pool, "jdk/internal/misc/Unsafe.shouldBeInitialized0(Ljava/lang/Class;)Z", jdk_internal_misc_Unsafe_shouldBeInitialized0_9Ljava_lang_Class10Z);
 
     //ClassLoader
     put_map(&native_pool, "java/lang/ClassLoader.registerNatives()V", java_lang_ClassLoader_registerNatives_90V);

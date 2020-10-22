@@ -185,7 +185,7 @@ Object *new_object(Thread *thread, SerialHeap *heap, Object *this, char *class_n
 
 Object *new_method_type(Thread *thread, SerialHeap *heap, char *desc);
 
-Object *new_method_handle_lookup(Thread *thread, SerialHeap *heap, Object *class);
+Object *new_method_handle_lookup(Thread *thread, SerialHeap *heap);
 
 Object *new_method_handle(Thread *thread, SerialHeap *heap, Object *method_type, Object *from_method_type);
 
