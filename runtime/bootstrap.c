@@ -28,7 +28,7 @@ void init_primitives(Thread *thread, SerialHeap *heap)
 
 HashMap **init_vm_opts()
 {
-    VM_OPTS = create_map_by_size((int)(20 * 1.3) + 1);
+    VM_OPTS = create_map_by_size((int)(23 * 1.3) + 1);
     char *lib_path = malloc(strlen(JAVA_HOME) + 4);
     sprintf(lib_path, "%s/lib", JAVA_HOME);
     put_map(&VM_OPTS, "java.version", "1.11.0");
