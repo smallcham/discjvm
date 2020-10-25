@@ -40,3 +40,5 @@
 # complete the method "parse_param_types"
 
 # complete the opcode "instanof" and complete the next native method stat0
+
+# if_acmpne int class not equals, set frame->count > 140006

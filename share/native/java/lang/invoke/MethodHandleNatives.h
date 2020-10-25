@@ -21,6 +21,11 @@ enum {
     ALL_KINDS               = MN_IS_METHOD | MN_IS_CONSTRUCTOR | MN_IS_FIELD | MN_IS_TYPE
 };
 
+typedef struct {
+    MethodInfo *vm_target;
+    void *vm_holder;
+} ResolvedMethodName;
+
 void java_lang_invoke_MethodHandleNatives_registerNatives_90V(Thread *thread, SerialHeap *heap, Frame *frame);
 
 void java_lang_invoke_MethodHandleNatives_resolve_9Ljava_lang_invoke_MemberName1Ljava_lang_Class1Z0Ljava_lang_invoke_MemberName1(Thread *thread, SerialHeap *heap, Frame *frame);

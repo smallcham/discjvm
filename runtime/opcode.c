@@ -302,7 +302,6 @@ void ldc_w(SerialHeap *heap, Thread *thread, Frame *frame) {
             CONSTANT_Class_info class_info = *(CONSTANT_Class_info*)frame->constant_pool[index].info;
             u1 *class_name = get_utf8_bytes(frame->constant_pool, class_info.name_index);
             push_object(frame->operand_stack, load_class(thread, heap, class_name)->class_object);
-//            create_object_with_backpc(thread, heap, frame, index, 3);
             break;
         }
         case CONSTANT_InterfaceMethodref: {
@@ -807,8 +806,8 @@ void dup_x2(SerialHeap *heap, Thread *thread, Frame *frame) {
     Slot *value2 = pop_slot(frame->operand_stack);
     Slot *value3 = pop_slot(frame->operand_stack);
     push_slot_copy(frame->operand_stack, value1);
-    push_slot_copy(frame->operand_stack, value2);
     push_slot_copy(frame->operand_stack, value3);
+    push_slot_copy(frame->operand_stack, value2);
     push_slot_copy(frame->operand_stack, value1);
     step_pc_1(frame);
 }
@@ -817,10 +816,10 @@ void j_dup2(SerialHeap *heap, Thread *thread, Frame *frame) {
     //TODO the logic is not complete here is form1
     Slot *value1 = pop_slot(frame->operand_stack);
     Slot *value2 = pop_slot(frame->operand_stack);
-    push_slot_copy(frame->operand_stack, value1);
     push_slot_copy(frame->operand_stack, value2);
     push_slot_copy(frame->operand_stack, value1);
     push_slot_copy(frame->operand_stack, value2);
+    push_slot_copy(frame->operand_stack, value1);
     step_pc_1(frame);
 }
 
@@ -829,11 +828,11 @@ void dup2_x1(SerialHeap *heap, Thread *thread, Frame *frame) {
     Slot *value1 = pop_slot(frame->operand_stack);
     Slot *value2 = pop_slot(frame->operand_stack);
     Slot *value3 = pop_slot(frame->operand_stack);
-    push_slot_copy(frame->operand_stack, value1);
     push_slot_copy(frame->operand_stack, value2);
+    push_slot_copy(frame->operand_stack, value1);
     push_slot_copy(frame->operand_stack, value3);
-    push_slot_copy(frame->operand_stack, value1);
     push_slot_copy(frame->operand_stack, value2);
+    push_slot_copy(frame->operand_stack, value1);
     step_pc_1(frame);
 }
 
@@ -843,12 +842,12 @@ void dup2_x2(SerialHeap *heap, Thread *thread, Frame *frame) {
     Slot *value2 = pop_slot(frame->operand_stack);
     Slot *value3 = pop_slot(frame->operand_stack);
     Slot *value4 = pop_slot(frame->operand_stack);
-    push_slot_copy(frame->operand_stack, value1);
     push_slot_copy(frame->operand_stack, value2);
-    push_slot_copy(frame->operand_stack, value3);
+    push_slot_copy(frame->operand_stack, value1);
     push_slot_copy(frame->operand_stack, value4);
-    push_slot_copy(frame->operand_stack, value1);
+    push_slot_copy(frame->operand_stack, value3);
     push_slot_copy(frame->operand_stack, value2);
+    push_slot_copy(frame->operand_stack, value1);
     step_pc_1(frame);
 }
 

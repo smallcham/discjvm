@@ -608,7 +608,7 @@ void do_invokedynamic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
     ensure_inited_class(thread, heap, class);
     u1* x = get_utf8_bytes(frame->constant_pool, mh_name_and_type_info.name_index);
     u1* t = get_utf8_bytes(frame->constant_pool, mh_name_and_type_info.descriptor_index);
-//    MethodInfo *method_info = find_method_iter_super_with_desc(thread, heap, &class, x, t);
+    MethodInfo *bs_method_info = find_method_iter_super_with_desc(thread, heap, &class, x, t);
 
     Object *lookup = new_method_handle_lookup(thread, heap);
     Object *method_type = new_method_type(thread, heap, t);
@@ -626,10 +626,23 @@ void do_invokedynamic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
             push_object(params, method_type);
             single_invoke(thread, heap, lookup->class, "findStatic", "(Ljava/lang/Class;Ljava/lang/String;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/MethodHandle;", params, _return);
             Object *method_handle = _return->object_value;
-            MethodInfo *invoke = find_method_with_desc(thread, heap, method_handle->class, "invokeExact", "[Ljava/lang/Object;");
+
             push_object(params, method_handle);
-            push_object(params, create_str_slot_set_str(thread, heap, "Hello"));
-            create_vm_frame_by_method_add_params(thread, method_handle->class, params, invoke);
+            push_object(params, lookup);
+            push_slot(params, create_str_slot_set_str(thread, heap, invoke_name));
+            push_object(params, new_method_type(thread, heap, invoke_desc));
+
+            CONSTANT_Utf8_info *str = get_utf8_info_from_string_index(frame->constant_pool, boot_method_info.bootstrap_arguments[0]);
+            push_slot(params, create_str_slot_set_str(thread, heap, str->bytes));
+            Array *array = malloc_array(thread, heap, load_primitive_class(thread, heap, "[Ljava/lang/Object;"), 0);
+            push_object(params, array);
+            create_vm_frame_by_method_add_params(thread, class, params, bs_method_info);
+
+//            ClassFile *mh_class = method_handle->class;
+//            MethodInfo *invoke = find_method_iter_super_with_desc(thread, heap, &mh_class, "invoke", "[Ljava/lang/Object;");
+//            push_object(params, method_handle);
+//            push_object(params, create_str_slot_set_str(thread, heap, "Hello"));
+//            create_vm_frame_by_method_add_params(thread, method_handle->class, params, invoke);
             break;
         }
         case REF_invokeVirtual: {

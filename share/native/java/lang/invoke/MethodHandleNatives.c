@@ -13,7 +13,7 @@ void java_lang_invoke_MethodHandleNatives_resolve_9Ljava_lang_invoke_MemberName1
 {
     Object *self = get_ref_localvar(frame, 0);
     Object *caller = get_ref_localvar(frame, 1);
-    int speculative_resolve = get_localvar(frame, 3);
+    int speculative_resolve = get_localvar(frame, 2);
 
     push_object(frame->operand_stack, self);
 
@@ -46,8 +46,17 @@ void java_lang_invoke_MethodHandleNatives_resolve_9Ljava_lang_invoke_MemberName1
                 } else {
                     method = find_method_iter_super_with_desc(thread, heap, &defc_oop->raw_class, name, desc);
                 }
-                put_value_field_by_name_and_desc(self, "flags", "I", flags | method->access_flags);
-                put_object_value_field_by_name_and_desc(self, "method", "Ljava/lang/invoke/ResolvedMethodName;", method);
+                ResolvedMethodName *resolved_method = malloc(sizeof(ResolvedMethodName));
+                if (NULL == method) {
+                    resolved_method->vm_target = method;
+                    resolved_method->vm_holder = NULL;
+                    put_value_field_by_name_and_desc(self, "flags", "I", flags);
+                } else {
+                    resolved_method->vm_target = method;
+                    resolved_method->vm_holder = NULL;
+                    put_value_field_by_name_and_desc(self, "flags", "I", flags | method->access_flags);
+                }
+                put_object_value_field_by_name_and_desc(self, "method", "Ljava/lang/invoke/ResolvedMethodName;", resolved_method);
                 break;
             } else if (ref_kind == REF_invokeInterface) {
 
