@@ -2156,7 +2156,7 @@ void exec(Operator operator, SerialHeap *heap, Thread *thread, Frame *frame)
         if (NULL != t_name_obj) t_name = get_str_field_value_by_object(t_name_obj);
     }
     printf_debug("\t\t\t[%ld - %s] - %s.%s%s\t\t\t#%d %s:\n", count++, t_name, frame->class->class_name, frame->method->name, frame->method->desc, frame->pc, instructions_desc[read_code(frame)]);
-    frame->count = count;
+    thread->count = count;
     operator(heap, thread, frame);
     Frame *_frame = get_stack(thread->vm_stack);
     if (NULL != _frame && NULL != _frame->class) {

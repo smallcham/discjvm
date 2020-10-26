@@ -41,6 +41,7 @@ Object *malloc_object(Thread *thread, SerialHeap *heap, ClassFile *class)
     object->raw_class = class;
     object->fields = create_slot_by_size(class->object_fields_count);
     object->monitor = create_monitor(NULL);
+    object->_debug_flag = thread->count;
     return object;
 }
 

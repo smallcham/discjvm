@@ -863,17 +863,28 @@ void do_invokevirtual_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
         push_slot(params, slots[i]);
     }
     Object *object = slots[0]->object_value;
-    class = object->class;
-    MethodInfo *method = find_method_iter_super_with_desc(thread, heap, &class, method_name_info.bytes, method_desc_info.bytes);
+    ClassFile *_class = object->class;
+
+    if (is_signature_polymorphic(class->class_name, method_name_info.bytes)) {
+        Object *method_type = new_method_type(thread, heap, method_desc_info.bytes);
+        if (strcmp(method_name_info.bytes, "invokeExact") == 0) {
+
+        } else if (strcmp(method_name_info.bytes, "invoke") == 0) {
+            Object *ref_method_type = get_field_object_value_by_name_and_desc(object, "type", "Ljava/lang/invoke/MethodType;");
+            printf("123");
+        }
+    }
+
+    MethodInfo *method = find_method_iter_super_with_desc(thread, heap, &_class, method_name_info.bytes, method_desc_info.bytes);
     if (NULL == method) {
         printf_err("method [%s] not found", method_name_info.bytes);
         exit(-1);
     }
     Frame *new_frame;
     if (is_native(method->access_flags)) {
-        new_frame = create_c_frame_and_invoke_add_params_plus1(thread, heap, frame, params, class->class_name, method);
+        new_frame = create_c_frame_and_invoke_add_params_plus1(thread, heap, frame, params, _class->class_name, method);
     } else {
-        new_frame = create_vm_frame_by_method_add_params_plus1(thread, class, params, method);
+        new_frame = create_vm_frame_by_method_add_params_plus1(thread, _class, params, method);
     }
     if (is_synchronized(method->access_flags)) {
         new_frame->pop_args = object->monitor;

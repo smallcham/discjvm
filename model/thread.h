@@ -13,7 +13,6 @@ typedef void (*PopHook)(void *, void *, void *, void *);
 
 typedef struct {
     u4 pc;
-    long count;
     Stack *operand_stack;
     ClassFile *class;
     ConstantPool *constant_pool;
@@ -31,6 +30,7 @@ typedef struct {
     Stack *c_stack;
     Object *jthread;
     pthread_t *pthread;
+    long count;
 } Thread;
 
 Frame *create_vm_frame_by_method(Thread* thread, ClassFile *class, MethodInfo *method);

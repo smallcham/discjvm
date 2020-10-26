@@ -28,8 +28,7 @@
 # LD_LIBRARY_PATH=/usr/lib/jvm/java-11-openjdk-amd64/lib/server
 
 # Object.clone not complete
-# Thread.isAlive not complete
-# Thread.start0 not complete, need lock
+# Thread.isAlive not complete# Thread.start0 not complete, need lock
 
 # wait has some problem, may be the key is complete the synchronized invoke method.
 
@@ -42,3 +41,5 @@
 # complete the opcode "instanof" and complete the next native method stat0
 
 # if_acmpne int class not equals, set frame->count > 140006
+
+# completed invoke_virtual , write logic of is_signature_polymorphic method internal, and find out why method_type is equals. 

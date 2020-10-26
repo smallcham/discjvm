@@ -52,9 +52,8 @@ void java_lang_Class_forName0_9Ljava_lang_String1ZLjava_lang_ClassLoader1Ljava_l
 //        push_slot(current->operand_stack, get_slot_localvar(frame, 3));
 //        back_pc(current, 3);
 //        init_class(thread, heap, class);
-    } else {
-        push_object(frame->operand_stack, class->class_object);
     }
+    push_object(frame->operand_stack, class->class_object);
 }
 
 void java_lang_Class_isPrimitive_90Z(Thread *thread, SerialHeap *heap, Frame *frame)

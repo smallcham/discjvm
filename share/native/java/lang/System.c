@@ -46,14 +46,17 @@ void java_lang_System_arraycopy_9Ljava_lang_Object1ILjava_lang_Object1II0V(Threa
     } else {
         for (int i = s_pos, j = d_pos; i < s_pos + length; i++, j++) {
             Object *s_obj = source->objects[i];
-            Object *t_obj = malloc_object(thread, heap, s_obj->class);
-            t_obj->raw_class = s_obj->raw_class;
-            for (int k = 0; k < s_obj->class->object_fields_count; k++) {
-                t_obj->fields[k].value = s_obj->fields[k].value;
-                t_obj->fields[k].object_value = s_obj->fields[k].object_value;
+            if (is_full_primitive_desc(s_obj->raw_class->class_name)) {
+                dest->objects[j] = source->objects[i];
+            } else {
+                Object *t_obj = malloc_object(thread, heap, s_obj->class);
+                t_obj->raw_class = s_obj->raw_class;
+                for (int k = 0; k < s_obj->class->object_fields_count; k++) {
+                    t_obj->fields[k].value = s_obj->fields[k].value;
+                    t_obj->fields[k].object_value = s_obj->fields[k].object_value;
+                }
+                dest->objects[j] = t_obj;
             }
-            dest->objects[j] = t_obj;
-//            dest->objects[j] = source->objects[i];
         }
     }
 }

@@ -224,6 +224,7 @@ typedef struct {
     ClassFile *class;
     ClassFile *raw_class;
     Monitor *monitor;
+    long _debug_flag;
     Slot *fields;
 } Object;
 
@@ -294,6 +295,8 @@ int is_primitive_desc(char *desc);
 int is_object_by_name(char *name);
 
 int is_synchronized(u2 access_flags);
+
+int is_signature_polymorphic(char *class_name, char *method_name);
 
 void format_class_name(char *class_name);
 

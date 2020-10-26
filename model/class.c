@@ -199,6 +199,16 @@ int is_native(u2 access_flag)
     return 0 != (access_flag & ACC_NATIVE);
 }
 
+int is_signature_polymorphic(char *class_name, char *method_name)
+{
+    if (strcmp(class_name, "java/lang/invoke/MethodHandle") == 0 || strcmp(class_name, "java/lang/invoke/VarHandle") == 0) {
+        if (strcmp(method_name, "invoke") == 0 || strcmp(method_name, "invokeExact") == 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 void format_class_name(char *class_name)
 {
     for (int i = 0; i < strlen(class_name); i++) {
