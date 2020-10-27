@@ -871,8 +871,20 @@ void do_invokevirtual_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
 
         } else if (strcmp(method_name_info.bytes, "invoke") == 0) {
             Object *ref_method_type = get_field_object_value_by_name_and_desc(object, "type", "Ljava/lang/invoke/MethodType;");
-            printf("123");
+            if (method_type != ref_method_type) {
+                Stack *as_type_params = create_unlimit_stack();
+                Slot *_return = create_slot();
+                push_object(as_type_params, object);
+                push_object(as_type_params, method_type);
+                single_invoke(thread, heap, load_class(thread, heap, "java/lang/invoke/MethodHandle"), "asType", "(Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/MethodHandle;", as_type_params, _return);
+                object = _return->object_value;
+            }
+        } else {
+            printf_err("ShouldNotReachHere");
+            exit(-1);
         }
+        ResolvedMethodName *resolved_method = get_resolved_method_name_from_mh(object);
+        MethodInfo *method = resolved_method->vm_target;
     }
 
     MethodInfo *method = find_method_iter_super_with_desc(thread, heap, &_class, method_name_info.bytes, method_desc_info.bytes);
@@ -1010,6 +1022,13 @@ void *get_field_object_value_by_name_and_desc(Object *object, char *name, char *
 {
     FieldInfo *field = get_field_by_name_and_desc(object->class, name, desc);
     return object->fields[field->offset].object_value;
+}
+
+void *get_resolved_method_name_from_mh(Object *method_handle)
+{
+    Object *from = get_field_object_value_by_name_and_desc(method_handle, "form", "Ljava/lang/invoke/LambdaForm;");
+    Object *member_name = get_field_object_value_by_name_and_desc(from, "vmentry", "Ljava/lang/invoke/MemberName;");
+    return get_field_object_value_by_name_and_desc(member_name, "method", "Ljava/lang/invoke/ResolvedMethodName;");
 }
 
 FieldInfo *get_static_field_by_name_and_desc(ClassFile *class, char *name, char *desc)

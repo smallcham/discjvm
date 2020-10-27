@@ -39,7 +39,9 @@ void java_lang_invoke_MethodHandleNatives_resolve_9Ljava_lang_invoke_MemberName1
     }
     switch (flags & ALL_KINDS) {
         case MN_IS_METHOD: {
-            if (ref_kind == REF_invokeStatic) {
+            if (ref_kind == REF_invokeStatic ||
+                    ref_kind == REF_invokeSpecial ||
+                    ref_kind == REF_invokeVirtual) {
                 MethodInfo *method;
                 if (NULL == desc) {
                     method = find_method(thread, heap, defc_oop->raw_class, name);
@@ -48,6 +50,16 @@ void java_lang_invoke_MethodHandleNatives_resolve_9Ljava_lang_invoke_MemberName1
                 }
                 ResolvedMethodName *resolved_method = malloc(sizeof(ResolvedMethodName));
                 if (NULL == method) {
+                    Stack *params = create_unlimit_stack();
+                    Slot *_return = create_slot();
+                    push_object(params, self);
+                    single_invoke(thread, heap, self->class, "getSignature", "()Ljava/lang/String;", params, _return);
+                    free(params);
+                    char *signature = get_str_field_value_by_object(_return->object_value);
+                    printf("123");
+//                    MethodInfo *method = find_method_with_desc(thread, heap, class->raw_class, name, signature);
+//                    put_value_field_by_name_and_desc(self, "flags", "I", method->access_flags);
+
                     resolved_method->vm_target = method;
                     resolved_method->vm_holder = NULL;
                     put_value_field_by_name_and_desc(self, "flags", "I", flags);
@@ -59,10 +71,6 @@ void java_lang_invoke_MethodHandleNatives_resolve_9Ljava_lang_invoke_MemberName1
                 put_object_value_field_by_name_and_desc(self, "method", "Ljava/lang/invoke/ResolvedMethodName;", resolved_method);
                 break;
             } else if (ref_kind == REF_invokeInterface) {
-
-            } else if (ref_kind == REF_invokeSpecial) {
-
-            } else if (ref_kind == REF_invokeVirtual) {
 
             } else {
                 printf_err("ref_kind=%d", ref_kind);

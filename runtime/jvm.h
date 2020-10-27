@@ -197,6 +197,8 @@ u4 parse_method_param_count_by_desc(char *desc, int length, u4 *real_count);
 
 char *get_str_field_value_by_object_and_name(Object *object, char *name);
 
+void *get_resolved_method_name_from_mh(Object *method_handle);
+
 ExceptionsAttribute *get_exception_handle(ConstantPool *pool, MethodInfo *method, ClassFile *class);
 
 ClassFile *get_class_by_attr_index(Thread *thread, SerialHeap *heap, ConstantPool *pool, u2 index);
