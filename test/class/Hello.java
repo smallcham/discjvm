@@ -28,8 +28,14 @@ public class Hello {
 // 	}
 
     public static void main(String[] args) {
+        int a = 0;
+        int b = 2;
         for (int i = 0; i < 100; i++) {
-            System.out.println("Hello" + i);
+            System.out.println("Hello:");
+            System.out.println(a + b + i);
+            b = a;
+            a = i;
+//             System.out.println("Hello" + i);
 //             System.out.println("Hello World");
         }
 //         int a = 100;

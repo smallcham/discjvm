@@ -1509,6 +1509,8 @@ void invokeinterface(SerialHeap *heap, Thread *thread, Frame *frame) {
 }
 
 void invokedynamic(SerialHeap *heap, Thread *thread, Frame *frame) {
+    printf_err("invokedynamic not yet competed");
+    exit(-1);
     u1 byte1 = step_pc1_and_read_code(frame);
     u1 byte2 = step_pc1_and_read_code(frame);
     step_pc_2(frame);
