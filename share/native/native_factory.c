@@ -170,6 +170,9 @@ void init_native_factory()
     //MethodHandleNatives
     put_map(&native_pool, "java/lang/invoke/MethodHandleNatives.registerNatives()V", java_lang_invoke_MethodHandleNatives_registerNatives_90V);
     put_map(&native_pool, "java/lang/invoke/MethodHandleNatives.resolve(Ljava/lang/invoke/MemberName;Ljava/lang/Class;Z)Ljava/lang/invoke/MemberName;", java_lang_invoke_MethodHandleNatives_resolve_9Ljava_lang_invoke_MemberName1Ljava_lang_Class1Z0Ljava_lang_invoke_MemberName1);
+
+    //StackTraceElement
+    put_map(&native_pool, "java/lang/StackTraceElement.initStackTraceElements([Ljava/lang/StackTraceElement;Ljava/lang/Throwable;)V", java_lang_StackTraceElement_initStackTraceElements_9sLjava_lang_StackTraceElement1Ljava_lang_Throwable10V);
 }
 
 NativeMethod find_native(char *class_name, char *method_name, char *method_desc)

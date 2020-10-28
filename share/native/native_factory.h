@@ -37,6 +37,7 @@
 #include "java/lang/StringUTF16.h"
 #include "jdk/internal/reflect/NativeMethodAccessorImpl.h"
 #include "java/lang/invoke/MethodHandleNatives.h"
+#include "java/lang/StackTraceElement.h"
 
 typedef void (*NativeMethod)(Thread *, SerialHeap *, Frame *);
 

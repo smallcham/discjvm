@@ -947,7 +947,7 @@ void idiv(SerialHeap *heap, Thread *thread, Frame *frame) {
     int value2 = pop_int(frame->operand_stack);
     int value1 = pop_int(frame->operand_stack);
     if (value2 == 0) {
-        throw_exception_by_name_and_msg(thread, heap, frame, "java/lang/ArithmeticException", "/ by zero");
+        throw_exception_by_name_and_msg(thread, heap, "java/lang/ArithmeticException", "/ by zero");
         return;
     }
     push_int(frame->operand_stack, value1 / value2);
@@ -1556,7 +1556,7 @@ void arraylength(SerialHeap *heap, Thread *thread, Frame *frame) {
 
 void athrow(SerialHeap *heap, Thread *thread, Frame *frame) {
     Object *exception = pop_object(frame->operand_stack);
-    throw_exception(thread, heap, frame, exception);
+    throw_exception(thread, heap, exception);
 }
 
 void checkcast(SerialHeap *heap, Thread *thread, Frame *frame) {

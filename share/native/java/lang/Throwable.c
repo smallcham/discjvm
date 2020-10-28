@@ -14,13 +14,13 @@ void java_lang_Throwable_fillInStackTrace_9I0Ljava_lang_Throwable1(Thread *threa
 {
     Object *throwable = get_localvar_this(frame);
     Stack *vm_stack = thread->vm_stack;
-    if (vm_stack->size <= 0) {
-        if (VM_STACK_SIZE >= 1 && NULL != frame->method) {
-            put_value_field_by_name_and_desc(throwable, "depth", "I", 1);
-            put_object_value_field_by_name_and_desc(throwable, "backtrace", "Ljava/lang/Object;", malloc_object(thread, heap, load_class(thread, heap, "java/lang/Object")));
-        }
-        return;
-    }
+//    if (vm_stack->size <= 0) {
+//        if (VM_STACK_SIZE >= 1 && NULL != frame->method) {
+//            put_value_field_by_name_and_desc(throwable, "depth", "I", 1);
+//            put_object_value_field_by_name_and_desc(throwable, "backtrace", "Ljava/lang/Object;", malloc_object(thread, heap, load_class(thread, heap, "java/lang/Object")));
+//        }
+//        return;
+//    }
     Array *stack_trace_element = malloc_array(thread, heap, load_primitive_class(thread, heap, "[Ljava/lang/StackTraceElement"), vm_stack->size);
     ClassFile *stack_trace_class = load_class_ensure_init(thread, heap, "java/lang/StackTraceElement");
     for (int i = 0; i < stack_trace_element->length; ++i) {
@@ -38,5 +38,7 @@ void java_lang_Throwable_fillInStackTrace_9I0Ljava_lang_Throwable1(Thread *threa
     }
 //    put_object_value_field_by_name_and_desc(throwable, "stackTrace", "[Ljava/lang/StackTraceElement;", stack_trace_element);
     put_static_field_by_name_and_desc(throwable->class, "UNASSIGNED_STACK", "[Ljava/lang/StackTraceElement;", stack_trace_element);
+    Array *_array = get_static_field_slot_by_name_and_desc(throwable->class, "UNASSIGNED_STACK", "[Ljava/lang/StackTraceElement;")->object_value;
+
     push_object(frame->operand_stack, throwable);
 }

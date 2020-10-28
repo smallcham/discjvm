@@ -1496,8 +1496,7 @@ Object *new_object_add_frame(Thread *thread, SerialHeap *heap, Object *this, cha
 
 Object *new_object_by_desc(Thread *thread, SerialHeap *heap, Object *this, char *class_name, char *desc, Stack *params)
 {
-    ClassFile *class = load_class(thread, heap, class_name);
-    ensure_inited_class(thread, heap, class);
+    ClassFile *class = load_class_ensure_init(thread, heap, class_name);
     this = (NULL == this) ? malloc_object(thread, heap, class) : this;
     params = NULL == params ? create_unlimit_stack() : params;
     int size = params->size;
@@ -2080,64 +2079,67 @@ Frame *get_caller_frame(Thread *thread)
     return get_stack_offset(thread->vm_stack, 2);
 }
 
-void throw_exception_by_name(Thread *thread, SerialHeap *heap, Frame *frame, char *exception_name)
+void throw_exception_by_name(Thread *thread, SerialHeap *heap, char *exception_name)
 {
-    throw_exception(thread, heap, frame, new_object(thread, heap, NULL, exception_name, NULL));
+    throw_exception(thread, heap, new_object(thread, heap, NULL, exception_name, NULL));
 }
 
-void throw_exception_by_name_and_msg(Thread *thread, SerialHeap *heap, Frame *frame, char *exception_name, char *msg)
+void throw_exception_by_name_and_msg(Thread *thread, SerialHeap *heap, char *exception_name, char *msg)
 {
     Stack *params = create_unlimit_stack();
     push_slot(params, create_str_slot_set_str(thread, heap, msg));
-    throw_exception(thread, heap, frame, new_object_by_desc(thread, heap, NULL, exception_name, "(Ljava/lang/String;)V", params));
+    throw_exception(thread, heap, new_object_by_desc(thread, heap, NULL, exception_name, "(Ljava/lang/String;)V", params));
 }
 
-void throw_exception_with_msg(Thread *thread, SerialHeap *heap, Frame *frame, Object *exception, char *msg)
+void throw_exception_with_msg(Thread *thread, SerialHeap *heap, Object *exception, char *msg)
 {
     if (NULL == exception) {
         if (NULL != msg) {
             Stack *params = create_unlimit_stack();
             push_slot(params, create_str_slot_set_str(thread, heap, msg));
-            exception = new_object_by_desc_add_frame(thread, heap, NULL, "java/lang/NullPointerException", "(Ljava/lang/String;)V", params);
+            exception = new_object_by_desc(thread, heap, NULL, "java/lang/NullPointerException", "(Ljava/lang/String;)V", params);
         } else {
-            exception = new_object_add_frame(thread, heap, NULL, "java/lang/NullPointerException", NULL);
+            exception = new_object(thread, heap, NULL, "java/lang/NullPointerException", NULL);
         }
     } else {
-        int is_syn = is_synchronized(frame->method->access_flags);
-        if (is_syn && exception->monitor->owner != thread) {
-            if (NULL != msg) {
-                Stack *params = create_unlimit_stack();
-                push_slot(params, create_str_slot_set_str(thread, heap, msg));
-                exception = new_object_by_desc(thread, heap, NULL, "java/lang/IllegalMonitorStateException", "(Ljava/lang/String;)V", params);
-            } else {
-                exception = new_object(thread, heap, NULL, "java/lang/IllegalMonitorStateException", NULL);
-            }
-        }
-        for (int i = 0; i < frame->method->code_attribute->exception_table_length; ++i) {
-            ExceptionTable exception_table = frame->method->code_attribute->exception_table[i];
-            if (exception_table.catch_type == 0 ||
-                exception->class == load_class_by_class_info_index(thread, heap, frame->constant_pool, exception_table.catch_type)) {
-                empty_stack(frame->operand_stack);
-                push_object(frame->operand_stack, exception);
-                if (exception_table.start_pc <= frame->pc && frame->pc < exception_table.end_pc) {
-                    frame->pc = exception_table.handler_pc;
-                    return;
+        for (int i = 0; i < thread->vm_stack->size; ++i) {
+            Frame *frame = get_stack(thread->vm_stack);
+            int is_syn = is_synchronized(frame->method->access_flags);
+            if (is_syn && exception->monitor->owner != thread) {
+                if (NULL != msg) {
+                    Stack *params = create_unlimit_stack();
+                    push_slot(params, create_str_slot_set_str(thread, heap, msg));
+                    exception = new_object_by_desc(thread, heap, NULL, "java/lang/IllegalMonitorStateException", "(Ljava/lang/String;)V", params);
+                } else {
+                    exception = new_object(thread, heap, NULL, "java/lang/IllegalMonitorStateException", NULL);
                 }
             }
-        }
-        pop_stack(thread->vm_stack);
-        if (is_syn) {
-            monitor_exit(exception->monitor, thread);
+            for (int j = 0; j < frame->method->code_attribute->exception_table_length; ++j) {
+                ExceptionTable exception_table = frame->method->code_attribute->exception_table[j];
+                if (exception_table.catch_type == 0 ||
+                    exception->class == load_class_by_class_info_index(thread, heap, frame->constant_pool, exception_table.catch_type)) {
+                    empty_stack(frame->operand_stack);
+                    push_object(frame->operand_stack, exception);
+                    if (exception_table.start_pc <= frame->pc && frame->pc < exception_table.end_pc) {
+                        frame->pc = exception_table.handler_pc;
+                        return;
+                    }
+                }
+            }
+            pop_stack(thread->vm_stack);
+            if (is_syn) {
+                monitor_exit(exception->monitor, thread);
+            }
         }
         MethodInfo *method = find_method(thread, heap, thread->jthread->class, "dispatchUncaughtException");
         Stack *params = create_unlimit_stack();
         push_object(params, thread->jthread);
         push_object(params, exception);
-        create_vm_frame_by_method_add_params_plus1(thread, heap, params, method);
+        create_vm_frame_by_method_add_params_plus1(thread, load_class(thread, heap, "java/lang/Thread"), params, method);
     }
 }
 
-void throw_exception(Thread *thread, SerialHeap *heap, Frame *frame, Object *exception)
+void throw_exception(Thread *thread, SerialHeap *heap, Object *exception)
 {
-    throw_exception_with_msg(thread, heap, frame, exception, NULL);
+    throw_exception_with_msg(thread, heap, exception, NULL);
 }
