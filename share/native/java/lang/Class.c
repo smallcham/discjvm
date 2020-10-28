@@ -29,7 +29,7 @@ void java_lang_Class_isArray_90Z(Thread *thread, SerialHeap *heap, Frame *frame)
 void java_lang_Class_initClassName_90Ljava_lang_String1(Thread *thread, SerialHeap *heap, Frame *frame)
 {
     Object *this = get_localvar_this(frame);
-    push_slot(frame->operand_stack, create_str_slot_set_str(thread, heap, this->raw_class->class_name));
+    push_slot(frame->operand_stack, create_str_slot_set_str(thread, heap, this->raw_class->standard_class_name));
 }
 
 void java_lang_Class_forName0_9Ljava_lang_String1ZLjava_lang_ClassLoader1Ljava_lang_Class10Ljava_lang_Class1(Thread *thread, SerialHeap *heap, Frame *frame)

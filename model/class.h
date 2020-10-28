@@ -54,6 +54,13 @@ typedef struct {
 } InterfaceInfo;
 
 typedef struct {
+    u2 start_pc;
+    u2 end_pc;
+    u2 handler_pc;
+    u2 catch_type;
+} ExceptionTable;
+
+typedef struct {
     u2 attribute_name_index;
     u4 attribute_length;
     u2 max_stack;
@@ -61,12 +68,7 @@ typedef struct {
     u4 code_length;
     u1 *code;
     u2 exception_table_length;
-    struct {
-        u2 start_pc;
-        u2 end_pc;
-        u2 handler_pc;
-        u2 catch_type;
-    } *exception_table;
+    ExceptionTable *exception_table;
     u2 attributes_count;
     AttributeInfo *attributes;
 } CodeAttribute;
@@ -194,6 +196,8 @@ typedef struct {
     u2 access_flags;
     u2 this_class;
     u1 *class_name;
+    u1 *standard_class_name;
+    u1 *package_name;
     u2 super_class_index;
     u2 interfaces_count;
     u2 *interfaces;
@@ -302,6 +306,12 @@ void format_class_name(char *class_name);
 
 int is_public(u2 access_flags);
 
-char* return_type_name(char* desc);
+char *return_type_name(char* desc);
+
+u1 *standard_class_name(u1 *class_name);
+
+u1 *reduction_class_name(u1 *class_name);
+
+u1 *class_package_name(u1 *class_name);
 
 #endif //DISCJVM_CLASS_H

@@ -261,6 +261,13 @@ double pop_double(Stack *stack)
     return (double) pop_long(stack);
 }
 
+void empty_stack(Stack *stack)
+{
+    for (int i = 0; i < stack->size; ++i) {
+        pop_stack(stack);
+    }
+}
+
 void free_stack(Stack **stack)
 {
     while (!is_empty_stack(*stack)) {

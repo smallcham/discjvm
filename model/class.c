@@ -239,3 +239,49 @@ char* return_type_name(char* desc)
     }
     return name;
 }
+
+u1 *standard_class_name(u1 *class_name)
+{
+    int size = strlen(class_name);
+    u1 *_class_name = malloc(size + 1);
+    memcpy(_class_name, class_name, size);
+    _class_name[size] = '\0';
+    for (int i = 0; i < size; i++) {
+        if (_class_name[i] == '/') {
+            _class_name[i] = '.';
+        }
+    }
+    return _class_name;
+}
+
+u1 *class_package_name(u1 *class_name)
+{
+    int offset = 0;
+    int size = strlen(class_name);
+    for (int i = size - 1; i > 0; i--) {
+        if (class_name[i] == '/' || class_name[i] == '.') {
+            offset = i;
+            break;
+        }
+    }
+    u1 *buf = malloc(offset + 1);
+    for (int i = 0; i < offset; ++i) {
+        if (class_name[i] == '/') {
+            buf[i] = '.';
+        } else {
+            buf[i] = class_name[i];
+        }
+    }
+    buf[offset] = '\0';
+    return buf;
+}
+
+u1 *reduction_class_name(u1 *class_name)
+{
+    for (int i = 0; i < strlen(class_name); i++) {
+        if (class_name[i] == '.') {
+            class_name[i] = '/';
+        }
+    }
+    return class_name;
+}

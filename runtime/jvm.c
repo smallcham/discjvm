@@ -215,6 +215,8 @@ ClassFile *load_class_by_bytes(Thread *thread, SerialHeap *heap, u1 *bytes)
     class_file += sizeof(u2);
     class->this_class = l2b_2(*(u2 *) class_file);
     class->class_name = get_class_name_by_index(class->constant_pool, class->this_class);
+    class->standard_class_name = standard_class_name(class->class_name);
+    class->package_name = class_package_name(class->class_name);
     class_file += sizeof(u2);
     class->super_class_index = l2b_2(*(u2 *) class_file);
     class_file += sizeof(u2);
@@ -527,6 +529,10 @@ u1 *get_class_name_by_index(ConstantPool *pool, u2 index)
 {
     CONSTANT_Class_info *info = pool[index].info;
     CONSTANT_Utf8_info *name = pool[info->name_index].info;
+//    char *class_name = malloc(name->length + 1);
+//    memcpy(class_name, name->bytes, name->length);
+//    class_name[name->length] = '\0';
+//    return standard_class_name(class_name);
     return name->bytes;
 }
 
@@ -1483,6 +1489,11 @@ Object *new_object(Thread *thread, SerialHeap *heap, Object *this, char *class_n
     return new_object_by_desc(thread, heap, this, class_name, "()V", params);
 }
 
+Object *new_object_add_frame(Thread *thread, SerialHeap *heap, Object *this, char *class_name, Stack *params)
+{
+    return new_object_by_desc_add_frame(thread, heap, this, class_name, "()V", params);
+}
+
 Object *new_object_by_desc(Thread *thread, SerialHeap *heap, Object *this, char *class_name, char *desc, Stack *params)
 {
     ClassFile *class = load_class(thread, heap, class_name);
@@ -1495,9 +1506,24 @@ Object *new_object_by_desc(Thread *thread, SerialHeap *heap, Object *this, char 
     for (int i = 0; i < size; i++) {
         push_slot(params, slots[i]);
     }
-//    MethodInfo *init_method = find_method_with_desc(thread, heap, class, "<init>", desc);
-//    create_vm_frame_by_method_add_params_plus1(thread, class, params, init_method);
     single_invoke(thread, heap, class, "<init>", desc, params, NULL);
+    return this;
+}
+
+Object *new_object_by_desc_add_frame(Thread *thread, SerialHeap *heap, Object *this, char *class_name, char *desc, Stack *params)
+{
+    ClassFile *class = load_class(thread, heap, class_name);
+    ensure_inited_class(thread, heap, class);
+    this = (NULL == this) ? malloc_object(thread, heap, class) : this;
+    params = NULL == params ? create_unlimit_stack() : params;
+    int size = params->size;
+    Slot **slots = pop_slot_with_num(params, size);
+    push_object(params, this);
+    for (int i = 0; i < size; i++) {
+        push_slot(params, slots[i]);
+    }
+    MethodInfo *init_method = find_method_with_desc(thread, heap, class, "<init>", desc);
+    create_vm_frame_by_method_add_params_plus1(thread, class, params, init_method);
     return this;
 }
 
@@ -1624,10 +1650,17 @@ CodeAttribute *get_method_code(ConstantPool *pool, MethodInfo method)
     code_attribute->exception_table_length = l2b_2(*(u2*) bytes);
     bytes += sizeof(u2);
     if (code_attribute->exception_table_length > 0) {
-        u8 exception_table_len = code_attribute->exception_table_length * sizeof(u8);
-        code_attribute->exception_table = malloc(exception_table_len);
-        memcpy(code_attribute->exception_table, bytes, exception_table_len);
-        bytes += exception_table_len;
+        code_attribute->exception_table = malloc(sizeof(ExceptionTable) * code_attribute->exception_table_length);
+        for (int i = 0; i < code_attribute->exception_table_length; i++) {
+            code_attribute->exception_table[i].start_pc = l2b_2(*(u2*) bytes);
+            bytes += sizeof(u2);
+            code_attribute->exception_table[i].end_pc = l2b_2(*(u2*) bytes);
+            bytes += sizeof(u2);
+            code_attribute->exception_table[i].handler_pc = l2b_2(*(u2*) bytes);
+            bytes += sizeof(u2);
+            code_attribute->exception_table[i].catch_type = l2b_2(*(u2*) bytes);
+            bytes += sizeof(u2);
+        }
     }
     code_attribute->attributes_count = l2b_2(*(u2*) bytes);
     bytes += sizeof(u2);
@@ -2045,4 +2078,66 @@ char** parse_param_types(Thread *thread, SerialHeap *heap, char *desc, int count
 Frame *get_caller_frame(Thread *thread)
 {
     return get_stack_offset(thread->vm_stack, 2);
+}
+
+void throw_exception_by_name(Thread *thread, SerialHeap *heap, Frame *frame, char *exception_name)
+{
+    throw_exception(thread, heap, frame, new_object(thread, heap, NULL, exception_name, NULL));
+}
+
+void throw_exception_by_name_and_msg(Thread *thread, SerialHeap *heap, Frame *frame, char *exception_name, char *msg)
+{
+    Stack *params = create_unlimit_stack();
+    push_slot(params, create_str_slot_set_str(thread, heap, msg));
+    throw_exception(thread, heap, frame, new_object_by_desc(thread, heap, NULL, exception_name, "(Ljava/lang/String;)V", params));
+}
+
+void throw_exception_with_msg(Thread *thread, SerialHeap *heap, Frame *frame, Object *exception, char *msg)
+{
+    if (NULL == exception) {
+        if (NULL != msg) {
+            Stack *params = create_unlimit_stack();
+            push_slot(params, create_str_slot_set_str(thread, heap, msg));
+            exception = new_object_by_desc_add_frame(thread, heap, NULL, "java/lang/NullPointerException", "(Ljava/lang/String;)V", params);
+        } else {
+            exception = new_object_add_frame(thread, heap, NULL, "java/lang/NullPointerException", NULL);
+        }
+    } else {
+        int is_syn = is_synchronized(frame->method->access_flags);
+        if (is_syn && exception->monitor->owner != thread) {
+            if (NULL != msg) {
+                Stack *params = create_unlimit_stack();
+                push_slot(params, create_str_slot_set_str(thread, heap, msg));
+                exception = new_object_by_desc(thread, heap, NULL, "java/lang/IllegalMonitorStateException", "(Ljava/lang/String;)V", params);
+            } else {
+                exception = new_object(thread, heap, NULL, "java/lang/IllegalMonitorStateException", NULL);
+            }
+        }
+        for (int i = 0; i < frame->method->code_attribute->exception_table_length; ++i) {
+            ExceptionTable exception_table = frame->method->code_attribute->exception_table[i];
+            if (exception_table.catch_type == 0 ||
+                exception->class == load_class_by_class_info_index(thread, heap, frame->constant_pool, exception_table.catch_type)) {
+                empty_stack(frame->operand_stack);
+                push_object(frame->operand_stack, exception);
+                if (exception_table.start_pc <= frame->pc && frame->pc < exception_table.end_pc) {
+                    frame->pc = exception_table.handler_pc;
+                    return;
+                }
+            }
+        }
+        pop_stack(thread->vm_stack);
+        if (is_syn) {
+            monitor_exit(exception->monitor, thread);
+        }
+        MethodInfo *method = find_method(thread, heap, thread->jthread->class, "dispatchUncaughtException");
+        Stack *params = create_unlimit_stack();
+        push_object(params, thread->jthread);
+        push_object(params, exception);
+        create_vm_frame_by_method_add_params_plus1(thread, heap, params, method);
+    }
+}
+
+void throw_exception(Thread *thread, SerialHeap *heap, Frame *frame, Object *exception)
+{
+    throw_exception_with_msg(thread, heap, frame, exception, NULL);
 }

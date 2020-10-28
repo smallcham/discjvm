@@ -946,6 +946,10 @@ void dmul(SerialHeap *heap, Thread *thread, Frame *frame) {
 void idiv(SerialHeap *heap, Thread *thread, Frame *frame) {
     int value2 = pop_int(frame->operand_stack);
     int value1 = pop_int(frame->operand_stack);
+    if (value2 == 0) {
+        throw_exception_by_name_and_msg(thread, heap, frame, "java/lang/ArithmeticException", "/ by zero");
+        return;
+    }
     push_int(frame->operand_stack, value1 / value2);
     step_pc_1(frame);
 }
@@ -1552,17 +1556,7 @@ void arraylength(SerialHeap *heap, Thread *thread, Frame *frame) {
 
 void athrow(SerialHeap *heap, Thread *thread, Frame *frame) {
     Object *exception = pop_object(frame->operand_stack);
-    printf_err("throw %s", exception->raw_class->class_name);
-    ExceptionsAttribute *exceptions = get_exception_handle(frame->constant_pool, frame->method, exception->raw_class);
-    if (NULL == exceptions) {
-        pop_frame(thread, heap);
-    } else {
-        for(int i = 0; i < exceptions->number_of_exceptions; i++) {
-            ClassFile *class = get_class_by_attr_index(thread, heap, frame->constant_pool, exceptions->exception_index_table[i]);
-            if (class == exception->raw_class) {}
-        }
-    }
-    exit(-1);
+    throw_exception(thread, heap, frame, exception);
 }
 
 void checkcast(SerialHeap *heap, Thread *thread, Frame *frame) {

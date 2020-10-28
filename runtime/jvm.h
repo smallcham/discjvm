@@ -215,4 +215,16 @@ Object *get_component_type(void *object);
 
 Frame *get_caller_frame(Thread *thread);
 
+void throw_exception(Thread *thread, SerialHeap *heap, Frame *frame, Object *exception);
+
+void throw_exception_by_name(Thread *thread, SerialHeap *heap, Frame *frame, char *exception_name);
+
+void throw_exception_by_name_and_msg(Thread *thread, SerialHeap *heap, Frame *frame, char *exception_name, char *msg);
+
+void throw_exception_with_msg(Thread *thread, SerialHeap *heap, Frame *frame, Object *exception, char *msg);
+
+Object *new_object_add_frame(Thread *thread, SerialHeap *heap, Object *this, char *class_name, Stack *params);
+
+Object *new_object_by_desc_add_frame(Thread *thread, SerialHeap *heap, Object *this, char *class_name, char *desc, Stack *params);
+
 #endif //DISCJVM_JVM_H

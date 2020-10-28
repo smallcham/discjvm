@@ -93,4 +93,6 @@ void *get_stack_offset(Stack *stack, int offset);
 
 Slot *push_slot_copy(Stack *stack, Slot *slot);
 
+void empty_stack(Stack *stack);
+
 #endif //DISCJVM_STACK_H
