@@ -254,6 +254,23 @@ u1 *standard_class_name(u1 *class_name)
     return _class_name;
 }
 
+u1 *simple_class_name(u1 *class_name)
+{
+    int offset = 0;
+    int size = strlen(class_name);
+    for (int i = size - 1; i > 0; i--) {
+        if (class_name[i] == '/' || class_name[i] == '.') {
+            offset = i + 1;
+            break;
+        }
+    }
+    int new_size = size - offset;
+    u1 *buf = malloc(new_size + 1);
+    memcpy(buf, class_name + offset, new_size);
+    buf[new_size] = '\0';
+    return buf;
+}
+
 u1 *class_package_name(u1 *class_name)
 {
     int offset = 0;

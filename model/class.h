@@ -197,6 +197,7 @@ typedef struct {
     u2 this_class;
     u1 *class_name;
     u1 *standard_class_name;
+    u1 *simple_class_name;
     u1 *package_name;
     u2 super_class_index;
     u2 interfaces_count;
@@ -313,5 +314,7 @@ u1 *standard_class_name(u1 *class_name);
 u1 *reduction_class_name(u1 *class_name);
 
 u1 *class_package_name(u1 *class_name);
+
+u1 *simple_class_name(u1 *class_name);
 
 #endif //DISCJVM_CLASS_H

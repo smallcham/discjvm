@@ -60,8 +60,8 @@ HashMap **init_vm_opts()
 
 void start_vm(char *class_path)
 {
-//    LOG_LEVEL = LOG_INFO;
-    LOG_LEVEL = LOG_DEBUG;
+    LOG_LEVEL = LOG_INFO;
+//    LOG_LEVEL = LOG_DEBUG;
     JAVA_HOME = getenv("JAVA_HOME");
     CLASS_PATH = getenv("CLASSPATH");
     VM_STACK_SIZE = 100;

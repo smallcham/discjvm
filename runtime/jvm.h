@@ -133,7 +133,7 @@ FieldInfo *get_field_by_name_and_desc(ClassFile *class, char *name, char *desc);
 
 Slot *get_static_field_slot_by_name_and_desc(ClassFile *class, char *name, char *desc);
 
-FieldInfo *get_static_field_by_name_and_desc(ClassFile *class, char *name, char *desc);
+FieldInfo *get_static_field_by_name_and_desc(ClassFile **class, char *name, char *desc);
 
 Array *get_str_field_array_value_by_object(Object *object);
 

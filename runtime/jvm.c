@@ -2,7 +2,7 @@
 
 u1* get_class_bytes(char *path);
 
-FieldInfo *get_field_by_name_and_desc_(ClassFile *class, char *name, char *desc, int _static);
+FieldInfo *get_field_by_name_and_desc_(ClassFile **class, char *name, char *desc, int _static);
 
 ClassFile *load_class_by_bytes(Thread *thread, SerialHeap *heap, u1 *bytes)
 {
@@ -216,6 +216,7 @@ ClassFile *load_class_by_bytes(Thread *thread, SerialHeap *heap, u1 *bytes)
     class->this_class = l2b_2(*(u2 *) class_file);
     class->class_name = get_class_name_by_index(class->constant_pool, class->this_class);
     class->standard_class_name = standard_class_name(class->class_name);
+    class->simple_class_name = simple_class_name(class->class_name);
     class->package_name = class_package_name(class->class_name);
     class_file += sizeof(u2);
     class->super_class_index = l2b_2(*(u2 *) class_file);
@@ -960,23 +961,24 @@ void get_static_field_to_opstack_by_index(Thread *thread, SerialHeap *heap, Fram
     }
 }
 
-FieldInfo *get_field_by_name_and_desc_(ClassFile *class, char *name, char *desc, int _static)
+FieldInfo *get_field_by_name_and_desc_(ClassFile **class, char *name, char *desc, int _static)
 {
-    while (NULL != class) {
-        for (int i = 0; i < class->fields_count; i++) {
-            if (strcmp(class->fields[i].name, name) == 0 && strcmp(class->fields[i].desc, desc) == 0) {
+    while (NULL != (*class)) {
+        for (int i = 0; i < (*class)->fields_count; i++) {
+            if (strcmp((*class)->fields[i].name, name) == 0 && strcmp((*class)->fields[i].desc, desc) == 0) {
                 if (_static) {
-                    if (is_static(class->fields[i].access_flags)) {
-                        return &class->fields[i];
+                    if (is_static((*class)->fields[i].access_flags)) {
+
+                        return &(*class)->fields[i];
                     }
                 } else {
-                    if (!is_static(class->fields[i].access_flags)) {
-                        return &class->fields[i];
+                    if (!is_static((*class)->fields[i].access_flags)) {
+                        return &(*class)->fields[i];
                     }
                 }
             }
         }
-        if (NULL != class->super_class) class = class->super_class;
+        if (NULL != (*class)->super_class) *class = (*class)->super_class;
         else return NULL;
     }
     return NULL;
@@ -984,7 +986,7 @@ FieldInfo *get_field_by_name_and_desc_(ClassFile *class, char *name, char *desc,
 
 FieldInfo *get_field_by_name_and_desc(ClassFile *class, char *name, char *desc)
 {
-    return get_field_by_name_and_desc_(class, name, desc, 0);
+    return get_field_by_name_and_desc_(&class, name, desc, 0);
 }
 
 FieldInfo *get_field_by_name(ClassFile *class, char *name)
@@ -1037,7 +1039,7 @@ void *get_resolved_method_name_from_mh(Object *method_handle)
     return get_field_object_value_by_name_and_desc(member_name, "method", "Ljava/lang/invoke/ResolvedMethodName;");
 }
 
-FieldInfo *get_static_field_by_name_and_desc(ClassFile *class, char *name, char *desc)
+FieldInfo *get_static_field_by_name_and_desc(ClassFile **class, char *name, char *desc)
 {
     return get_field_by_name_and_desc_(class, name, desc, 1);
 }
@@ -1106,7 +1108,7 @@ Object *get_component_type(void *object)
 
 void put_static_field_by_name_and_desc(ClassFile *class, char *name, char *desc, void *value)
 {
-    FieldInfo *field = get_static_field_by_name_and_desc(class, name, desc);
+    FieldInfo *field = get_static_field_by_name_and_desc(&class, name, desc);
     class->static_fields[field->offset].object_value = value;
 }
 
@@ -1151,7 +1153,7 @@ void put_static_field(Thread *thread, SerialHeap *heap, Frame *frame, CONSTANT_F
         init_class(thread, heap, class);
         return;
     }
-    FieldInfo *field = get_static_field_by_name_and_desc(class, field_name_info.bytes, field_desc_info.bytes);
+    FieldInfo *field = get_static_field_by_name_and_desc(&class, field_name_info.bytes, field_desc_info.bytes);
     if (str_start_with(field_desc_info.bytes, "D") ||
         str_start_with(field_desc_info.bytes, "J")) {
         class->static_fields[field->offset].value = pop_long(frame->operand_stack);
