@@ -61,6 +61,18 @@ typedef struct {
 } ExceptionTable;
 
 typedef struct {
+    u2 start_pc;
+    u2 line_number;
+} LineNumberTable;
+
+typedef struct {
+    u2 attribute_name_index;
+    u4 attribute_length;
+    u2 line_number_table_length;
+    LineNumberTable *line_number_table;
+} LineNumberTableAttribute;
+
+typedef struct {
     u2 attribute_name_index;
     u4 attribute_length;
     u2 max_stack;
@@ -70,6 +82,7 @@ typedef struct {
     u2 exception_table_length;
     ExceptionTable *exception_table;
     u2 attributes_count;
+    LineNumberTableAttribute *line_number_table_attr;
     AttributeInfo *attributes;
 } CodeAttribute;
 
@@ -87,16 +100,6 @@ typedef struct {
     CodeAttribute *code_attribute;
     u1 *signature;
 } MethodInfo;
-
-typedef struct {
-    u2 attribute_name_index;
-    u4 attribute_length;
-    u2 line_number_table_length;
-    struct {
-        u2 start_pc;
-        u2 line_number;
-    } *line_number_table;
-} LineNumberTableAttribute;
 
 typedef struct {
     u2 attribute_name_index;

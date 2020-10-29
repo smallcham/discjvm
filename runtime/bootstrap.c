@@ -105,8 +105,8 @@ void start_vm(char *class_path)
     MethodInfo *main = find_method(thread, heap, class, "main");
 
     if (NULL == main) {
-        printf_err("main method not found");
-        exit(-1);
+        throw_exception_by_name_and_msg(thread, heap, "java/lang/AbstractMethodError", "main");
+        return;
     }
     create_vm_frame_by_method_with_push(thread, class, main);
 

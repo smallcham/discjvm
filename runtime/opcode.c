@@ -354,8 +354,6 @@ void fload(SerialHeap *heap, Thread *thread, Frame *frame) {
 void dload(SerialHeap *heap, Thread *thread, Frame *frame) {
     u1 index = step_pc1_and_read_code(frame);
     push_double(frame->operand_stack, get_long_localvar(frame, index));
-//    push_int(frame->operand_stack, frame->local_variables[index + 1]->value);
-//    push_int(frame->operand_stack, frame->local_variables[index]->value);
     step_pc_1(frame);
 }
 
@@ -586,10 +584,6 @@ void istore_3(SerialHeap *heap, Thread *thread, Frame *frame) {
 }
 
 void lstore_0(SerialHeap *heap, Thread *thread, Frame *frame) {
-//    frame->local_variables[0]->value = pop_int(frame->operand_stack);
-//    frame->local_variables[1]->value = pop_int(frame->operand_stack);
-//    step_pc_1(frame);
-
     u8 value = pop_long(frame->operand_stack);
     set_long_localvar(frame, 0, value);
     step_pc_1(frame);
@@ -692,8 +686,8 @@ void xastore_(SerialHeap *heap, Thread *thread, Frame *frame, char desc) {
         value = pop_slot(frame->operand_stack);
     }
     if (NULL == value) {
-        printf_err("throw NULLPointerException");
-        exit(-1);
+        throw_exception(thread, heap, NULL);
+        return;
     }
     int index = pop_int(frame->operand_stack);
     Array *ref = pop_object(frame->operand_stack);
@@ -957,6 +951,10 @@ void idiv(SerialHeap *heap, Thread *thread, Frame *frame) {
 void j_ldiv(SerialHeap *heap, Thread *thread, Frame *frame) {
     long value2 = pop_long(frame->operand_stack);
     long value1 = pop_long(frame->operand_stack);
+    if (value2 == 0) {
+        throw_exception_by_name_and_msg(thread, heap, "java/lang/ArithmeticException", "/ by zero");
+        return;
+    }
     push_long(frame->operand_stack, value1 / value2);
     step_pc_1(frame);
 }
@@ -964,6 +962,10 @@ void j_ldiv(SerialHeap *heap, Thread *thread, Frame *frame) {
 void fdiv(SerialHeap *heap, Thread *thread, Frame *frame) {
     float value2 = pop_float(frame->operand_stack);
     float value1 = pop_float(frame->operand_stack);
+    if (value2 == 0) {
+        throw_exception_by_name_and_msg(thread, heap, "java/lang/ArithmeticException", "/ by zero");
+        return;
+    }
     push_float(frame->operand_stack, value1 / value2);
     step_pc_1(frame);
 }
@@ -971,6 +973,10 @@ void fdiv(SerialHeap *heap, Thread *thread, Frame *frame) {
 void ddiv(SerialHeap *heap, Thread *thread, Frame *frame) {
     double value2 = pop_double(frame->operand_stack);
     double value1 = pop_double(frame->operand_stack);
+    if (value2 == 0) {
+        throw_exception_by_name_and_msg(thread, heap, "java/lang/ArithmeticException", "/ by zero");
+        return;
+    }
     push_double(frame->operand_stack, value1 / value2);
     step_pc_1(frame);
 }
@@ -1547,8 +1553,8 @@ void arraylength(SerialHeap *heap, Thread *thread, Frame *frame) {
     Slot *slot = pop_slot(frame->operand_stack);
     Array *array = slot->object_value;
     if (NULL == array) {
-        printf_err("op:arraylength, array is NULL");
-        exit(-1);
+        throw_exception(thread, heap, NULL);
+        return;
     }
     push_int(frame->operand_stack, array->length);
     step_pc_1(frame);
@@ -1585,9 +1591,8 @@ void checkcast(SerialHeap *heap, Thread *thread, Frame *frame) {
         }
         //TODO
         if (!is_instance_of(ref->class, class)) {
-            printf_err("throws ClassCastException!");
-            printf_warn("DEBUG HANDLE!");
-            exit(-1);
+            throw_exception_by_name(thread, heap, "java/lang/ClassCastException");
+            return;
         }
     }
     step_pc_1(frame);
@@ -1608,9 +1613,9 @@ void instanceof(SerialHeap *heap, Thread *thread, Frame *frame) {
 
 void monitorenter(SerialHeap *heap, Thread *thread, Frame *frame) {
     Object *object = pop_object(frame->operand_stack);
-    if (NULL == object) {
-        printf_err("NULLPointerException");
-        exit(-1);
+    if (NULL == object || NULL == object->monitor) {
+        throw_exception(thread, heap, NULL);
+        return;
     }
     monitor_enter(object->monitor, thread);
     step_pc_1(frame);
@@ -1618,9 +1623,9 @@ void monitorenter(SerialHeap *heap, Thread *thread, Frame *frame) {
 
 void monitorexit(SerialHeap *heap, Thread *thread, Frame *frame) {
     Object *object = pop_object(frame->operand_stack);
-    if (NULL == object) {
-        printf_err("NULLPointerException");
-        exit(-1);
+    if (NULL == object || NULL == object->monitor) {
+        throw_exception(thread, heap, NULL);
+        return;
     }
     monitor_exit(object->monitor, thread);
     step_pc_1(frame);
@@ -2169,6 +2174,7 @@ void single_invoke(Thread *current_thread, SerialHeap *heap, ClassFile *class, c
     Thread *thread = create_thread(100, 100);
     thread->pthread = current_thread->pthread;
     thread->jthread = current_thread->jthread;
+    thread->real_thread = current_thread;
     MethodInfo *method = find_method_with_desc(thread, heap, class, method_name, method_desc);
     Frame *frame = create_vm_frame_by_method_with_push(thread, class, method);
     frame->_return = _return;

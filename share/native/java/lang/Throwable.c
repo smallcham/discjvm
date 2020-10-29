@@ -13,33 +13,31 @@
 void java_lang_Throwable_fillInStackTrace_9I0Ljava_lang_Throwable1(Thread *thread, SerialHeap *heap, Frame *frame)
 {
     Object *throwable = get_localvar_this(frame);
-    Stack *vm_stack = thread->vm_stack;
+    Thread *_thread = NULL == thread->real_thread ? thread : thread->real_thread;
+    Stack *vm_stack = _thread->vm_stack;
     if (vm_stack->size <= 0) {
         if (VM_STACK_SIZE >= 1 && NULL != frame->method) {
             put_value_field_by_name_and_desc(throwable, "depth", "I", 1);
-            put_object_value_field_by_name_and_desc(throwable, "backtrace", "Ljava/lang/Object;", malloc_object(thread, heap, load_class(thread, heap, "java/lang/Object")));
+            put_object_value_field_by_name_and_desc(throwable, "backtrace", "Ljava/lang/Object;", malloc_object(_thread, heap, load_class(_thread, heap, "java/lang/Object")));
         }
         return;
     }
-    put_value_field_by_name_and_desc(throwable, "depth", "I", 1);
-    Array *stack_trace_element = malloc_array(thread, heap, load_primitive_class(thread, heap, "[Ljava/lang/StackTraceElement"), vm_stack->size);
-    ClassFile *stack_trace_class = load_class(thread, heap, "java/lang/StackTraceElement");
+    put_value_field_by_name_and_desc(throwable, "depth", "I", vm_stack->size);
+    Array *stack_trace_element = malloc_array(_thread, heap, load_primitive_class(_thread, heap, "[Ljava/lang/StackTraceElement"), vm_stack->size);
+    ClassFile *stack_trace_class = load_class(_thread, heap, "java/lang/StackTraceElement");
     for (int i = 0; i < stack_trace_element->length; ++i) {
-        Frame *top_frame = get_stack_offset(thread->vm_stack, i);
+        Frame *top_frame = get_stack_offset(vm_stack, i);
         ClassFile *method_class = top_frame->method->class;
-        Object *element = malloc_object(thread, heap, stack_trace_class);
-        put_object_value_field_by_name_and_desc(element, "classLoaderName", "Ljava/lang/String;", create_str_slot_set_str(thread, heap, "")->object_value);
-        put_object_value_field_by_name_and_desc(element, "moduleName", "Ljava/lang/String;", create_str_slot_set_str(thread, heap, "")->object_value);
-        put_object_value_field_by_name_and_desc(element, "moduleVersion", "Ljava/lang/String;", create_str_slot_set_str(thread, heap, "0")->object_value);
-        put_object_value_field_by_name_and_desc(element, "declaringClass", "Ljava/lang/String;", create_str_slot_set_str(thread, heap, method_class->class_name)->object_value);
-        put_object_value_field_by_name_and_desc(element, "methodName", "Ljava/lang/String;", create_str_slot_set_str(thread, heap, top_frame->method->name)->object_value);
-        put_object_value_field_by_name_and_desc(element, "fileName", "Ljava/lang/String;", create_str_slot_set_str(thread, heap, method_class->simple_class_name)->object_value);
-        put_value_field_by_name_and_desc(element, "lineNumber", "I", 0);
+        Object *element = malloc_object(_thread, heap, stack_trace_class);
+        put_object_value_field_by_name_and_desc(element, "classLoaderName", "Ljava/lang/String;", create_str_slot_set_str(_thread, heap, "")->object_value);
+        put_object_value_field_by_name_and_desc(element, "moduleName", "Ljava/lang/String;", create_str_slot_set_str(_thread, heap, "")->object_value);
+        put_object_value_field_by_name_and_desc(element, "moduleVersion", "Ljava/lang/String;", create_str_slot_set_str(_thread, heap, "0")->object_value);
+        put_object_value_field_by_name_and_desc(element, "declaringClass", "Ljava/lang/String;", create_str_slot_set_str(_thread, heap, method_class->class_name)->object_value);
+        put_object_value_field_by_name_and_desc(element, "methodName", "Ljava/lang/String;", create_str_slot_set_str(_thread, heap, top_frame->method->name)->object_value);
+        put_object_value_field_by_name_and_desc(element, "fileName", "Ljava/lang/String;", create_str_slot_set_str(_thread, heap, method_class->simple_class_name)->object_value);
+        put_value_field_by_name_and_desc(element, "lineNumber", "I", get_line_number(top_frame->pc - 1, top_frame->method->code_attribute->line_number_table_attr));
         stack_trace_element->objects[i] = element;
     }
-//    put_object_value_field_by_name_and_desc(throwable, "stackTrace", "[Ljava/lang/StackTraceElement;", stack_trace_element);
     put_static_field_by_name_and_desc(throwable->class, "UNASSIGNED_STACK", "[Ljava/lang/StackTraceElement;", stack_trace_element);
-//    Array *_array = get_static_field_slot_by_name_and_desc(throwable->class, "UNASSIGNED_STACK", "[Ljava/lang/StackTraceElement;")->object_value;
-
     push_object(frame->operand_stack, throwable);
 }

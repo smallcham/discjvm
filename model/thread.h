@@ -30,6 +30,7 @@ typedef struct {
     Stack *c_stack;
     Object *jthread;
     pthread_t *pthread;
+    void *real_thread;
     long count;
 } Thread;
 

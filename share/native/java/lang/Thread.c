@@ -33,8 +33,8 @@ void java_lang_Thread_isAlive_90Z(Thread *thread, SerialHeap *heap, Frame *frame
     Thread *_thread = this->monitor->owner;
     int alive = NULL != this && NULL != this->raw_class && NULL != this->monitor && NULL != this->monitor->owner && !is_empty_stack(_thread->vm_stack);
     if (alive) {
-        printf_err("throw IllegalThreadStateException");
-        exit(-1);
+        throw_exception_by_name(thread, heap, "java/lang/IllegalThreadStateException");
+        return;
     }
     push_int(frame->operand_stack, alive);
 }
@@ -57,7 +57,7 @@ void java_lang_Thread_start0_90V(Thread *thread, SerialHeap *heap, Frame *frame)
     int ret;
     ret = pthread_create(new_pthread, NULL, (void *(*)(void *)) run_by_env, env);
     if (ret != 0) {
-        printf_err("thread create error!");
-        exit(-1);
+        throw_exception_by_name_and_msg(thread, heap, "java/lang/RuntimeException", "thread create error");
+        return;
     }
 }

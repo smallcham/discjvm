@@ -83,12 +83,12 @@ void java_lang_Object_wait_9J0V(Thread *thread, SerialHeap *heap, Frame *frame)
     long time = get_long_localvar(frame, 1);
 
     if (time < 0) {
-        printf_err("throw IllegalArgumentException");
-        exit(-1);
+        throw_exception_by_name(thread, heap, "java/lang/IllegalArgumentException");
+        return;
     }
     if (NULL == this->monitor->owner) {
-        printf_err("throw IllegalMonitorStateException");
-        exit(-1);
+        throw_exception_by_name(thread, heap, "java/lang/IllegalMonitorStateException");
+        return;
     }
 
     struct timespec abstime;

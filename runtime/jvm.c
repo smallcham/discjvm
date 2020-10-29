@@ -436,6 +436,10 @@ ClassFile *load_class(Thread *thread, SerialHeap *heap, char *full_class_name)
     ClassFile *class = (ClassFile*)malloc(sizeof(ClassFile));
 
     u1 *class_file = get_class_bytes(full_class_name);
+    if (NULL == class_file) {
+        throw_exception_by_name_and_msg(thread, heap, "sun/tools/java/ClassNotFound", full_class_name);
+        return;
+    }
     class = load_class_by_bytes(thread, heap, class_file);
 
     Object *class_object = malloc_object(thread, heap, get_class_class(thread, heap));
@@ -603,8 +607,8 @@ void do_invokedynamic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
     u1* invoke_desc = get_utf8_bytes(frame->constant_pool, name_and_type_info.descriptor_index);
     BootstrapMethods* bootstrap_methods = get_bootstrap_methods(frame->constant_pool, frame->class);
     if (NULL == bootstrap_methods) {
-        printf_err("IllegalStateException");
-        exit(-1);
+        throw_exception_by_name(thread, heap, "java/lang/IllegalStateException");
+        return;
     }
     BootstrapMethodInfo boot_method_info = bootstrap_methods->methods[dynamic_info.bootstrap_method_attr_index];
     CONSTANT_MethodHandle_info mh_info = *(CONSTANT_MethodHandle_info*)frame->constant_pool[boot_method_info.bootstrap_method_ref].info;
@@ -732,13 +736,10 @@ void do_invokedynamic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
 ////            push_slot(params, sam_method_type);
 ////
 ////            create_vm_frame_by_method_add_params(thread, class, params, method_info);
-//            printf("123");
 //        }
 //        case REF_invokeVirtual: {
-//            printf("123");
 //        }
 //    }
-    printf("123");
 }
 
 void do_invokestatic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2 index)
@@ -758,8 +759,8 @@ void do_invokestatic_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u2
     printf_debug("\n\t\t\t\t\t -> %s.#%d %s #%d%s\n\n", class_name_info.bytes, name_and_type_info.name_index, method_name_info.bytes, name_and_type_info.descriptor_index, method_desc_info.bytes);
     MethodInfo *method = find_interface_method_iter_super_with_desc(thread, heap, &class, method_name_info.bytes, method_desc_info.bytes);
     if (NULL == method) {
-        printf_err("method [%s] not found", method_name_info.bytes);
-        exit(-1);
+        throw_exception_by_name_and_msg(thread, heap, "java/lang/AbstractMethodError", method_name_info.bytes);
+        return;
     }
     Slot **slots = pop_slot_with_num(frame->operand_stack, method->params_count);
     Stack *params = create_unlimit_stack();
@@ -797,11 +798,15 @@ void do_invokeinterface_by_index(Thread *thread, SerialHeap *heap, Frame *frame,
         push_slot(params, slots[i]);
     }
     Object *object = slots[0]->object_value;
+    if (NULL == object) {
+        throw_exception(thread, heap, NULL);
+        return;
+    }
     class = object->class;
     MethodInfo *method = find_interface_method_iter_super_with_desc(thread, heap, &class, method_name, method_desc);
     if (NULL == method) {
-        printf_err("method [%s] not found", method_name);
-        exit(-1);
+        throw_exception_by_name_and_msg(thread, heap, "java/lang/AbstractMethodError", method_name);
+        return;
     }
     Frame *new_frame;
     if (is_native(method->access_flags)) {
@@ -835,9 +840,13 @@ void do_invokespecial_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
         push_slot(params, slots[i]);
     }
     Object *object = slots[0]->object_value;
+    if (NULL == object) {
+        throw_exception(thread, heap, NULL);
+        return;
+    }
     if (NULL == method) {
-        printf_err("method [%s] not found", method_name_info.bytes);
-        exit(-1);
+        throw_exception_by_name_and_msg(thread, heap, "java/lang/AbstractMethodError", method_name_info.bytes);
+        return;
     }
     Frame *new_frame;
     if (is_native(method->access_flags)) {
@@ -870,6 +879,10 @@ void do_invokevirtual_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
         push_slot(params, slots[i]);
     }
     Object *object = slots[0]->object_value;
+    if (NULL == object) {
+        throw_exception(thread, heap, NULL);
+        return;
+    }
     ClassFile *_class = object->class;
 
     if (is_signature_polymorphic(class->class_name, method_name_info.bytes)) {
@@ -896,8 +909,8 @@ void do_invokevirtual_by_index(Thread *thread, SerialHeap *heap, Frame *frame, u
 
     MethodInfo *method = find_method_iter_super_with_desc(thread, heap, &_class, method_name_info.bytes, method_desc_info.bytes);
     if (NULL == method) {
-        printf_err("method [%s] not found", method_name_info.bytes);
-        exit(-1);
+        throw_exception_by_name_and_msg(thread, heap, "java/lang/AbstractMethodError", method_name_info.bytes);
+        return;
     }
     Frame *new_frame;
     if (is_native(method->access_flags)) {
@@ -1623,58 +1636,77 @@ u1 *get_signature(ConstantPool *pool, MethodInfo method)
 CodeAttribute *get_method_code(ConstantPool *pool, MethodInfo method)
 {
     if (method.attributes_count == 0) return NULL;
-    int index = -1;
+    int flag = -1;
+    CodeAttribute *code_attribute = (CodeAttribute*) malloc(sizeof(CodeAttribute));
     for (int i = 0; i < method.attributes_count; i++) {
         CONSTANT_Utf8_info info = *(CONSTANT_Utf8_info *) pool[method.attributes[i].attribute_name_index].info;
         if (strcmp(info.bytes, "Code") == 0) {
-            index = i;
-            break;
-        }
-    }
-    if (index == -1) return NULL;
-    AttributeInfo code_info = method.attributes[index];
-    CodeAttribute *code_attribute = (CodeAttribute*) malloc(sizeof(CodeAttribute));
-    code_attribute->attribute_name_index = code_info.attribute_name_index;
-    code_attribute->attribute_length = code_info.attribute_length;
-    u1 *bytes = code_info.info;
-    code_attribute->max_stack = l2b_2(*(u2*) bytes);
-    bytes += sizeof(u2);
-    code_attribute->max_locals = l2b_2(*(u2*) bytes);
-    bytes += sizeof(u2);
-    code_attribute->code_length = l2b_4(*(u4*) bytes);
-    bytes += sizeof(u4);
-    if (code_attribute->code_length > 0) {
-        code_attribute->code = malloc(code_attribute->code_length);
-        memcpy(code_attribute->code, bytes, code_attribute->code_length);
-        bytes += code_attribute->code_length;
-    }
-    code_attribute->exception_table_length = l2b_2(*(u2*) bytes);
-    bytes += sizeof(u2);
-    if (code_attribute->exception_table_length > 0) {
-        code_attribute->exception_table = malloc(sizeof(ExceptionTable) * code_attribute->exception_table_length);
-        for (int i = 0; i < code_attribute->exception_table_length; i++) {
-            code_attribute->exception_table[i].start_pc = l2b_2(*(u2*) bytes);
+            flag = 1;
+            AttributeInfo code_info = method.attributes[i];
+            code_attribute->attribute_name_index = code_info.attribute_name_index;
+            code_attribute->attribute_length = code_info.attribute_length;
+            u1 *bytes = code_info.info;
+            code_attribute->max_stack = l2b_2(*(u2*) bytes);
             bytes += sizeof(u2);
-            code_attribute->exception_table[i].end_pc = l2b_2(*(u2*) bytes);
+            code_attribute->max_locals = l2b_2(*(u2*) bytes);
             bytes += sizeof(u2);
-            code_attribute->exception_table[i].handler_pc = l2b_2(*(u2*) bytes);
-            bytes += sizeof(u2);
-            code_attribute->exception_table[i].catch_type = l2b_2(*(u2*) bytes);
-            bytes += sizeof(u2);
-        }
-    }
-    code_attribute->attributes_count = l2b_2(*(u2*) bytes);
-    bytes += sizeof(u2);
-    if (code_attribute->attributes_count > 0) {
-        code_attribute->attributes = malloc(sizeof(AttributeInfo) * code_attribute->attributes_count);
-        for (int i = 0; i < code_attribute->attributes_count; i++) {
-            code_attribute->attributes[i].attribute_name_index = l2b_2(*(u2*) bytes);
-            bytes += sizeof(u2);
-            code_attribute->attributes[i].attribute_length = l2b_4(*(u4*) bytes);
+            code_attribute->code_length = l2b_4(*(u4*) bytes);
             bytes += sizeof(u4);
-            code_attribute->attributes[i].info = malloc(code_attribute->attributes[i].attribute_length);
-            memcpy(code_attribute->attributes[i].info, bytes, code_attribute->attributes[i].attribute_length);
-            bytes += code_attribute->attributes[i].attribute_length;
+            if (code_attribute->code_length > 0) {
+                code_attribute->code = malloc(code_attribute->code_length);
+                memcpy(code_attribute->code, bytes, code_attribute->code_length);
+                bytes += code_attribute->code_length;
+            }
+            code_attribute->exception_table_length = l2b_2(*(u2*) bytes);
+            bytes += sizeof(u2);
+            if (code_attribute->exception_table_length > 0) {
+                code_attribute->exception_table = malloc(sizeof(ExceptionTable) * code_attribute->exception_table_length);
+                for (int j = 0; j < code_attribute->exception_table_length; j++) {
+                    code_attribute->exception_table[j].start_pc = l2b_2(*(u2*) bytes);
+                    bytes += sizeof(u2);
+                    code_attribute->exception_table[j].end_pc = l2b_2(*(u2*) bytes);
+                    bytes += sizeof(u2);
+                    code_attribute->exception_table[j].handler_pc = l2b_2(*(u2*) bytes);
+                    bytes += sizeof(u2);
+                    code_attribute->exception_table[j].catch_type = l2b_2(*(u2*) bytes);
+                    bytes += sizeof(u2);
+                }
+            }
+            code_attribute->attributes_count = l2b_2(*(u2*) bytes);
+            bytes += sizeof(u2);
+            if (code_attribute->attributes_count > 0) {
+                code_attribute->attributes = malloc(sizeof(AttributeInfo) * code_attribute->attributes_count);
+                for (int j = 0; j < code_attribute->attributes_count; j++) {
+                    code_attribute->attributes[j].attribute_name_index = l2b_2(*(u2*) bytes);
+                    bytes += sizeof(u2);
+                    code_attribute->attributes[j].attribute_length = l2b_4(*(u4*) bytes);
+                    bytes += sizeof(u4);
+                    code_attribute->attributes[j].info = malloc(code_attribute->attributes[j].attribute_length);
+                    memcpy(code_attribute->attributes[j].info, bytes, code_attribute->attributes[j].attribute_length);
+                    bytes += code_attribute->attributes[j].attribute_length;
+                }
+            }
+        }
+    }
+    if (flag == -1) return NULL;
+    for (int i = 0; i < code_attribute->attributes_count; ++i) {
+        CONSTANT_Utf8_info info = *(CONSTANT_Utf8_info *) pool[code_attribute->attributes[i].attribute_name_index].info;
+        if (strcmp(info.bytes, "LineNumberTable") == 0) {
+            LineNumberTableAttribute *line_number_table_attr = malloc(sizeof(LineNumberTableAttribute));
+            u1 *bytes = code_attribute->attributes[i].info;
+            line_number_table_attr->attribute_name_index = code_attribute->attributes[i].attribute_name_index;
+            line_number_table_attr->attribute_length = code_attribute->attributes[i].attribute_length;
+            line_number_table_attr->line_number_table_length = l2b_2(*(u2*)bytes);
+            bytes += sizeof(u2);
+            LineNumberTable *table = malloc(sizeof(LineNumberTable) * line_number_table_attr->line_number_table_length);
+            for (int j = 0; j < line_number_table_attr->line_number_table_length; j++) {
+                table[j].start_pc = l2b_2(*(u2*)bytes);
+                bytes += sizeof(u2);
+                table[j].line_number = l2b_2(*(u2*)bytes);
+                bytes += sizeof(u2);
+            }
+            line_number_table_attr->line_number_table = table;
+            code_attribute->line_number_table_attr = line_number_table_attr;
         }
     }
     return code_attribute;
@@ -2104,7 +2136,8 @@ void throw_exception_with_msg(Thread *thread, SerialHeap *heap, Object *exceptio
             exception = new_object(thread, heap, NULL, "java/lang/NullPointerException", NULL);
         }
     } else {
-        for (int i = 0; i < thread->vm_stack->size; ++i) {
+        int size = thread->vm_stack->size;
+        for (int i = 0; i < size; ++i) {
             Frame *frame = get_stack(thread->vm_stack);
             int is_syn = is_synchronized(frame->method->access_flags);
             if (is_syn && exception->monitor->owner != thread) {
@@ -2144,4 +2177,19 @@ void throw_exception_with_msg(Thread *thread, SerialHeap *heap, Object *exceptio
 void throw_exception(Thread *thread, SerialHeap *heap, Object *exception)
 {
     throw_exception_with_msg(thread, heap, exception, NULL);
+}
+
+int get_line_number(u1 pc, LineNumberTableAttribute *table)
+{
+    for (int i = 0; i < table->line_number_table_length; ++i) {
+        LineNumberTable line = table->line_number_table[i];
+        if (pc == line.start_pc) {
+            return line.line_number;
+        } else if (pc > line.start_pc) {
+            continue;
+        } else if (pc < line.start_pc) {
+            return table->line_number_table[i - 1].line_number;
+        }
+    }
+    return table->line_number_table[table->line_number_table_length - 1].line_number;
 }

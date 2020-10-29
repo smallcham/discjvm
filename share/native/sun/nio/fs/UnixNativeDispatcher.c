@@ -70,8 +70,8 @@ void sun_nio_fs_UnixNativeDispatcher_getcwd_90Bs(Thread *thread, SerialHeap *hea
     char buf[PATH_MAX + 1];
     char *cwd = getcwd(buf, sizeof(buf));
     if (NULL == cwd) {
-        printf_err("throwUnixException");
-        exit(-1);
+        throw_exception_by_name(thread, heap, "sun/nio/fs/UnixException");
+        return;
     } else {
         Array *array = malloc_array_by_type_size(thread, heap, load_primitive_class(thread, heap, "[B"), strlen(buf), sizeof(char));
         char *str = (char *) array->objects;
@@ -115,8 +115,8 @@ void sun_nio_fs_UnixNativeDispatcher_stat0_9JLsun_nio_fs_UnixFileAttributes10V(T
     struct stat s_buf;
     int errno = stat((const char *) path_address, &s_buf);
     if (errno == -1) {
-        printf_err("throwUnixException %d", errno);
-        exit(-1);
+        throw_exception_by_name_and_msg(thread, heap, "sun/nio/fs/UnixException", "-1");
+        return;
     } else {
         put_value_field_by_name_and_desc(attrs, "st_mode", "I", s_buf.st_mode);
         put_value_field_by_name_and_desc(attrs, "st_ino", "J", s_buf.st_ino);

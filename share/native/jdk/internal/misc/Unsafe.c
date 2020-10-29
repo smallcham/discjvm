@@ -18,8 +18,8 @@ void jdk_internal_misc_Unsafe_arrayBaseOffset0_9java_lang_Class10I(Thread *threa
 {
     Object *ref = frame->local_variables[1]->object_value;
     if (!is_array_by_raw(ref)) {
-        printf_err("Invalid Class, [%s] Not A Array", ref->class->class_name);
-        exit(-1);
+        throw_exception_by_name_and_msg(thread, heap, "java/lang/RuntimeException", "Invalid Class, Not A Array");
+        return;
     } else if (is_array_by_raw(ref)) {
         push_int(frame->operand_stack, offsetof(Array, objects));
     } else {
@@ -240,8 +240,8 @@ void jdk_internal_misc_Unsafe_ensureClassInitialized0_9Ljava_lang_Class10V(Threa
 {
     Object *class = get_ref_localvar(frame, 1);
     if (NULL == class) {
-        printf_err("jdk_internal_misc_Unsafe_ensureClassInitialized0_9Ljava_lang_Class10V: clazz must not be NULL");
-        exit(-1);
+        throw_exception_by_name_and_msg(thread, heap, "java/lang/RuntimeException", "clazz must not be NULL");
+        return;
     }
     if (!class_is_not_init(class->raw_class)) {
         init_class(thread, heap, class->raw_class);
@@ -412,8 +412,8 @@ void jdk_internal_misc_Unsafe_shouldBeInitialized0_9Ljava_lang_Class10Z(Thread *
 {
     Object *class = get_ref_localvar(frame, 1);
     if (NULL == class) {
-        printf_err("clazz must not be NULL");
-        exit(-1);
+        throw_exception_by_name_and_msg(thread, heap, "java/lang/RuntimeException", "clazz must not be NULL");
+        return;
     }
     push_int(frame->operand_stack, !class_is_in_init(class->raw_class));
 }

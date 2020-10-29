@@ -15,8 +15,7 @@ u1 *load_from_jmod(char *jmod_name, char *name)
     sprintf(file_path, "%s/jmods/%s", JAVA_HOME, jmod_name);
     FILE *fp = fopen(file_path, "rb");
     if (NULL == fp) {
-        printf_err("Class [%s] not found", name);
-        exit(-1);
+        return NULL;
     }
     fseek(fp, 0, SEEK_END);
     long f_size = ftell(fp);
@@ -38,8 +37,7 @@ u1 *load_from_jmod(char *jmod_name, char *name)
     zip_file_t *f = zip_fopen(z, full_name, 0);
     zip_fread(f, contents, st.size);
     if (NULL == f) {
-        printf_err("Class [%s] Not Found!", full_name);
-        exit(-1);
+        return NULL;
     }
     zip_fclose(f);
 

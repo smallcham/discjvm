@@ -10,8 +10,8 @@ void java_lang_ClassLoader_findBuiltinLib_9Ljava_lang_String10Ljava_lang_String1
 {
     char *cname = get_str_field_value_by_object(get_ref_localvar(frame, 0));
     if (NULL == cname) {
-        printf_err("java_lang_ClassLoader_findBuiltinLib_9Ljava_lang_String10Ljava_lang_String1, NULL filename for native library");
-        exit(-1);
+        throw_exception_by_name_and_msg(thread, heap, "java/lang/RuntimeException", "NULL filename for native library");
+        return;
     }
 //    char *libname = malloc(strlen(JNI_LIB_PREFIX) + strlen(JNI_LIB_SUFFIX) + strlen(cname) + 1);
 //    sprintf(libname, "%s/lib/%s%s%s", JAVA_HOME, JNI_LIB_PREFIX, cname, JNI_LIB_SUFFIX);

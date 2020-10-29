@@ -6,7 +6,6 @@
 #define DISCJVM_MONITOR_H
 
 #include "class.h"
-#include <pthread.h>
 #include "../util/ioutil.h"
 
 Monitor *create_monitor(void *owner);

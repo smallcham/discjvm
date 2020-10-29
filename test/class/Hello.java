@@ -27,13 +27,25 @@ public class Hello {
 // 	    System.out.println(new Object().getClass() == new Object().getClass());
 // 	}
 
+
+    public static void test1() {
+        Object c = null;
+        c.getClass();
+        System.out.println(1 / 0);
+    }
+
+    public static void test() {
+        System.out.println("test0");
+        test1();
+    }
+
     public static void main(String[] args) {
         int a = 0;
         int b = 2;
         Object object = new Object();
         System.out.println(object.getClass());
         for (int i = 0; i < 100; i++) {
-            System.out.println(1 / 0);
+            test();
             System.out.println("Hello:");
             System.out.println(a + b + i);
             b = a;

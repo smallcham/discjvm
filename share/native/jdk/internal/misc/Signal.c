@@ -11,8 +11,8 @@ void jdk_internal_misc_Signal_findSignal0_9Ljava_lang_String10I(Thread *thread, 
     Object *name_obj = get_ref_localvar(frame, 0);
     char *name = get_str_field_value_by_object(name_obj);
     if (NULL == name) {
-        printf_err("jdk_internal_misc_Signal_findSignal0_9Ljava_lang_String10I Throw Error, Name Is NULL");
-        exit(-1);
+        throw_exception_by_name_and_msg(thread, heap, "java/lang/IllegalArgumentException", "name is null");
+        return;
     }
     int sig = -1;
     if (str_end_with(name, "HUP")) sig = 1;

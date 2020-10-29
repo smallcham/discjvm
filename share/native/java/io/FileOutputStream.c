@@ -33,8 +33,8 @@ void java_io_FileOutputStream_writeBytes_9BsIIZ0V(Thread *thread, SerialHeap *he
     char *buf;
 
     if (off < 0 || len < 0 || bytes->length - off < len ) {
-        printf_err("Throw Exception: java/lang/IndexOutOfBoundsException");
-        exit(-1);
+        throw_exception_by_name(thread, heap, "java/lang/IndexOutOfBoundsException");
+        return;
     }
 
     if (len == 0) return;
@@ -49,13 +49,13 @@ void java_io_FileOutputStream_writeBytes_9BsIIZ0V(Thread *thread, SerialHeap *he
     while (len > 0) {
         int fd = get_field_value_by_name_and_desc(fd_object, "fd", "I");
         if (fd == -1) {
-            printf_err("Throw Exception: Stream Closed");
-            exit(-1);
+            throw_exception_by_name_and_msg(thread, heap, "java/lang/RuntimeException", "Stream Closed");
+            return;
         }
         n = write(fd, buf + off, len);
         if (n == -1) {
-            printf_err("Throw Exception: Write error");
-            exit(-1);
+            throw_exception_by_name_and_msg(thread, heap, "java/lang/RuntimeException", "Write Error");
+            return;
         }
         off += n;
         len -= n;

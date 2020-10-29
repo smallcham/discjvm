@@ -33,12 +33,12 @@ void java_lang_System_arraycopy_9Ljava_lang_Object1ILjava_lang_Object1II0V(Threa
     u8 d_pos = get_localvar(frame, 3);
     u8 length = get_localvar(frame, 4);
     if (NULL == source || NULL == dest) {
-        printf_err("Need Throw Exception");
-        exit(-1);
+        throw_exception(thread, heap, NULL);
+        return;
     }
     if (s_pos < 0 || d_pos < 0 || length < 0 || s_pos + length > source->length || d_pos + length > dest->length) {
-        printf_err("Need Throw IndexOutOfBoundsException");
-        exit(-1);
+        throw_exception_by_name(thread, heap, "java/lang/IndexOutOfBoundsException");
+        return;
     }
     if (is_primitive_array(source)) {
         int type_size = primitive_size(source->raw_class->class_name);
@@ -96,8 +96,8 @@ void java_lang_System_mapLibraryName_9Ljava_lang_String10Ljava_lang_String1(Thre
 {
     char *libname = get_str_field_value_by_object(get_ref_localvar(frame, 0));
     if (strlen(libname) > 240) {
-        printf_err("java_lang_System_mapLibraryName_9Ljava_lang_String10Ljava_lang_String1: name too long");
-        exit(-1);
+        throw_exception_by_name_and_msg(thread, heap, "java/lang/IllegalArgumentException", "name too long");
+        return;
     }
     char *chars = malloc(strlen(libname) + strlen(JNI_LIB_PREFIX) + strlen(JNI_LIB_SUFFIX) + 1);
     sprintf(chars, "%s%s%s", JNI_LIB_PREFIX, libname, JNI_LIB_SUFFIX);

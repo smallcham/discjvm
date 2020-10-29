@@ -22,10 +22,6 @@ Monitor *create_monitor(void *owner)
 
 int do_monitor_enter(Monitor *monitor, void *thread)
 {
-    if (NULL == monitor) {
-        printf_err("NULLPointerException");
-        exit(-1);
-    }
     if (monitor->count == 0) {
         if (pthread_mutex_trylock(monitor->lock) == 0) {
             if (monitor->count == 0) {
@@ -63,10 +59,6 @@ void monitor_enter(Monitor *monitor, void *thread)
 
 void monitor_exit(Monitor *monitor, void *thread)
 {
-    if (NULL == monitor) {
-        printf_err("NULLPointerException");
-        exit(-1);
-    }
     if (monitor->owner == thread) {
         if (--monitor->count == 0) {
             monitor->owner = NULL;

@@ -227,4 +227,6 @@ Object *new_object_add_frame(Thread *thread, SerialHeap *heap, Object *this, cha
 
 Object *new_object_by_desc_add_frame(Thread *thread, SerialHeap *heap, Object *this, char *class_name, char *desc, Stack *params);
 
+int get_line_number(u1 pc, LineNumberTableAttribute *table);
+
 #endif //DISCJVM_JVM_H

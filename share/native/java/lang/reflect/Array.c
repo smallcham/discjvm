@@ -8,8 +8,8 @@ void java_lang_reflect_Array_newArray_9Ljava_lang_Class1I0Ljava_lang_Object1(Thr
 {
     Object *this = get_localvar_this(frame);
     if (NULL == this) {
-        printf_err("Need ThrowNullPointerException");
-        exit(-1);
+        throw_exception(thread, heap, NULL);
+        return;
     }
     int length = get_localvar(frame, 1);
     ClassFile *class = this->raw_class;
