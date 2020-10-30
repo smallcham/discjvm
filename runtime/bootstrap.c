@@ -5,6 +5,23 @@
 #include <pwd.h>
 #include "bootstrap.h"
 
+void print_version()
+{
+    printf("discjvm 1.0 2020-06-22\n");
+    printf("基于规范 (The Java ® Virtual Machine Specification Java SE 11)\n");
+    printf("源码 https://github.com/smallcham/discjvm\n");
+}
+
+void print_help()
+{
+    printf("用法：java [选项] <主类> [参数...]\n");
+    printf("其中，选项包括：\n");
+    printf("\t--version\t\t\t显示版本信息\n");
+    printf("\t--help\t\t\t\t显示帮助信息\n");
+    printf("\t--debug\t\t\t\t以调试模式运行jvm，将会打印指令执行信息\n");
+    printf("\t--show-class\t\t\t打印目标class的详细信息\n");
+}
+
 void init_lib_by_names(Thread *thread, SerialHeap *heap, char *names[], int count)
 {
     for (int i = 0; i < count; i++) {
@@ -58,10 +75,9 @@ HashMap **init_vm_opts()
     return &VM_OPTS;
 }
 
-void start_vm(char *class_path)
+void start_vm(char *class_path, int log_level)
 {
-    LOG_LEVEL = LOG_INFO;
-//    LOG_LEVEL = LOG_DEBUG;
+    LOG_LEVEL = log_level;
     JAVA_HOME = getenv("JAVA_HOME");
     CLASS_PATH = getenv("CLASSPATH");
     VM_STACK_SIZE = 100;

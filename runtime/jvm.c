@@ -438,7 +438,7 @@ ClassFile *load_class(Thread *thread, SerialHeap *heap, char *full_class_name)
     u1 *class_file = get_class_bytes(full_class_name);
     if (NULL == class_file) {
         throw_exception_by_name_and_msg(thread, heap, "sun/tools/java/ClassNotFound", full_class_name);
-        return;
+        return NULL;
     }
     class = load_class_by_bytes(thread, heap, class_file);
 
@@ -1565,7 +1565,6 @@ Object *new_method_type(Thread *thread, SerialHeap *heap, char *desc)
     ClassFile *class = load_class_ensure_init(thread, heap, "java/lang/invoke/MethodType");
     Slot *_return = create_slot();
     single_invoke(thread, heap, class, "methodType", "(Ljava/lang/Class;[Ljava/lang/Class;)Ljava/lang/invoke/MethodType;", params, _return);
-//    Object *method_type = new_object_by_desc(thread, heap, NULL, "", "(Ljava/lang/Class;[Ljava/lang/Class;)V", params);
     put_object_value_field_by_name_and_desc(_return->object_value, "methodDescriptor", "Ljava/lang/String;", desc);
     return _return->object_value;
 }
@@ -1592,7 +1591,20 @@ u1* get_class_bytes(char *path)
         str_start_with(path, "sun/")) {
         return load_from_jmod("java.base.jmod", path);
     }
-    FILE *fp = fopen(path, "rb");
+    FILE *fp;
+    if (path[0] != '/') {
+        int size = strlen(MAIN_PATH) + strlen(path) + 7;
+        char buf[size];
+        sprintf(buf, "%s%s.class", MAIN_PATH, path);
+        fp = fopen(buf, "rb");
+    } else {
+        fp = fopen(path, "rb");
+    }
+    if (NULL == fp) {
+        printf_err("错误: 找不到或无法加载主类 %s", path);
+        printf_err("原因: java.lang.ClassNotFoundException %s", path);
+        exit(-1);
+    }
     fseek(fp, 0, SEEK_END);
     long f_size = ftell(fp);
     u1 *class_file = (u1 *) malloc(f_size * sizeof(u1));
@@ -1765,8 +1777,9 @@ ClassFile *get_class_by_attr_index(Thread *thread, SerialHeap *heap, ConstantPoo
     return load_class(thread, heap, get_utf8_bytes(pool, class_info.name_index));
 }
 
-void print_class_info(ClassFile class)
+void print_class_info(char *path)
 {
+    ClassFile class = *load_class_by_bytes(NULL, init_gc(), get_class_bytes(path));
     printf("General Infomation:\n");
 
     CONSTANT_Class_info constant_class_info = *(CONSTANT_Class_info*)class.constant_pool[class.this_class].info;
@@ -2135,43 +2148,42 @@ void throw_exception_with_msg(Thread *thread, SerialHeap *heap, Object *exceptio
         } else {
             exception = new_object(thread, heap, NULL, "java/lang/NullPointerException", NULL);
         }
-    } else {
-        int size = thread->vm_stack->size;
-        for (int i = 0; i < size; ++i) {
-            Frame *frame = get_stack(thread->vm_stack);
-            int is_syn = is_synchronized(frame->method->access_flags);
-            if (is_syn && exception->monitor->owner != thread) {
-                if (NULL != msg) {
-                    Stack *params = create_unlimit_stack();
-                    push_slot(params, create_str_slot_set_str(thread, heap, msg));
-                    exception = new_object_by_desc(thread, heap, NULL, "java/lang/IllegalMonitorStateException", "(Ljava/lang/String;)V", params);
-                } else {
-                    exception = new_object(thread, heap, NULL, "java/lang/IllegalMonitorStateException", NULL);
-                }
-            }
-            for (int j = 0; j < frame->method->code_attribute->exception_table_length; ++j) {
-                ExceptionTable exception_table = frame->method->code_attribute->exception_table[j];
-                if (exception_table.catch_type == 0 ||
-                    exception->class == load_class_by_class_info_index(thread, heap, frame->constant_pool, exception_table.catch_type)) {
-                    empty_stack(frame->operand_stack);
-                    push_object(frame->operand_stack, exception);
-                    if (exception_table.start_pc <= frame->pc && frame->pc < exception_table.end_pc) {
-                        frame->pc = exception_table.handler_pc;
-                        return;
-                    }
-                }
-            }
-            pop_stack(thread->vm_stack);
-            if (is_syn) {
-                monitor_exit(exception->monitor, thread);
+    }
+    int size = thread->vm_stack->size;
+    for (int i = 0; i < size; ++i) {
+        Frame *frame = get_stack(thread->vm_stack);
+        int is_syn = is_synchronized(frame->method->access_flags);
+        if (is_syn && exception->monitor->owner != thread) {
+            if (NULL != msg) {
+                Stack *params = create_unlimit_stack();
+                push_slot(params, create_str_slot_set_str(thread, heap, msg));
+                exception = new_object_by_desc(thread, heap, NULL, "java/lang/IllegalMonitorStateException", "(Ljava/lang/String;)V", params);
+            } else {
+                exception = new_object(thread, heap, NULL, "java/lang/IllegalMonitorStateException", NULL);
             }
         }
-        MethodInfo *method = find_method(thread, heap, thread->jthread->class, "dispatchUncaughtException");
-        Stack *params = create_unlimit_stack();
-        push_object(params, thread->jthread);
-        push_object(params, exception);
-        create_vm_frame_by_method_add_params_plus1(thread, load_class(thread, heap, "java/lang/Thread"), params, method);
+        for (int j = 0; j < frame->method->code_attribute->exception_table_length; ++j) {
+            ExceptionTable exception_table = frame->method->code_attribute->exception_table[j];
+            if (exception_table.catch_type == 0 ||
+                exception->class == load_class_by_class_info_index(thread, heap, frame->constant_pool, exception_table.catch_type)) {
+                empty_stack(frame->operand_stack);
+                push_object(frame->operand_stack, exception);
+                if (exception_table.start_pc <= frame->pc && frame->pc < exception_table.end_pc) {
+                    frame->pc = exception_table.handler_pc;
+                    return;
+                }
+            }
+        }
+        pop_stack(thread->vm_stack);
+        if (is_syn) {
+            monitor_exit(exception->monitor, thread);
+        }
     }
+    MethodInfo *method = find_method(thread, heap, thread->jthread->class, "dispatchUncaughtException");
+    Stack *params = create_unlimit_stack();
+    push_object(params, thread->jthread);
+    push_object(params, exception);
+    create_vm_frame_by_method_add_params_plus1(thread, load_class(thread, heap, "java/lang/Thread"), params, method);
 }
 
 void throw_exception(Thread *thread, SerialHeap *heap, Object *exception)
@@ -2192,4 +2204,20 @@ int get_line_number(u1 pc, LineNumberTableAttribute *table)
         }
     }
     return table->line_number_table[table->line_number_table_length - 1].line_number;
+}
+
+void format_and_set_root_path(char *path)
+{
+    int size = strlen(path);
+    int offset = 0;
+    for (int i = size - 1; i >= 0; i--) {
+        if (path[i] == '/') {
+            offset = i + 1;
+            break;
+        }
+    }
+    char *root = malloc(offset + 1);
+    memcpy(root, path, offset);
+    root[offset] = '\0';
+    MAIN_PATH = root;
 }

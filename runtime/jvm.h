@@ -15,6 +15,8 @@
 #include "../runtime/opcode.h"
 #include "../runtime/jmod.h"
 
+char *MAIN_PATH;
+
 Object *bootstrap_class_loader;
 
 ClassFile *load_class_by_bytes(Thread *thread, SerialHeap *heap, u1 *bytes);
@@ -89,7 +91,7 @@ void set_monitor_exit_hook(Thread *thread, SerialHeap *heap, Frame *frame, Frame
 
 void clinit_class_and_exec(Thread *thread, SerialHeap *heap, ClassFile *class);
 
-void print_class_info(ClassFile class);
+void print_class_info(char *path);
 
 MethodInfo *get_method_info_by_ref(Thread *thread, SerialHeap *heap, ConstantPool *pool, CONSTANT_Methodref_info ref);
 
@@ -228,5 +230,7 @@ Object *new_object_add_frame(Thread *thread, SerialHeap *heap, Object *this, cha
 Object *new_object_by_desc_add_frame(Thread *thread, SerialHeap *heap, Object *this, char *class_name, char *desc, Stack *params);
 
 int get_line_number(u1 pc, LineNumberTableAttribute *table);
+
+void format_and_set_root_path(char *path);
 
 #endif //DISCJVM_JVM_H

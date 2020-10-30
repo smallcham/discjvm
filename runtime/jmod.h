@@ -16,7 +16,6 @@
 
 extern char *JAVA_HOME;
 
-
 u1 *load_from_jmod(char *jmod_name, char *name);
 
 #endif //DISCJVM_JMOD_H

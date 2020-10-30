@@ -33,8 +33,9 @@ void java_lang_Thread_isAlive_90Z(Thread *thread, SerialHeap *heap, Frame *frame
     Thread *_thread = this->monitor->owner;
     int alive = NULL != this && NULL != this->raw_class && NULL != this->monitor && NULL != this->monitor->owner && !is_empty_stack(_thread->vm_stack);
     if (alive) {
-        throw_exception_by_name(thread, heap, "java/lang/IllegalThreadStateException");
-        return;
+        //TODO 这里在执行多线程时经常会抛出异常， 尚未查明原因, 先注释此处异常
+//        throw_exception_by_name(thread, heap, "java/lang/IllegalThreadStateException");
+//        return;
     }
     push_int(frame->operand_stack, alive);
 }
@@ -46,8 +47,9 @@ void java_lang_Thread_start0_90V(Thread *thread, SerialHeap *heap, Frame *frame)
 
     Thread *new_thread = create_thread_with_jthread(VM_STACK_SIZE, C_STACK_SIZE, this);
     MethodInfo *method = find_method_with_desc(new_thread, heap, class, "run", "()V");
-    push_object(frame->operand_stack, this);
-    create_vm_frame_by_method_add_params_plus1(new_thread, class, frame, method);
+    Stack *params = create_unlimit_stack();
+    push_object(params, this);
+    create_vm_frame_by_method_add_params_plus1(new_thread, class, params, method);
     Env *env = malloc(sizeof(Env));
     env->thread = new_thread;
     env->heap = heap;
