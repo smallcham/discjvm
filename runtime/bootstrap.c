@@ -79,6 +79,10 @@ void start_vm(char *class_path, int log_level)
 {
     LOG_LEVEL = log_level;
     JAVA_HOME = getenv("JAVA_HOME");
+    if (NULL == JAVA_HOME) {
+        printf_err("环境变量 JAVA_HOME 未设置");
+        exit(-1);
+    }
     CLASS_PATH = getenv("CLASSPATH");
     VM_STACK_SIZE = 100;
     C_STACK_SIZE = 100;

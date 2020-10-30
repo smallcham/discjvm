@@ -1,45 +1,36 @@
-# unsigned to signed need take some attention, such like iinc.
+# DiscJVM - (Dis) Distributed (C) Based On C (JVM)Java Virtual Machine
 
-# fix is_instance_of
+### DiscJVM 是一个基于jvm11规范以纯C语言编写的一个虚拟机的实现，目的是为了深入理解虚拟机原理，并在此基础上尝试将内存映射至多机，以实现指令级的分布式执行而无需对代码作任何修改（目前内存映射这部分尚未实现）。
 
-# if_icmpge point set to -> frame->count > 21452,  
-# ConcurrentHashMap.equals has effect a endless loop, 
-# probably in method Traverser.advance. 
-# need track and explain it.
+### 如果你对这个项目感兴趣，说明你应该看过或者了解过不少jvm相关的书籍或信息，但纸上谈兵总让你有隔靴搔痒的感觉，作用不大，要真正了解jvm如何实现还是得从头到尾实现一个jvm，这也是我编写discjvm的一个主要原因。
 
-# Properties fields is NULL , fix it
+### DiscJVM 不是一个完整的java虚拟机，不可以用作生产环境，目前的完成度仅限于执行一些简单的代码，大部分基础类库的本地支持尚未编写完全，主要目的还是用以理解和学习虚拟机相关技术。
+
+### DiscJVM 的基础类库使用的是java.base.jmod，而不是rt.jar，这是因为jdk11已经将rt.jar移除，javac等编译工具都应该使用官方工具，所以如果你想要体验一下discjvm你需要先装好jdk11并设置好JAVA_HOME环境变量
+
+### 目前仅支持Linux平台，并且只会支持Linux，跨平台不是此项目的目的。
+
+## 目录说明:
+/discjvm
+-------/build
+-------/model	#基础结构体以及链表哈希表等数据结构的定义和封装
+-------/runtime #虚拟机主要执行逻辑代码
+-------/share	#本地方法的映射与实现
+-------/test	#测试用class
+-------/util	#工具类库
+-------/main.c
+
+## 编译方法
+> git clone https://github.com/smallcham/discjvm.git
+> cd discjvm/build
+> cmake ../
+> make
+
+## 使用方法(以测试class为例):
+> cd discjvm/build
+> ./discjvm ../test/class/HelloWorld
+
+[![](https://smallcham.github.io/static/img/jvmtest1.png)](https://smallcham.github.io/static/img/jvmtest1.png)
+[![](https://smallcham.github.io/static/img/jvmtest2.png)](https://smallcham.github.io/static/img/jvmtest2.png)
 
 
-# ladd may be error, long type calc has some problem, set frame->count greater then 7984 , fix it
-# look like the store type of the long type push to stack cause next error 
-
-# if_icmpge set to 19742
-
-# File.getName return a name ".", is not right
-# point to ClassLoader.c findBuiltinLib and System.c mapLibraryName
-
-# File( fs.resolve(parent, child) ) has some problem, set point to 99913 and find it.
-# look like native method System.arraycopy is wrong, point at 100526
-
-# AccessController_doPrivileged need a return value
-
-# compete invokedynamic instruction, don't forget initPhase2 and 3
-
-# LD_LIBRARY_PATH=/usr/lib/jvm/java-11-openjdk-amd64/lib/server
-
-# Object.clone not complete
-# Thread.isAlive not complete# Thread.start0 not complete, need lock
-
-# wait has some problem, may be the key is complete the synchronized invoke method.
-
-# Unsafe_allocateMemory0 has some problem, maybe. Unsafe_copyMemory0 maybe effect by this.
-
-# use lstore_3 stored the long number not equals with the pushed long number, set pointer to 120826  
-
-# complete the method "parse_param_types"
-
-# complete the opcode "instanof" and complete the next native method stat0
-
-# if_acmpne int class not equals, set frame->count > 140006
-
-# completed invoke_virtual , write logic of is_signature_polymorphic method internal, and find out why method_type is equals. 
