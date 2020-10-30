@@ -1,5 +1,5 @@
 ## DiscJVM
-#### - (Dis) Distributed (C) Based On C (JVM)Java Virtual Machine
+#### - (Dis) Distributed (C) Based On C (JVM) Java Virtual Machine
 
 #### 简述
 -------
