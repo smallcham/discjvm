@@ -3,7 +3,7 @@
 
 #### 简述
 -------
-1. DiscJVM 是一个基于jvm11规范以纯C语言编写的一个虚拟机的实现，目的是为了深入理解虚拟机原理，并在此基础上尝试将内存映射至多机，以实现指令级的分布式执行而无需对代码作任何修改（目前内存映射这部分尚未实现）。
+1. DiscJVM 是一个基于jvm11规范以纯C语言编写的一个虚拟机实现，目的是为了深入理解虚拟机原理，并期望在此基础上尝试将内存映射至多机，以实现指令级的分布式执行而无需对代码作任何修改（目前内存映射这部分尚未实现）。
 
 2. 如果你对这个项目感兴趣，说明你应该看过或者了解过不少jvm相关的书籍或信息，但纸上谈兵总让你有隔靴搔痒的感觉，作用不大，要真正了解jvm如何实现还是得从头到尾实现一个jvm，这也是我编写discjvm的一个主要原因。
 
@@ -37,23 +37,36 @@
 
 #### 编译方法
 
-> git clone https://github.com/smallcham/discjvm.git
+> `git clone https://github.com/smallcham/discjvm.git`
 
-> cd discjvm/build
+> `cd discjvm/build`
 
-> cmake ../
+> `cmake ../`
 
-> make
+> `make`
 
 --------
 
 #### 使用方法(以测试class为例):
 
-> cd discjvm/build
+> `cd discjvm/build`
 
-> ./discjvm ../test/class/HelloWorld
+> `./discjvm ../test/class/HelloWorld`
 
 [![](https://smallcham.github.io/static/img/jvmtest1.png)](https://smallcham.github.io/static/img/jvmtest1.png)
 [![](https://smallcham.github.io/static/img/jvmtest2.png)](https://smallcham.github.io/static/img/jvmtest2.png)
+
+--------
+
+#### 尚未实现
+
+1. invokedynamic jdk11关于这部分的逻辑非常的绕，暂时没看明白，目前该指令尚未实现，这意味着包含动态调用部分的程序无法执行。
+
+2. 本地方法并未100%实现， 目前编写的本地方法实现均在/share/native目录下。
+
+3. gc尚未实现，目前的内存分配都是直接malloc，尚未开始着手内存回收部分。
+
+4. 字符串常量池的区域划分逻辑尚未编写，这意味着目前字符串对象不会在地址上相等。
+
 
 
