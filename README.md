@@ -37,6 +37,8 @@
 
 #### 编译方法
 
+> `sudo apt-get -y update && sudo apt-get -y install libzip-dev`
+
 > `git clone https://github.com/smallcham/discjvm.git`
 
 > `cd discjvm/build`
